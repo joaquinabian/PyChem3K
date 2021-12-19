@@ -5,7 +5,7 @@
 # Author:      Roger Jarvis
 #
 # Created:     2007/05/22
-# RCS-ID:      $Id: Univariate.py,v 1.2 2009/02/26 22:19:47 rmj01 Exp $
+# RCS-ID:      $Id: Univariate.py, v 1.2 2009/02/26 22:19:47 rmj01 Exp $
 # Copyright:   (c) 2006
 # Licence:     GNU General Public Licence
 # ---------------------------------------------------------------------------
@@ -17,6 +17,7 @@ import wx.lib.stattext
 import wx.lib.agw.buttonpanel as bp
 from wx.lib.anchors import LayoutAnchors
 
+import inspect
 import numpy as np
 import scipy as sp
 import scipy.stats
@@ -149,7 +150,7 @@ class Univariate(wx.Panel):
         self.plcPsumm.enableLegend = True
         self.plcPsumm.fontSizeLegend = 8
         self.plcPsumm.SetAutoLayout(True)
-        # self.plcPsumm.set_log_scale((True,False))
+        # self.plcPsumm.set_log_scale((True, False))
         self.plcPsumm.SetConstraints(LayoutAnchors(self.plcPsumm, True,
               True, True, True))
         
@@ -217,16 +218,16 @@ class Univariate(wx.Panel):
             'plcScatter': ['Scatter Plot or Regression Summary', 'Group/R', 'Value']
         }
 
-        curve = wx.lib.plot.PolyLine([[0, 0], [1, 1]], colour='white', width=1,
-                                     style=wx.TRANSPARENT)
+        curve = PolyLine([[0, 0], [1, 1]], colour='white', width=1,
+                         style=wx.TRANSPARENT)
         
         # set to udef by boxplot function
         self.plcBoxplot.xSpec = 'min'
         
         for each in objects:
-            exec('self.' + each + '.Draw(wx.lib.plot.PlotGraphics([curve],' +
-                 'objects["' + each + '"][0],' +
-                 'objects["' + each + '"][1],' +
+            exec('self.' + each + '.Draw(wx.lib.plot.PlotGraphics([curve], ' +
+                 'objects["' + each + '"][0], ' +
+                 'objects["' + each + '"][1], ' +
                  'objects["' + each + '"][2]))'
                  )
         
@@ -235,28 +236,24 @@ class Univariate(wx.Panel):
             
 class TitleBar(bp.ButtonPanel):
     def _init_btnpanel_ctrls(self, prnt):
-        bp.ButtonPanel.__init__(self, parent=prnt, id=-1,
-                                text="Univariate Tests",
-                                agwStyle=bp.BP_USE_GRADIENT,
-                                alignment=bp.BP_ALIGN_LEFT)
+        bp.ButtonPanel.__init__(
+            self, parent=prnt, id=-1, text="Univariate Tests",
+            agwStyle=bp.BP_USE_GRADIENT, alignment=bp.BP_ALIGN_LEFT)
         
-        self.cbxData = wx.Choice(choices=['Raw spectra', 'Processed spectra'],
-                                 id=-1, name='cbxData', parent=self,
-                                 pos=wx.Point(118, 21), size=wx.Size(90, 23),
-                                 style=0)
+        self.cbxData = wx.Choice(
+            choices=['Raw spectra', 'Processed spectra'], id=-1, name='cbxData',
+            parent=self, pos=wx.Point(118, 21), size=wx.Size(90, 23), style=0)
         self.cbxData.SetSelection(0)
         
-        self.cbxVariable = wx.Choice(choices=['Variables'], id=-1,
-                                     name='cbxVariable', parent=self,
-                                     pos=wx.Point(118, 21),
-                                     size=wx.Size(90, 23), style=0)
+        self.cbxVariable = wx.Choice(
+            choices=['Variables'], id=-1, name='cbxVariable', parent=self,
+            pos=wx.Point(118, 21), size=wx.Size(90, 23), style=0)
         self.cbxVariable.SetSelection(0)
         
-        self.cbxTest = wx.Choice(choices=['ANOVA', 'Kruskal-Wallis',
-                                          'Correlation Coeff.'],
-                                 id=-1, name='cbxTest', parent=self,
-                                 pos=wx.Point(75, 21),
-                                 size=wx.Size(90, 23), style=0)
+        self.cbxTest = wx.Choice(
+            choices=['ANOVA', 'Kruskal-Wallis', 'Correlation Coeff.'],
+            id=-1, name='cbxTest', parent=self, pos=wx.Point(75, 21),
+            size=wx.Size(90, 23), style=0)
 
         self.cbxTest.Bind(wx.EVT_CHOICE, self.OnCbxTest, id=-1)
         self.cbxTest.SetSelection(0)
@@ -271,9 +268,7 @@ class TitleBar(bp.ButtonPanel):
     def __init__(self, parent, id, text, style, alignment):
         
         self._init_btnpanel_ctrls(parent)
-        
         self.parent = parent
-                                           
         self.CreateButtons()
     
     def CreateButtons(self):
@@ -288,10 +283,11 @@ class TitleBar(bp.ButtonPanel):
         self.AddButton(self.btnRunTest)
         
         self.Thaw()
-
         self.DoLayout()
     
     def get_data(self, data):
+        # curframe = inspect.currentframe()
+        # print(inspect.getouterframes(curframe, 2))
         self.data = data
         
     def SetProperties(self):
@@ -323,18 +319,18 @@ class TitleBar(bp.ButtonPanel):
         
         """
         # sort by classifier output
-        idx = sp.argsort(-x, 0)
-        group = group[sp.reshape(idx, (len(idx),))][:, nax]
+        idx = np.argsort(-x, 0)
+        group = group[np.reshape(idx, (len(idx), ))][:, nax]
         
         # compute true positive and false positive rates
-        rgrp = sp.ones(group.shape)
-        rgrp[sp.nonzero(group)[0]] = 0
+        rgrp = np.ones(group.shape)
+        rgrp[np.nonzero(group)[0]] = 0
         
-        tp = sp.cumsum(group) / sp.sum(group)
-        fp = sp.cumsum(rgrp) / sp.sum(rgrp)
+        tp = np.cumsum(group) / np.sum(group)
+        fp = np.cumsum(rgrp) / np.sum(rgrp)
         
-        tp = sp.concatenate(([[0]], tp[:, nax], [[1]]), 0)
-        fp = sp.concatenate(([[0]], fp[:, nax], [[1]]), 0)
+        tp = np.concatenate(([[0]], tp[:, nax], [[1]]), 0)
+        fp = np.concatenate(([[0]], fp[:, nax], [[1]]), 0)
         
         return tp, fp
     
@@ -343,7 +339,7 @@ class TitleBar(bp.ButtonPanel):
         """
         n = len(tp)
         
-        return sp.sum((fp[2:n] - fp[1:n-1]) * (tp[2:n] + tp[1:n-1])) / 2
+        return np.sum((fp[2:n] - fp[1:n-1]) * (tp[2:n] + tp[1:n-1])) / 2
     
     def OnBtnRunTestButton(self, event):
         # run the analysis
@@ -351,65 +347,64 @@ class TitleBar(bp.ButtonPanel):
         
     def RunUnivariate(self):
         # ANOVA or KW
-        if self.cbxTest.GetSelection() < 2:
-            if (self.data['utest'] is None) | (self.data['utest'] != [self.cbxTest.GetSelection(),
-                  self.cbxData.GetSelection()]) is True:
+        # F = None
+        # K = None
+        cbx_test = self.cbxTest.GetSelection()
+        utest = self.data['utest']
+        data_label = np.array(self.data['label'])
+        cbx_data = self.cbxData.GetSelection()
+
+        if cbx_test < 2:
+            if (utest is None) | (utest != [cbx_test, cbx_data]):
                 vr = range(self.cbxVariable.GetCount())
             else:
                 cbx_value = self.cbxVariable.GetSelection()
                 vr = range(cbx_value, cbx_value + 1)
                 
             # prepare data
-            uG = sp.unique(np.array(self.data['label']))
-            p_aur = [[]]*len(uG)
+            uG = np.unique(data_label)
+            p_aur = [[]] * len(uG)
 
             # plotting colours
             colours = ['black', 'blue', 'red', 'cyan', 'green']
             for variable in vr:
                 # report to status bar
-                self.parent.prnt.parent.sbMain.SetStatusText('Calculating ' +
-                                                           self.data['indlabels'][variable], 0)
+                self.parent.prnt.parent.sbMain.SetStatusText(
+                    'Calculating ' + self.data['indlabels'][variable], 0)
                 
                 # get column
-                if self.cbxData.GetSelection() == 0:
-                    x = sp.take(self.data['rawtrunc'], [variable], 1)
-                elif self.cbxData.GetSelection() == 1:
-                    x = sp.take(self.data['proctrunc'], [variable], 1)
-                
-                print('*** x ***')
-                print(type(x))
-                print(x)
-                print('*** uG ***')
-                print(uG)
-                print('*** data ***')
-                print(type(self.data))
-                print(self.data)
-                print('**********')
+                if cbx_data == 0:
+                    x = np.take(self.data['rawtrunc'], [variable], 1)
+                elif cbx_data == 1:
+                    x = np.take(self.data['proctrunc'], [variable], 1)
 
                 # gather data
                 grp_list = ''
                 for item in uG:
-                    grp_list = grp_list + 'x[sp.array(self.data["label"])==' + item + '],'
-                
+                    grp_list = grp_list + 'x[data_label=="' + item + '"], '
+
                 # apply test!!!!!!!!!!!!!!!!!!
                 if self.cbxTest.GetSelection() == 0:
                     # run anova
-                    groups = grp_list[0:len(grp_list) - 1]
+                    groups = grp_list[0:-1]
                     print('groups : ', groups)
-                    f = 0
-                    exec('f, p = sp.stats.f_oneway(' + groups + ')')
+                    cmd = 'F = sp.stats.f_oneway(' + groups + ')'
+                    exec(cmd, locals(), globals())
 
-                    print('-> ', f)
-                    print('-> ', p)
+                    f = F.statistic
+                    p = F.pvalue[0]
 
-                    p = p[0]
                 elif self.cbxTest.GetSelection() == 1:
                     # run kruskal-wallis (non-parametric anova)
-                    exec('h, p = sp.stats.kruskal(' + grp_list[0:len(grp_list)-1] + ')')
+                    cmd = 'K = sp.stats.kruskal(' + grp_list[0:-1] + ')'
+                    exec(cmd, locals(), globals())
+
+                    h = K.statistic
+                    p = K.pvalue
                 
                 # save some stuff for plotting
                 if variable == self.cbxVariable.GetSelection():
-                    plotx,self.data['plotp'] = x, p
+                    plotx, self.data['plotp'] = x, p
                 
                 # plot roc vs. p for small p, big r
                 # filter by bonferroni corrected p-value:
@@ -420,13 +415,13 @@ class TitleBar(bp.ButtonPanel):
                         # +1 for most group with most +ve values
                         y = np.zeros(x.shape)
                         y[np.array(self.data['label']) == uG[each]] = 1
-                        if sp.mean(x[y == 1]) < sp.mean(x[y == 0]):
-                            y = sp.ones(x.shape)
-                            y[np.array(self.data['label']) == uG[each]] = 0
+                        if np.mean(x[y == 1]) < np.mean(x[y == 0]):
+                            y = np.ones(x.shape)
+                            y[data_label == uG[each]] = 0
                         
                         # calculate roc
-                        tp,fp = self.Roc(y, x)
-                        r = self.RocArea(tp,fp)
+                        tp, fp = self.Roc(y, x)
+                        r = self.RocArea(tp, fp)
                         
                         if r > .75:
                             # list of coords for plotting
@@ -440,30 +435,25 @@ class TitleBar(bp.ButtonPanel):
                         colCount += 1
                         if colCount == len(colours):
                             colCount = 0
-            exit()
+
             # create results array
             plotSum = False
-            if (self.data['utest'] is None) | (self.data['utest'] != [self.cbxTest.GetSelection(),
-                self.cbxData.GetSelection()]) is True:
+            if (utest is None) | (utest != [cbx_test, cbx_data]):
                 self.data['p_aur'] = sp.zeros((1, 5))
                 for each in p_aur:
                     if len(each) > 0:
                         self.data['p_aur'] = sp.concatenate((self.data['p_aur'],
-                                                        sp.array(each)), 0)
+                                                             sp.array(each)), 0)
                 self.data['p_aur'] = self.data['p_aur'][1:len(self.data['p_aur']), :]
                 plotSum = True
             
             # plot results
-            self.PlotResults(plotx,p,uG,colours=colours,psum=plotSum)
-            
-            # save test used
-            # self.data['utest'] = [self.cbxTest.GetSelection(),self.cbxData.GetSelection()]
+            self.PlotResults(plotx, p, uG, colours=colours, psum=plotSum)
 
         # corr coef
         else:
             r = []
-            if (self.data['utest'] is None) | (self.data['utest'] != [self.cbxTest.GetSelection(),
-                  self.cbxData.GetSelection()]) is True:
+            if (utest is None) | (utest != [cbx_test, cbx_data]):
                 vr = range(self.cbxVariable.GetCount())
             else:
                 vr = range(self.cbxVariable.GetSelection(),
@@ -471,31 +461,39 @@ class TitleBar(bp.ButtonPanel):
             
             for variable in vr:
                 # report to status bar
-                self.parent.prnt.prnt.sbMain.SetStatusText('Calculating ' + \
-                                                           self.data['indlabels'][variable], 0)
+                msg = 'Calculating ' + self.data['indlabels'][variable]
+                self.parent.prnt.parent.sbMain.SetStatusText(msg, 0)
                 
                 # get column
                 if self.cbxData.GetSelection() == 0:
                     x = sp.take(self.data['rawtrunc'], [variable], 1)
                     xsel = 'raw'
                 elif self.cbxData.GetSelection() == 1:
-                    x = sp.take(self.data['proctrunc'], [variable], 1)
+                    x = np.take(self.data['proctrunc'], [variable], 1)
                     xsel = 'proc'
                     
                 # calculate correlation coefficient
-                r.append(sp.corrcoef(sp.reshape(x, (len(x),)),
+                r.append(np.corrcoef(np.reshape(x, (len(x), )),
                                      self.data['class'][:, 0])[0, 1])
                 
             # plot regression line
-            points = wx.lib.plot.PolyMarker(sp.transpose([self.data['class'][:, 0],
-                  sp.reshape(sp.take(self.data[xsel + 'trunc'],
-                  [self.cbxVariable.GetSelection()],1),(len(self.data[xsel + 'trunc']),))]),
-                  marker = 'square', fillstyle=wx.TRANSPARENT, colour='black', size=2)
-            pfit = sp.polyfit(self.data['class'][:,0], sp.reshape(sp.take(self.data[xsel + 'trunc'],
-                  [self.cbxVariable.GetSelection()],1), (len(self.data[xsel + 'trunc']),)), 1)
-            pval = sp.polyval(pfit, sp.sort(self.data['class'][:, 0]))
-            linear = wx.lib.plot.PolyLine(sp.transpose([sp.sort(self.data['class'][:, 0]),
-                                                        pval[:, nax]]), colour='black')
+            trunc = xsel + 'trunc'
+            xtrunc = self.data[trunc]
+            cbx_var = self.cbxVariable.GetSelection()
+            dclass = self.data['class'][:, 0]
+
+            points = PolyMarker(np.transpose([dclass, np.reshape(
+                np.take(xtrunc, [cbx_var], 1), (len(xtrunc), ))]),
+                                marker='square', fillstyle=wx.TRANSPARENT,
+                                colour='black', size=2)
+
+            pfit = np.polyfit(dclass, np.reshape(np.take(xtrunc, [cbx_var], 1),
+                                                 (len(xtrunc), )), 1)
+
+            pval = np.polyval(pfit, np.sort(dclass))
+
+            linear = PolyLine(np.transpose([np.sort(dclass), pval[:, nax]]),
+                              colour='black')
             if len(r) > 1:
                 self.data['plotp'] = r[self.cbxVariable.GetSelection()]
             else:
@@ -503,47 +501,51 @@ class TitleBar(bp.ButtonPanel):
 
             if self.data['plotp'] < 0:
                 coords = [[.75 * max(self.data['class'][:, 0]),
-                           .75 * max(sp.take(self.data[xsel + 'trunc'],
-                                     [self.cbxVariable.GetSelection()], 1))]]
+                           .75 * max(sp.take(xtrunc, [cbx_var], 1))]]
             else:
-                coords = [[.05*min(self.data['class'][:,0]),.75*min(sp.take(self.data[xsel + 'trunc'],
-                  [self.cbxVariable.GetSelection()],1))]]
+                coords = [[.05 * min(self.data['class'][:, 0]),
+                           .75 * min(sp.take(xtrunc, [cbx_var], 1))]]
+
             if pfit[1] < 0:
-                lineq = 'y = ' + '%.2f' % pfit[0] + 'x ' + '%.2f' %pfit[1] + \
+                lineq = 'y = ' + '%.2f' % pfit[0] + 'x ' + '%.2f' % pfit[1] + \
                       '; R = ' + '%.2f' % self.data['plotp']
             else:
-                lineq = 'y = ' + '%.2f' % pfit[0] + 'x + ' + '%.2f' %pfit[1] + \
+                lineq = 'y = ' + '%.2f' % pfit[0] + 'x + ' + '%.2f' % pfit[1] + \
                       ';R = ' + '%.2f' % self.data['plotp']
-            eq = PolyMarker(coords, labels = lineq, marker = 'text')
+
+            eq = PolyMarker(coords, labels=lineq, marker='text')
             self.parent.plcBoxplot.Draw(PlotGraphics([points, linear, eq],
                   title = 'Linear Regression', xLabel = 'Actual Value', 
                   yLabel = self.cbxVariable.GetStringSelection()))
             
             if len(r) > 1:
                 # plot +ve/-ve average spectrum, scaled with r
+
                 xaxis = self.data['xaxis']
+
+                xtrunc_mean = sp.mean(xtrunc, axis=0)[nax, :]
+
                 rplot = PolyLine(sp.transpose([sp.reshape(xaxis,
-                      (len(xaxis),)),sp.array(r)]), colour='blue',
+                      (len(xaxis), )), sp.array(r)]), colour='blue',
                       legend='Correlation Coefficient')
 
-                applot = PolyLine(sp.transpose([sp.reshape(xaxis,
-                                                (len(xaxis), )),
-                                                sp.reshape(scale01(sp.mean(self.data[xsel + 'trunc'],
-                                                                           axis=0)[nax, :]),
-                                                           (len(self.data['xaxis']), ))]),
-                                  colour='black',
-                                              legend='Average spectrum (+ve)')
-                anplot = PolyLine(sp.transpose([sp.reshape(self.data['xaxis'],
-                      (len(self.data['xaxis']),)), -sp.reshape(scale01(sp.mean(self.data[xsel + 'trunc'],
-                      axis=0)[nax, :]), (len(self.data['xaxis']),))]), colour='red',
-                                              legend='Average spectrum (-ve)')
+                applot = PolyLine(sp.transpose(
+                    [sp.reshape(xaxis, (len(xaxis), )),
+                     sp.reshape(scale01(xtrunc_mean), (len(xaxis), ))]),
+                    colour='black', legend='Average spectrum (+ve)')
+
+                anplot = PolyLine(sp.transpose(
+                    [sp.reshape(xaxis, (len(xaxis), )),
+                     -sp.reshape(scale01(xtrunc_mean), (len(xaxis), ))]),
+                    colour='red', legend='Average spectrum (-ve)')
+
                 self.parent.plcScatter.Draw(
                     PlotGraphics([rplot, applot, anplot], title='R-Summary',
                                  xLabel ='Arbitrary',
                                  yLabel='Intensity (a.u.) / R'))
                 
         # save test used
-        self.data['utest'] = [self.cbxTest.GetSelection(),self.cbxData.GetSelection()]
+        self.data['utest'] = [cbx_test, cbx_data]
             
     def PlotResults(self, x, p, ugrp, colours, psum=False):
         # boxplot
@@ -552,7 +554,9 @@ class TitleBar(bp.ButtonPanel):
                 title='Box and Whisker Plot: p = ' + '%.2g' % p)
         
         # scatter plot
-        plotScores(self.parent.plcScatter, x, cl=self.data['class'][:, 0],
+        cl = self.data['class'][:, 0]
+        print('data_class -> ', self.data['class'][:5])
+        plotScores(self.parent.plcScatter, x, cl=cl,
                    labels=self.data['label'],
                    validation=self.data['validation'],
                    col1=0, col2=0, title='Scatter Plot',
@@ -601,38 +605,36 @@ class TitleBar(bp.ButtonPanel):
             self.parent.plcRoc.enableLegend = False
         
         # draw roc
-        self.parent.plcRoc.Draw(PlotGraphics(rocPlot,
-                                             title='Receiver Operating Characteristic',
-                                             xLabel='False Positive',
-                                             yLabel='True Positive'))
+        self.parent.plcRoc.Draw(
+            PlotGraphics(rocPlot, title='Receiver Operating Characteristic',
+                         xLabel='False Positive', yLabel='True Positive'))
         
         # plot p-value vs. area under roc
         if psum:
             pRoc = []
             chkSum = 0
             for each in range(len(ugrp)):
-                aslice = self.data['p_aur'][sp.asarray(self.data['p_aur'][:, 0],
-                                                       dtype='i') == each, :]
+                mask = np.asarray(self.data['p_aur'][:, 0], dtype='i') == each
+                aslice = self.data['p_aur'][mask, :]
                 if len(aslice) > 0:
-                    pRoc.append(PolyMarker(sp.asarray(slice[:, 1:3],
+                    pRoc.append(PolyMarker(np.asarray(aslice[:, 1:3],
                                                       dtype='float64'),
                                            marker='circle',
-                                           colour=wx.Colour(slice[0, 3]),
-                                           fillcolour=wx.Colour(slice[0, 3]),
+                                           colour=wx.Colour(aslice[0, 3]),
+                                           fillcolour=wx.Colour(aslice[0, 3]),
                                            size=1, legend=ugrp[each]))
 
-                    pRoc.append(PolyMarker(sp.asarray(aslice[:, 1:3],
+                    pRoc.append(PolyMarker(np.asarray(aslice[:, 1:3],
                                                       dtype='float64'),
                                            marker='text',
-                                           labels=slice[:, 4],
+                                           labels=aslice[:, 4],
                                            colour=wx.Colour(aslice[0, 3])))
                 chkSum += len(aslice)
             #
             if chkSum > 0:
-                self.parent.plcPsumm.Draw(PlotGraphics(pRoc,
-                                                       title='p-value vs. Area under ROC',
-                                                       xLabel='log(p)',
-                                                       yLabel='Area under ROC'))
+                self.parent.plcPsumm.Draw(
+                    PlotGraphics(pRoc, title='p-value vs. Area under ROC',
+                                 xLabel='log(p)', yLabel='Area under ROC'))
 
     def _angle_to_point(self, point, centre):
         """calculate angle in 2-D between points and x axis"""

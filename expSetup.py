@@ -23,6 +23,7 @@ import os
 from wx.lib.anchors import LayoutAnchors
 from mva.chemometrics import _sample
 from mva.chemometrics import _index
+from commons import error_box
 
 [wxID_EXPSETUP, ID_BTNIMPIND, BTNINSRANGE, 
 ] = [wx.NewId() for _init_indbtnpanel_ctrls in range(3)]
@@ -35,14 +36,6 @@ from mva.chemometrics import _index
 [ID_BTNADDNAME, ID_BTNADDCLASS, ID_BTNADDMASK,
 ] = [wx.NewId() for _init_depbtnpanel_ctrls in range(3)]
 
-def error_box(window, error):
-    dlg = wx.MessageDialog(window, 
-      ''.join(('The following error occured:\n\n',error)),
-      'Error!', wx.OK | wx.ICON_ERROR)
-    try:
-        dlg.ShowModal()
-    finally:
-        dlg.Destroy()
 
 def valSplit(grid, data, pc, trunc='yes'):
     #get class col(s)
@@ -878,16 +871,16 @@ class IndTitleBar(bp.ButtonPanel):
                         finally:
                             dlg.Destroy()
             except Exception as error:
-                error_box(self,'%s' %str(error))
+                error_box(self,'%s' % str(error))
                 dlg.Destroy()
                 raise
 
     def OnBtnInsertRangeButton(self, event):
         if self.stcRangeFrom.GetValue() and self.stcRangeTo.GetValue() not in ['']:
             self.grid.AppendCols(1)
-##            #keep indexing up to date
-##            self.data['indvarsel'].append(max(sp.array(self.data['indvarsel']))+1)
-            #check for user def vars
+            # keep indexing up to date
+            # self.data['indvarsel'].append(max(sp.array(self.data['indvarsel']))+1)
+            # check for user def vars
             countpos = 0
             for r in range(1,self.grid.GetNumberRows()):
                 if len(self.grid.GetRowLabelValue(r).split('U')) > 1:

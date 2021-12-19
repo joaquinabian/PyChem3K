@@ -21,13 +21,13 @@ from wx.lib.plot import PolyMarker, PlotGraphics, PolyLine
 
 import scipy as sp
 import numpy as np
-import string
 import os
 import mva.chemometrics
+from commons import error_box
 
 from mva.chemometrics import _index
 from mva.chemometrics import _put
-from mva.chemometrics import _BW
+from mva.chemometrics import _bw
 from numpy import newaxis as nA
 from Pca import plotLine
 from Pca import plotStem
@@ -47,17 +47,9 @@ from Pca import PlotPlsModel
  wxID_PLSRSTUSE, wxID_PLSRTXTPLSSTATS, 
 ] = [wx.NewId() for _init_ctrls in range(21)]
 
-def error_box(window, error):
-    dlg = wx.MessageDialog(window, 
-      ''.join(('The following error occured:\n\n',error)),
-      'Error!', wx.OK | wx.ICON_ERROR)
-    try:
-        dlg.ShowModal()
-    finally:
-        dlg.Destroy()
 
 class Plsr(wx.Panel):
-    #partial least squares regression
+    # partial least squares regression
     
     def _init_coll_bxsPls2_Items(self, parent):
         # generated method, don't edit

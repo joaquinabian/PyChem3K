@@ -22,6 +22,7 @@ import scipy as sp
 import string
 import os
 import mva.chemometrics
+from commons import error_box
 
 from Bio.Cluster import *
 from mva.chemometrics import _index
@@ -42,14 +43,6 @@ from Pca import MyPlotCanvas
  wxID_SELFUNSTNOPASS, 
 ] = [wx.NewId() for _init_selfun_ctrls in range(25)]
 
-def error_box(window, error):
-    dlg = wx.MessageDialog(
-        window, ''.join(('The following error occured:\n\n', error)),
-        'Error!', wx.OK | wx.ICON_ERROR)
-    try:
-        dlg.ShowModal()
-    finally:
-        dlg.Destroy()
 
 class Cluster(wx.Panel):
     def _init_coll_bxsClust1_Items(self, parent):
@@ -376,8 +369,8 @@ class TitleBar(bp.ButtonPanel):
             raise
 
     def treestructure(self, tree, order):
-        #determine hierarchical tree structure
-        clusters,nodedist = [],[]
+        # determine hierarchical tree structure
+        clusters,nodedist = [], []
         nodes = tree[:]
         
         for i in range(len(tree)):
