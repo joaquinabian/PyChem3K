@@ -35,7 +35,7 @@ from Pca import plotScores
 from Pca import plotLoads
 from Pca import MyPlotCanvas
 from Pca import PlotPlsModel
-from expSetup import valSplit
+from exp_setup import val_split
 from commons import error_box
 
 
@@ -526,8 +526,8 @@ class TitleBar(bp.ButtonPanel):
                 for nF in range(1, _attr['resample']):
                     # split in to training and test
                     mask = np.concatenate(
-                        (mask, np.array(valSplit(self.grid, self.data,
-                                                 self.pcSplit))[:, nax]), 1)
+                        (mask, np.array(val_split(self.grid, self.data,
+                                                  self.pcSplit))[:, nax]), 1)
                 
             # Run DFA - set containers
             scoreList = [] 
@@ -952,9 +952,10 @@ class SelParam(fpb.FoldPanelBar):
         self.SetAutoLayout(True)
         
         icons = wx.ImageList(16, 16)
-        bmp = wx.Bitmap(os.path.join('bmp', 'arrown.png'))
-        icons.Add(bmp, wx.BITMAP_TYPE_PNG)
-        icons.Add(bmp, wx.BITMAP_TYPE_PNG)
+        bmp = wx.Bitmap(os.path.join('bmp', 'arrown.png'), wx.BITMAP_TYPE_PNG)
+        icons.Add(bmp)
+        bmp = wx.Bitmap(os.path.join('bmp', 'arrows.png'), wx.BITMAP_TYPE_PNG)
+        icons.Add(bmp)
         
         self.fpParams = self.AddFoldPanel("Parameters", collapsed=True, 
                                           foldIcons=icons)

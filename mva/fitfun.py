@@ -1,4 +1,4 @@
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # Name:        fitfun.py
 # Purpose:     
 #
@@ -9,29 +9,28 @@
 # Copyright:   (c) 2006
 # Licence:     GNU General Public License
 # Description: Fitness functions for use in genetic algorithm optimisation
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 
-import string, copy
-import scipy as sp
 from mva.process import *
 from mva.chemometrics import *
 from mva.chemometrics import _split
 from mva.chemometrics import _slice
 from mva.chemometrics import _index
-from mva.chemometrics import _diag
 from mva.chemometrics import _put
 from mva.chemometrics import _flip
 from mva.chemometrics import _bw
 from mva.genetic import _remdup
-from expSetup import valSplit
+
+import numpy as np
 from numpy import newaxis as nax
+
 
 def _group(x, mrep):
     grp = []
     for n in range(1, x.shape[0]/mrep+1, 1):
         for cnt in range(0, mrep, 1):
             grp.append(n)
-    return sp.reshape(sp.asarray(grp, 'i'), (len(grp), 1))
+    return np.reshape(np.asarray(grp, 'i'), (len(grp), 1))
 
 def call_dfa(chrom, xdata, DFs, mask, data):
     """Runs DFA on subset of variables from "xdata" as 
@@ -41,28 +40,31 @@ def call_dfa(chrom, xdata, DFs, mask, data):
     Y = []
     for x in range(len(chrom)):
         if _remdup(chrom[x]) == 0:
-            #extract vars from xdata
-            slice = meancent(_slice(xdata, chrom[x]))
+            # extract vars from xdata
+            aslice = meancent(_slice(xdata, chrom[x]))
             collate = 0
             for nF in range(mask.shape[1]):
-                #split in to training and test
-                tr_slice, cv_slice, ts_slice, tr_grp, cv_grp, ts_grp, tr_nm, cv_nm, ts_nm=_split(slice,
-                      data['class'][:, 0], mask[:, nF].tolist(), data['label'])
+                # split in to training and test
+                tr_slice, cv_slice, ts_slice, tr_grp, \
+                cv_grp, ts_grp, tr_nm, cv_nm, ts_nm = \
+                    _split(aslice, data['class'][:, 0], mask[:, nF].tolist(),
+                           data['label'])
                 
                 try:
                     u, v, eigs, dummy = cva(tr_slice, tr_grp, DFs)
-                    projU = sp.dot(cv_slice, v)
-                    u = sp.concatenate((u, projU), 0)
-                    group2 = sp.concatenate((tr_grp, cv_grp), 0)
+                    projU = np.dot(cv_slice, v)
+                    u = np.concatenate((u, projU), 0)
+                    group2 = np.concatenate((tr_grp, cv_grp), 0)
             
                     B, W = _bw(u, group2)
                     L, A = sp.linalg.eig(B, W)
-                    order =  _flip(sp.argsort(sp.reshape(L.real, (len(L), ))))
-                    Ls =  _flip(sp.sort(L.real))
+                    order = _flip(np.argsort(np.reshape(L.real, (len(L), ))))
+                    Ls = _flip(np.sort(L.real))
                     eigval = Ls[0:DFs]
                     
                     collate += sum(eigval)
-                except:
+                except ValueError:
+                    raise
                     continue
                 
             if collate != 0:
@@ -72,34 +74,35 @@ def call_dfa(chrom, xdata, DFs, mask, data):
         else:
             Y.append(10.0**5)
             
-    return sp.array(Y)[:, nax]
+    return np.array(Y)[:, nax]
 
 
 def rerun_dfa(chrom, xdata, mask, groups, names, DFs):
     """Run DFA in min app"""
-    #extract vars from xdata
-    slice = meancent(_slice(xdata, chrom))
+    # extract vars from xdata
+    aslice = meancent(_slice(xdata, chrom))
     
-    #split in to training and test
-    tr_slice, cv_slice, ts_slice, tr_grp, cv_grp, ts_grp, tr_nm, cv_nm, ts_nm=_split(slice, groups, mask, names)
+    # split in to training and test
+    tr_slice, cv_slice, ts_slice, tr_grp, cv_grp, ts_grp, tr_nm, cv_nm, ts_nm = \
+        _split(aslice, groups, mask, names)
     
-    #get indexes
-    idx = sp.arange(xdata.shape[0])[:, nax]
-    tr_idx = sp.take(idx, _index(mask, 0), 0)
-    cv_idx = sp.take(idx, _index(mask, 1), 0)
-    ts_idx = sp.take(idx, _index(mask, 2), 0)
+    # get indexes
+    idx = np.arange(xdata.shape[0])[:, nax]
+    tr_idx = np.take(idx, _index(mask, 0), 0)
+    cv_idx = np.take(idx, _index(mask, 1), 0)
+    ts_idx = np.take(idx, _index(mask, 2), 0)
     
-    #model DFA on training samples
+    # model DFA on training samples
     u, v, eigs, dummy = cva(tr_slice, tr_grp, DFs)
     
-    #project xval and test samples
-    projUcv = sp.dot(cv_slice, v)
-    projUt = sp.dot(ts_slice, v)
+    # project xval and test samples
+    projUcv = np.dot(cv_slice, v)
+    projUt = np.dot(ts_slice, v)
     
-    uout = sp.zeros((xdata.shape[0], DFs), 'd')
-    _put(uout, sp.reshape(tr_idx, (len(tr_idx), )).tolist(), u)
-    _put(uout, sp.reshape(cv_idx, (len(cv_idx), )).tolist(), projUcv)
-    _put(uout, sp.reshape(ts_idx, (len(ts_idx), )).tolist(), projUt)
+    uout = np.zeros((xdata.shape[0], DFs), 'd')
+    _put(uout, np.reshape(tr_idx, (len(tr_idx), )).tolist(), u)
+    _put(uout, np.reshape(cv_idx, (len(cv_idx), )).tolist(), projUcv)
+    _put(uout, np.reshape(ts_idx, (len(ts_idx), )).tolist(), projUt)
     
     return uout, v, eigs
 
@@ -110,19 +113,20 @@ def call_pls(chrom, xdata, factors, mask, data):
     
     for i in range(chrom.shape[0]):
         if _remdup(chrom[i]) == 0:
-            #extract vars from xdata
-            slice = sp.take(xdata, chrom[i, :].tolist(), 1)
+            # extract vars from xdata
+            aslice = np.take(xdata, chrom[i, :].tolist(), 1)
             collate = 0
             for nF in range(mask.shape[1]):
-                #split in to training and test
+                # split in to training and test
                 try:
-                    pls_output = pls(slice, data['class'][:, 0][:, nax], mask[:, nF].tolist(), factors)
+                    pls_output = pls(aslice, data['class'][:, 0][:, nax], mask[:, nF].tolist(), factors)
                     
                     if min(pls_output['rmsec']) <= min(pls_output['rmsepc']):
                         collate += pls_output['RMSEPC']
                     else:
                         collate += 10.0**5
-                except:
+                except ValueError:
+                    raise
                     collate = 0
                 
             if collate != 0:
@@ -132,15 +136,16 @@ def call_pls(chrom, xdata, factors, mask, data):
         else:
             scores.append(10.0**5)
             
-    return sp.asarray(scores)[:, nax]
+    return np.asarray(scores)[:, nax]
 
 def rerun_pls(chrom, xdata, groups, mask, factors):
     """rerun pls on a subset of X-variables"""
     
-    slice = sp.take(xdata, chrom, 1)
+    aslice = np.take(xdata, chrom, 1)
     
-    return pls(slice, groups, mask, factors)
+    return pls(aslice, groups, mask, factors)
 
-if __name__=="__main__":
-    import fitfun, doctest
+if __name__ == "__main__":
+    import fitfun
+    import doctest
     doctest.testmod(fitfun, verbose=True)

@@ -12,14 +12,11 @@
 
 import wx
 import wx.lib.buttons
-import wx.lib.plot
 from wx.lib.stattext import GenStaticText
 import wx.lib.agw.buttonpanel as bp
 from wx.lib.anchors import LayoutAnchors
-from wx.lib.plot import PolyMarker, PlotGraphics, PolyLine
+from wx.lib.plot import PlotGraphics, PolyLine
 
-
-import scipy as sp
 import numpy as np
 import os
 from mva import chemometrics as chemtrics
@@ -27,10 +24,8 @@ from commons import error_box
 
 from mva.chemometrics import _index
 from numpy import newaxis as nax
-from Bio.Cluster import *
+from Bio.Cluster import treecluster
 from Pca import plotLine
-from Pca import plotStem
-from Pca import plotText
 from Pca import plotScores
 from Pca import plotLoads
 from Pca import SetButtonState
@@ -52,7 +47,7 @@ from Pca import MyPlotCanvas
 
 class Dfa(wx.Panel):
     # discriminant function analysis
-    def _init_coll_grsDfa_Items(self, parent):
+    def _init_coll_grs_dfa(self, parent):
         # generated method, don't edit
 
         parent.Add(self.plcDFAscores, 0, border=0, flag=wx.EXPAND)
@@ -60,12 +55,12 @@ class Dfa(wx.Panel):
         parent.Add(self.plcDfaCluster, 0, border=0, flag=wx.EXPAND)
         parent.Add(self.plcDFAeigs, 0, border=0, flag=wx.EXPAND)
 
-    def _init_coll_bxsDfa1_Items(self, parent):
+    def _init_coll_bxs_dfa1(self, parent):
         # generated method, don't edit
 
         parent.Add(self.bxsDfa2, 1, border=0, flag=wx.EXPAND)
 
-    def _init_coll_bxsDfa2_Items(self, parent):
+    def _init_coll_bxs_dfa2(self, parent):
         # generated method, don't edit
 
         parent.Add(self.titleBar, 0, border=0, flag=wx.EXPAND)
@@ -79,9 +74,9 @@ class Dfa(wx.Panel):
 
         self.grsDfa = wx.GridSizer(cols=2, hgap=2, rows=2, vgap=2)
 
-        self._init_coll_bxsDfa1_Items(self.bxsDfa1)
-        self._init_coll_bxsDfa2_Items(self.bxsDfa2)
-        self._init_coll_grsDfa_Items(self.grsDfa)
+        self._init_coll_bxs_dfa1(self.bxsDfa1)
+        self._init_coll_bxs_dfa2(self.bxsDfa2)
+        self._init_coll_grs_dfa(self.grsDfa)
 
         self.SetSizer(self.bxsDfa1)
 
@@ -146,8 +141,7 @@ class Dfa(wx.Panel):
         self.plcDfaCluster.xSpec = 'none'
         self.plcDfaCluster.ySpec = 'none'
         self.plcDfaCluster.SetConstraints(
-            LayoutAnchors(self.plcDfaCluster, True,
-                          True, False, True))
+            LayoutAnchors(self.plcDfaCluster, True, True, False, True))
         self.plcDfaCluster.fontSizeLegend = 8
 
         self.titleBar = TitleBar(self, id=-1,
@@ -159,7 +153,6 @@ class Dfa(wx.Panel):
 
     def __init__(self, parent, id_, pos, size, style, name):
         self._init_ctrls(parent)
-
         self.parent = parent
 
     def reset(self):
@@ -179,7 +172,7 @@ class Dfa(wx.Panel):
                          colour='white', width=1, style=wx.TRANSPARENT)
 
         for each in objects.keys():
-            cmd = ('self.%s.Draw(wx.lib.plot.PlotGraphics([curve], '
+            cmd = ('self.%s.Draw(PlotGraphics([curve], '
                    'objects["%s"][0], objects["%s"][1], objects["%s"][2]))')
             exec(cmd % (each, each, each, each))
 
@@ -262,6 +255,8 @@ class TitleBar(bp.ButtonPanel):
 
         self._init_btnpanel_ctrls(parent)
         self.parent = parent
+        self.data = None
+        self.draw_dfa_eig = None
         self.create_buttons()
 
     def create_buttons(self):
@@ -301,9 +296,9 @@ class TitleBar(bp.ButtonPanel):
         background = self.GetBackgroundColour()
         bpArt.SetColour(bp.BP_TEXT_COLOUR, wx.BLUE)
         bpArt.SetColour(bp.BP_BORDER_COLOUR,
-                       bp.BrightenColour(background, 0.85))
+                        bp.BrightenColour(background, 0.85))
         bpArt.SetColour(bp.BP_SEPARATOR_COLOUR,
-                       bp.BrightenColour(background, 0.85))
+                        bp.BrightenColour(background, 0.85))
         bpArt.SetColour(bp.BP_BUTTONTEXT_COLOUR, wx.BLACK)
         bpArt.SetColour(bp.BP_SELECTION_BRUSH_COLOUR, wx.Colour(242, 242, 235))
         bpArt.SetColour(bp.BP_SELECTION_PEN_COLOUR, wx.Colour(206, 206, 195))
@@ -324,6 +319,10 @@ class TitleBar(bp.ButtonPanel):
                     self.spnDfaPcs.SetValue(self.data['plst'].shape[1])
 
     def on_run_dfa(self, _):
+        xdata, loads, xvaldata = None, None, None
+        scores, eigs = None, None
+        tbar = self.parent.prnt.prnt.plPca.titleBar
+        klass = self.data['class'][:, 0]
         try:
             # run discriminant function analysis
             if self.cbxData.GetSelection() == 0:
@@ -339,15 +338,15 @@ class TitleBar(bp.ButtonPanel):
 
             # if using xval
             # select data
-            if self.parent.prnt.prnt.plPca.titleBar.cbxData.GetSelection() == 0:
+            if tbar.cbxData.GetSelection() == 0:
                 xvaldata = self.data['rawtrunc']
-            elif self.parent.prnt.prnt.plPca.titleBar.cbxData.GetSelection() == 1:
+            elif tbar.cbxData.GetSelection() == 1:
                 xvaldata = self.data['proctrunc']
 
             # select pca method
-            if self.parent.prnt.prnt.plPca.titleBar.cbxPcaType.GetSelection() == 0:
+            if tbar.cbxPcaType.GetSelection() == 0:
                 self.data['niporsvd'] = 'nip'
-            elif self.parent.prnt.prnt.plPca.titleBar.cbxPcaType.GetSelection() == 1:
+            elif tbar.cbxPcaType.GetSelection() == 1:
                 self.data['niporsvd'] = 'svd'
 
             # check appropriate number of pcs/dfs
@@ -355,12 +354,12 @@ class TitleBar(bp.ButtonPanel):
                 self.spnDfaDfs.SetValue(self.spnDfaPcs.GetValue() - 1)
 
             # check for pca preproc method
-            if self.parent.prnt.prnt.plPca.titleBar.cbxPreprocType.GetSelection() == 0:
+            if tbar.cbxPreprocType.GetSelection() == 0:
                 self.data['pcatype'] = 'covar'
-            elif self.parent.prnt.prnt.plPca.titleBar.cbxPreprocType.GetSelection() == 1:
+            elif tbar.cbxPreprocType.GetSelection() == 1:
                 self.data['pcatype'] = 'corr'
 
-            # Reset controls
+            # reset controls
             self.spnDfaScore1.Enable(1)
             self.spnDfaScore2.Enable(1)
             self.spnDfaScore1.SetRange(1, self.spnDfaDfs.GetValue())
@@ -373,21 +372,19 @@ class TitleBar(bp.ButtonPanel):
                 # just a fix to recover original loadings when using PC-DFA
                 if self.cbxData.GetSelection() > 1:
                     scores, loads, eigs, _ = \
-                        chemtrics.cva(xdata, self.data['class'][:, 0],
-                                      self.spnDfaDfs.GetValue())
+                        chemtrics.cva(xdata, klass, self.spnDfaDfs.GetValue())
                 else:
                     scores, _, eigs, loads = \
-                        chemtrics.cva(xdata, self.data['class'][:, 0],
-                                      self.spnDfaDfs.GetValue(),
+                        chemtrics.cva(xdata, klass, self.spnDfaDfs.GetValue(),
                                       loads[0:self.spnDfaPcs.GetValue(), :])
 
             elif self.cbDfaXval.GetValue():
                 if self.cbxData.GetSelection() > 1:
                     # run dfa
                     scores, loads, eigs = \
-                        chemtrics.dfa_xvalraw(xdata, self.data['class'][:, 0],
-                                              self.data['validation'],
-                                              self.spnDfaDfs.GetValue())
+                        chemtrics.dfa_xval_raw(xdata, klass,
+                                               self.data['validation'],
+                                               self.spnDfaDfs.GetValue())
 
                 elif self.cbxData.GetSelection() == 0:
                     # run pc-dfa
@@ -395,7 +392,7 @@ class TitleBar(bp.ButtonPanel):
                         scores, loads, eigs = \
                             chemtrics.dfa_xval_pca(xvaldata, 'NIPALS',
                                                    self.spnDfaPcs.GetValue(),
-                                                   self.data['class'][:, 0],
+                                                   klass,
                                                    self.data['validation'],
                                                    self.spnDfaDfs.GetValue(),
                                                    ptype=self.data['pcatype'])
@@ -404,7 +401,7 @@ class TitleBar(bp.ButtonPanel):
                         scores, loads, eigs = \
                             chemtrics.dfa_xval_pca(xvaldata, 'SVD',
                                                    self.spnDfaPcs.GetValue(),
-                                                   self.data['class'][:, 0],
+                                                   klass,
                                                    self.data['validation'],
                                                    self.spnDfaDfs.GetValue(),
                                                    ptype=self.data['pcatype'])
@@ -415,7 +412,7 @@ class TitleBar(bp.ButtonPanel):
                         chemtrics.dfa_xval_pls(self.data['plst'],
                                                self.data['plsloads'],
                                                self.spnDfaPcs.GetValue(),
-                                               self.data['class'][:, 0],
+                                               klass,
                                                self.data['validation'],
                                                self.spnDfaDfs.GetValue())
 
@@ -432,7 +429,7 @@ class TitleBar(bp.ButtonPanel):
 
     def on_exp_dfa(self, _):
         dlg = wx.FileDialog(self, "Choose a file", ".", "",
-                            "Any files (*.*)|*.*", wx.SAVE)
+                            "Any files (*.*)|*.*", wx.FD_SAVE)
         try:
             if dlg.ShowModal() == wx.ID_OK:
                 saveFile = dlg.GetPath()
@@ -456,7 +453,7 @@ class TitleBar(bp.ButtonPanel):
                        self.spnDfaScore2.GetValue(),
                        self.parent.prnt.prnt.tbMain)
 
-    def on_spn_dfa_score2(self, event):
+    def on_spn_dfa_score2(self, _):
         self.plot_dfa()
         SetButtonState(self.spnDfaScore1.GetValue(),
                        self.spnDfaScore2.GetValue(),
@@ -512,23 +509,23 @@ class TitleBar(bp.ButtonPanel):
             mSn.append(
                 self.data['label'][_index(self.data['class'][:, 0], each)[0]])
 
-        tree = cluster.treecluster(data=mS, method='m', dist='e')
+        tree = treecluster(data=mS, method='m', dist='e')
         tree, order = self.parent.prnt.prnt.plCluster.titleBar.treestructure(
             tree,
             np.arange(len(tree) + 1))
-        self.parent.prnt.prnt.plCluster.titleBar.drawTree(
+        self.parent.prnt.prnt.plCluster.titleBar.draw_tree(
             self.parent.plcDfaCluster,
             tree, order, mSn, tit='Hierarchical Cluster Analysis',
             xL='Euclidean Distance', yL='Sample')
 
         # Plot eigs
-        self.DrawDfaEig = plotLine(self.parent.plcDFAeigs, self.data['dfeigs'],
-                                   xaxis=np.arange(1, self.data['dfeigs'].shape[
+        self.draw_dfa_eig = plotLine(self.parent.plcDFAeigs, self.data['dfeigs'],
+                                     xaxis=np.arange(1, self.data['dfeigs'].shape[
                                        1] + 1)[:, nax], rownum=0,
-                                   tit='Eigenvalues',
-                                   xLabel='Discriminant Function',
-                                   yLabel='Eigenvalues', wdth=3, type='single',
-                                   ledge=[])
+                                     tit='Eigenvalues',
+                                     xLabel='Discriminant Function',
+                                     yLabel='Eigenvalues', wdth=3, type='single',
+                                     ledge=[])
 
         # make sure ctrls enabled
         self.spnDfaScore1.Enable(True)

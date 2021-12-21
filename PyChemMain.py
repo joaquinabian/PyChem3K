@@ -28,7 +28,7 @@ from wx.lib.anchors import LayoutAnchors
 from wx.lib.stattext import GenStaticText
 from wx.adv import AboutDialogInfo, SashWindow, SW_3D, AboutBox
 
-import expSetup
+import exp_setup
 import plotSpectra
 import Pca
 import Cluster
@@ -877,7 +877,7 @@ class PyChemMain(wx.Frame):
         parent.Append(helpString='', id=MNUGRIDDELETECOL, kind=wx.ITEM_NORMAL,
                       item='Delete column')
         parent.Append(helpString='', id=MNUGRIDRESETSORT, kind=wx.ITEM_NORMAL,
-                      item='Reset row sort')
+                      item='reset row sort')
         self.Bind(wx.EVT_MENU, self.OnMnuGridCopy,
                   id=MNUGRIDCOPY)
         self.Bind(wx.EVT_MENU, self.OnMnuGridPaste,
@@ -956,12 +956,12 @@ class PyChemMain(wx.Frame):
         self.SetToolBar(self.tbMain)
         self.tbMain.Realize()
 
-        self.plExpset = expSetup.expSetup(id=wxID_PCMPLEXPSET,
-                                          name='plExpset',
-                                          parent=self.nbMain,
-                                          pos=wx.Point(0, 0),
-                                          size=wx.Size(1008, 635),
-                                          style=wx.TAB_TRAVERSAL)
+        self.plExpset = exp_setup.ExpSetup(id=wxID_PCMPLEXPSET,
+                                           name='plExpset',
+                                           parent=self.nbMain,
+                                           pos=wx.Point(0, 0),
+                                           size=wx.Size(1008, 635),
+                                           style=wx.TAB_TRAVERSAL)
         self.plExpset.getFrame(self)
         self.plExpset.SetToolTip('')
 
@@ -1208,10 +1208,10 @@ class PyChemMain(wx.Frame):
                 self.data['proctrunc'] = self.data['raw']
 
                 # Resize grids
-                expSetup.ResizeGrids(self.plExpset.grdNames,
-                                     self.data['raw'].shape[0], 3, 2)
-                expSetup.ResizeGrids(self.plExpset.grdIndLabels,
-                                     self.data['raw'].shape[1], 0, 3)
+                exp_setup.ResizeGrids(self.plExpset.grdNames,
+                                      self.data['raw'].shape[0], 3, 2)
+                exp_setup.ResizeGrids(self.plExpset.grdIndLabels,
+                                      self.data['raw'].shape[1], 0, 3)
 
                 # activate ctrls
                 self.EnableCtrls()
@@ -1227,7 +1227,7 @@ class PyChemMain(wx.Frame):
                     'raw'].shape[0])
 
                 # Calculate Xaxis
-                self.data['xaxis'] = expSetup.GetXaxis(
+                self.data['xaxis'] = exp_setup.get_xaxis(
                     self.plExpset.indTitleBar.stcRangeFrom.GetValue(),
                     self.plExpset.indTitleBar.stcRangeTo.GetValue(),
                     self.data['raw'].shape[1],
@@ -1528,7 +1528,7 @@ class PyChemMain(wx.Frame):
         self.plPls.Reset()
         self.plGadfa.Reset()
         self.plGapls.Reset()
-        self.plUnivariate.Reset()
+        self.plUnivariate.reset()
 
         # make data dictionary available to modules
         self.plExpset.depTitleBar.get_data(self.data)
@@ -1918,7 +1918,7 @@ class PyChemMain(wx.Frame):
         c = len(rows[0].split('\t')) - 2
 
         # size grid accordingly
-        expSetup.ResizeGrids(self.plExpset.grdIndLabels, r, c - 1, dtype=-1)
+        exp_setup.ResizeGrids(self.plExpset.grdIndLabels, r, c - 1, dtype=-1)
 
         # add column labels
         cl = rows[0].split('\t')
@@ -1959,7 +1959,7 @@ class PyChemMain(wx.Frame):
                     # size grid accordingly
                     if item.tag in ['plExpset.grdNames']:
                         exec(
-                            'expSetup.ResizeGrids(self.' + item.tag + ', r, c-1, dtype=0)')
+                            'exp_setup.ResizeGrids(self.' + item.tag + ', r, c-1, dtype=0)')
 
                         # add column labels
                         cl = rows[0].split('\t')
@@ -1988,7 +1988,7 @@ class PyChemMain(wx.Frame):
                                 break
                         # Validation column renderer for grdnames
                         #     if grid == self.plExpset.grdNames:
-                        expSetup.SetValidationEditor(grid)
+                        exp_setup.set_validation_editor(grid)
 
                     else:  # just set check boxes for grdindlabels
                         for row in range(1, len(rows) - 1):
@@ -2122,7 +2122,7 @@ class PyChemMain(wx.Frame):
                 for item in getVars:
                     if (item.tag == 'doClustering') & (
                             item.text == '1') is True:
-                        self.plCluster.titleBar.RunClustering()
+                        self.plCluster.titleBar.run_cluster()
                     elif (item.tag == 'doPlsr') & (item.text == '1') is True:
                         self.plPls.titleBar.runPls()
                     elif (item.tag == 'doUni') & (item.text != '0') is True:
@@ -2139,22 +2139,22 @@ class PyChemMain(wx.Frame):
                                 self.plUnivariate.titleBar.cbxTest.GetSelection(),
                                 self.plUnivariate.titleBar.cbxData.GetSelection()]
                             self.plUnivariate._init_class_sizers()
-                            self.plUnivariate.titleBar.PlotResults(x, float(
+                            self.plUnivariate.titleBar.plot_results(x, float(
                                 item.text),
-                                                                   sp.unique(
+                                                                    sp.unique(
                                                                        sp.array(
                                                                            self.data[
                                                                                'label'])),
-                                                                   ['black',
+                                                                    ['black',
                                                                     'blue',
                                                                     'red',
                                                                     'cyan',
                                                                     'green'],
-                                                                   psum=True)
+                                                                    psum=True)
                         else:
                             self.data['utest'] = None
                             self.plUnivariate._init_corr_sizers()
-                            self.plUnivariate.titleBar.RunUnivariate()
+                            self.plUnivariate.titleBar.run_univariate()
 
         # unlock ctrls
         self.EnableCtrls()
@@ -2238,7 +2238,6 @@ class PyChemMain(wx.Frame):
                                     countSample, classCols] = float(
                                     self.plExpset.grdNames.GetCellValue(j, i))
                             except ValueError:
-                                print('VErr PCM 2229',)
                                 pass
                             countSample += 1
                     classCols += 1

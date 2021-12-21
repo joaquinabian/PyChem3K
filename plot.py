@@ -2178,7 +2178,7 @@ class TestFrame(wx.Frame):
         self.Bind(wx.EVT_MENU, self.OnScrUp, id=225)
         menu.Append(230, 'Scroll Rt 2', 'Move View Right 2 Units')
         self.Bind(wx.EVT_MENU, self.OnScrRt, id=230)
-        menu.Append(235, '&Plot Reset', 'Reset to original plot')
+        menu.Append(235, '&Plot reset', 'reset to original plot')
         self.Bind(wx.EVT_MENU, self.OnReset, id=235)
 
         self.mainmenu.Append(menu, '&Plot')

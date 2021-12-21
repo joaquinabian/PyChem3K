@@ -643,7 +643,7 @@ class selFun(wx.Panel):
         self.tb.SetToolBitmapSize((16, 16))
         self.tb.AddTool(10, "Add Method", new_bmp, "Add Method'")
         self.tb.AddTool(20, "Delete Method", del_bmp, "Delete Method'")
-#        self.tb.AddTool(30, ref_bmp, "Reset", "Reset")
+#        self.tb.AddTool(30, ref_bmp, "reset", "reset")
         self.tb.Bind(wx.EVT_TOOL, self.on_new_meth, id=10)
         self.tb.Bind(wx.EVT_TOOL, self.on_new_meth, id=20)
         

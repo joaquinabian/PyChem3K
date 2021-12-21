@@ -80,10 +80,10 @@ def CreateSymColSelect(canvas, output):
     count = 0
     # apply button
     spuw.btnApply = wx.Button(spuw, wx.NewId(), 'Apply')
-    spuw.Bind(wx.EVT_BUTTON, spuw.OnBtnApply, spuw.btnApply)
+    spuw.Bind(wx.EVT_BUTTON, spuw.on_btn_apply, spuw.btnApply)
     # close button
     spuw.btnClose = wx.Button(spuw, wx.NewId(), 'Close')
-    spuw.Bind(wx.EVT_BUTTON, spuw.OnBtnClose, spuw.btnClose)
+    spuw.Bind(wx.EVT_BUTTON, spuw.on_btn_close, spuw.btnClose)
     # spacer
     spuw.stSpacer = wx.StaticText(spuw, -1, '')
     # dynamic ctrls
@@ -97,7 +97,7 @@ def CreateSymColSelect(canvas, output):
         exec('canvas.tbMain.SymPopUpWin.btn' + sc + ' = wx.BitmapButton(canvas.tbMain.SymPopUpWin, ' +
              'bitmap=wx.Bitmap(os.path.join("bmp", "' + each[1] + '.bmp"), wx.BITMAP_TYPE_BMP), id_=-1)')
         exec('canvas.tbMain.SymPopUpWin.btn' + sc + '.symname = "' + each[1] + '"')
-        exec('canvas.tbMain.SymPopUpWin.btn' + sc + '.Bind(wx.EVT_BUTTON, canvas.tbMain.SymPopUpWin.OnBtnSymbol' + ')')
+        exec('canvas.tbMain.SymPopUpWin.btn' + sc + '.Bind(wx.EVT_BUTTON, canvas.tbMain.SymPopUpWin.on_btn_symbol' + ')')
         exec('canvas.tbMain.SymPopUpWin.cp' + sc + ' = wx.ColourPickerCtrl(canvas.tbMain.SymPopUpWin, ' +
              '-1, col=' + str(each[2]) + ', style=wx.CLRP_DEFAULT_STYLE)')
         
@@ -858,11 +858,11 @@ def plotScores(canvas, scores, **_attr):
     # get mean centres
     # nb for a dfa/cva plot scaled to unit variance
     # 95% confidence radius is 2.15
-    sHape = scores.shape
+    shapex = scores.shape
     nCl = np.unique(_attr['cl'])
 
     plot = []
-    if (sHape[1] > 1) & (_attr['col1'] != _attr['col2']):
+    if (shapex[1] > 1) & (_attr['col1'] != _attr['col2']):
         canvas.xSpec = 'auto'
         
         scores = np.concatenate((scores[:, _attr['col1']][:, nax],
@@ -876,7 +876,7 @@ def plotScores(canvas, scores, **_attr):
         
         if _attr['symb'] is True:
             # plot symbols
-            symPlot, output = plotSymbols(None, scores, mask=_attr['validation'],
+            sym_plot, output = plotSymbols(None, scores, mask=_attr['validation'],
                   cLass=_attr['cl'], text=_attr['labels'], usemask=_attr['xval'],
                   col1=0, col2=1, tit='', xL='', yL='', usecol=_attr['usecol'],
                   usesym=_attr['usesym'])
@@ -884,18 +884,19 @@ def plotScores(canvas, scores, **_attr):
             # create window in background for changing symbols/colours
             CreateSymColSelect(canvas, output)
             
-            for each in symPlot:
+            for each in sym_plot:
                 plot.append(each)
             
-        if _attr['text'] is True:
+        if _attr['text']:
             # plot labels
             textPlot = plotText(None, scores, mask=_attr['validation'], 
-                  cLass=_attr['cl'], text=_attr['labels'], col1=0, col2=1,
-                  usemask=_attr['xval'], tit='', xL='', yL='')
+                                cLass=_attr['cl'], text=_attr['labels'],
+                                col1=0, col2=1, usemask=_attr['xval'], tit='',
+                                xL='', yL='')
             for each in textPlot:
                 plot.append(each)
                   
-        if _attr['pconf'] is True:
+        if _attr['pconf']:
             # 95% confidence interval
             plot.append(PolyEllipse(mScores, colour='black', width=1,
                                     dim=(2.15 * 2, 2.15 * 2), style=wx.SOLID))
@@ -934,7 +935,7 @@ def plotScores(canvas, scores, **_attr):
         
     else:
         canvas.xSpec = 'none'
-        if _attr['text'] is True:
+        if _attr['text']:
             # plot labels
             textPlot = plotText(None, scores, mask=_attr['validation'], 
                                 cLass=_attr['cl'], text=_attr['labels'],
@@ -944,22 +945,22 @@ def plotScores(canvas, scores, **_attr):
             for each in textPlot:
                 plot.append(each)
         
-        if _attr['symb'] is True:
+        if _attr['symb']:
             # plot symbols
-            symPlot, output = plotSymbols(None, scores,
-                                          mask=_attr['validation'],
-                                          cLass=_attr['cl'],
-                                          text=_attr['labels'],
-                                          usemask=_attr['xval'],
-                                          col1=_attr['col1'],
-                                          col2=_attr['col1'], tit='', xL='',
-                                          yL='', usecol=_attr['usecol'],
-                                          usesym=_attr['usesym'])
+            sym_plot, output = plotSymbols(None, scores,
+                                           mask=_attr['validation'],
+                                           cLass=_attr['cl'],
+                                           text=_attr['labels'],
+                                           usemask=_attr['xval'],
+                                           col1=_attr['col1'],
+                                           col2=_attr['col1'], tit='', xL='',
+                                           yL='', usecol=_attr['usecol'],
+                                           usesym=_attr['usesym'])
             
             # create window in background for changing symbols/colours
             CreateSymColSelect(canvas, output)
                                         
-            for each in symPlot:
+            for each in sym_plot:
                 plot.append(each)
         
         if _attr['text'] or _attr['symb']:
@@ -975,10 +976,10 @@ class SymColSelectTool(wx.Dialog):
         self.SetAutoLayout(True)
         self.prnt = prnt
         
-    def OnBtnClose(self, _):
+    def on_btn_close(self, _):
         self.Show(False)
     
-    def OnBtnApply(self, _):
+    def on_btn_apply(self, _):
         # get list of new colours
         collist = []
         for each in self.colctrls:
@@ -991,7 +992,7 @@ class SymColSelectTool(wx.Dialog):
         self.prnt.doPlot(loadType=3, symcolours=collist, symsymbols=symlist)
         self.prnt.loadIdx = 3
     
-    def OnBtnSymbol(self, evt):
+    def on_btn_symbol(self, evt):
         # symbol select dialog
         btn = evt.GetEventObject()
         dlg = SymDialog(self, btn)
@@ -1003,13 +1004,13 @@ class SymColSelectTool(wx.Dialog):
 class SymDialog(wx.Dialog):
     def _init_sizers(self):
         # generated method, don't edit
-        self.grsSymDialog = wx.GridSizer(cols=2, hgap=2, rows=3, vgap=2)
+        self.grs_symdialog = wx.GridSizer(cols=2, hgap=2, rows=3, vgap=2)
 
-        self._init_coll_grsSymDialog_Items(self.grsSymDialog)
+        self._init_coll_grs_symdialog_items(self.grs_symdialog)
 
-        self.SetSizer(self.grsSymDialog)
+        self.SetSizer(self.grs_symdialog)
 
-    def _init_coll_grsSymDialog_Items(self, parent):
+    def _init_coll_grs_symdialog_items(self, parent):
         # generated method, don't edit
 
         parent.Add(self.tbSquare, 0, border=0, flag=wx.EXPAND)
@@ -1606,10 +1607,11 @@ class TitleBar(bp.ButtonPanel):
             self.spnNumPcs2.SetValue(2)
             
             # check for metadata & setup limits for dfa
+            tbar = self.parent.prnt.parent.plDfa.titleBar
             if (sum(self.data['class'][:, 0]) != 0) and (self.data['class'] is not None):
-                self.parent.prnt.prnt.plDfa.titleBar.cbxData.SetSelection(0)
-                self.parent.prnt.prnt.plDfa.titleBar.spnDfaPcs.SetRange(2, len(self.data['pceigs']))
-                self.parent.prnt.prnt.plDfa.titleBar.spnDfaDfs.SetRange(1, len(np.unique(self.data['class'][:, 0])) - 1)
+                tbar.cbxData.SetSelection(0)
+                tbar.spnDfaPcs.SetRange(2, len(self.data['pceigs']))
+                tbar.spnDfaDfs.SetRange(1, len(np.unique(self.data['class'][:, 0])) - 1)
         
             # plot results
             self.PlotPca()
