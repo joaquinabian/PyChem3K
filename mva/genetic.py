@@ -17,6 +17,7 @@ import numpy as np
 # from mva.chemometrics import _slice
 from mva.chemometrics import _flip
 
+
 def _sortrows(a, i=0):
     """Sort rows of "a" in ascending order by column i
     """
@@ -30,10 +31,27 @@ def _sortrows(a, i=0):
         c += 1
     return a
 
-
+# noinspection PyShadowingNames
 def _remdup(a, amax=None):
-    """Remove duplicates from vector a
+    """Remove duplicates from vector a <- Not really.
+
+    Notes 2021
+    - Sends 1 if two consecutive items are duplicated
+    - Doesn't modify the vector
+
+    # TODO: Analyze the expected behavior this function should have.
+
+    >>> a = np.array([5, 2, 7, 6, 5, 7, 4, 5])
+    >>> _remdup(a)
+    0
+    >>> a
+    array([5, 2, 7, 6, 5, 7, 4, 5])
+    >>> a = np.array([5, 2, 7, 7, 4, 5])
+    >>> _remdup(a)
+    1
+
     """
+    _ = amax
     np.sort(a)
     flag = 0
     for x in range(1, len(a)):
@@ -41,8 +59,10 @@ def _remdup(a, amax=None):
             flag = 1
     return flag
 
+
 def _unique(a):
-    id = []
+    """"""
+    indexes = []
     for count in range(a.shape[0]):
         chk = 0
         ordx = np.sort(a[count])
@@ -50,8 +70,9 @@ def _unique(a):
             if ordx[i-1] == ordx[i]:
                 chk = 1
         if chk == 0:
-            id.append(count)
-    return id
+            indexes.append(count)
+    return indexes
+
 
 def crtpop(ni, nv, prec):
     """Create a random population array of size
@@ -104,6 +125,7 @@ def select(ranksc, chrom, N):
 def xover(chrom, N, p):
     """Single point crossover with probability N, precision p
     """
+    _ = p
     N = round(chrom.shape[0]*N)
     index1 = np.arange(chrom.shape[0])
     index2 = np.unique(np.around(sp.rand(chrom.shape[0], )*chrom.shape[0]))[0:chrom.shape[0]/2]
@@ -128,7 +150,6 @@ def xover(chrom, N, p):
             nchrom[select2[i], 0:int(xoverpnt[i])] = slice1
             nchrom[select1[i], 0:int(xoverpnt[i])] = slice2
         except ValueError:
-            nchrom = nchrom
             raise
     
     return nchrom
