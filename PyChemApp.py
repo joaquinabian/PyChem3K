@@ -16,7 +16,7 @@ import wx
 import os, time, string, PyChemMain, mva
 # import psyco, pychemaui
 
-modules ={'Cluster': [0, '', 'Cluster.py'],
+modules ={'Cluster': [0, '', 'cluster.py'],
  'Dfa': [0, '', 'Dfa.py'],
  'Ga': [0, '', 'Ga.py'],
  'Pca': [0, '', 'Pca.py'],

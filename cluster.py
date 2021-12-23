@@ -1,25 +1,28 @@
 # -----------------------------------------------------------------------------
-# Name:        Cluster.py
+# Name:        cluster.py
 # Purpose:     
 #
 # Author:      Roger Jarvis
 #
 # Created:     2007/05/22
-# RCS-ID:      $Id: Cluster.py, v 1.12 2009/02/26 22:19:46 rmj01 Exp $
+# RCS-ID:      $Id: cluster.py, v 1.12 2009/02/26 22:19:46 rmj01 Exp $
 # Copyright:   (c) 2006
 # Licence:     GNU General Public Licence
 # -----------------------------------------------------------------------------
+
+import os
+import numpy as np
 
 import wx
 import wx.lib.buttons
 import wx.lib.agw.buttonpanel as bp
 import wx.lib.agw.foldpanelbar as fpb
 from wx.lib.anchors import LayoutAnchors
-from wx.lib.plot import PolyMarker, PlotGraphics, PolyLine
+from wx.lib.plot.polyobjects import PolyLine, PlotGraphics
+# from wx.lib.plot.polyobjects import PolyMarker
 
-import os
-import numpy as np
 from commons import error_box
+from commons import PolyMarker
 
 from Bio.Cluster import kcluster, treecluster
 from Bio.Cluster import distancematrix, clustercentroids
@@ -42,21 +45,31 @@ from Pca import MyPlotCanvas
 
 
 class Cluster(wx.Panel):
+    """"""
+    def __init__(self, parent, id_, pos, size, style, name):
+        """"""
+        _, _, _, _, _ = id_, pos, size, style, name
+
+        wx.Panel.__init__(self, id=wxID_CLUSTER, name='Cluster', parent=parent,
+                          pos=wx.Point(72, 35), size=wx.Size(907, 670),
+                          style=wx.TAB_TRAVERSAL)
+
+        self._init_ctrls(parent)
+        self.parent = parent
+
     def _init_coll_bxs_clust1_items(self, parent):
-        # generated method, don't edit
+        """ """
 
         parent.Add(self.bxsClust2, 1, border=0, flag=wx.EXPAND)
 
     def _init_coll_bxs_clust2_items(self, parent):
-        # generated method, don't edit
-
+        """"""
         parent.Add(self.titleBar, 0, border=0, flag=wx.EXPAND)
         parent.Add(self.Splitter, 1, border=0, flag=wx.EXPAND)
 
     def _init_cluster_sizers(self):
-        # generated method, don't edit
+        """"""
         self.bxsClust1 = wx.BoxSizer(orient=wx.HORIZONTAL)
-
         self.bxsClust2 = wx.BoxSizer(orient=wx.VERTICAL)
 
         self._init_coll_bxs_clust1_items(self.bxsClust1)
@@ -65,10 +78,7 @@ class Cluster(wx.Panel):
         self.SetSizer(self.bxsClust1)
     
     def _init_ctrls(self, prnt):
-        # generated method, don't edit
-        wx.Panel.__init__(self, id=wxID_CLUSTER, name='Cluster', parent=prnt,
-                          pos=wx.Point(72, 35), size=wx.Size(907, 670),
-                          style=wx.TAB_TRAVERSAL)
+        """ """
         self.SetToolTip('')
         self.SetAutoLayout(True)
         self.prnt = prnt
@@ -78,7 +88,7 @@ class Cluster(wx.Panel):
                                           size=wx.Size(272, 168),
                                           style=wx.SP_3D | wx.SP_LIVE_UPDATE)
         self.Splitter.SetAutoLayout(True)
-        self.Splitter.Bind(wx.EVT_SPLITTER_DCLICK, self.OnSplitterDclick)
+        self.Splitter.Bind(wx.EVT_SPLITTER_DCLICK, self.on_splitter_dclick)
         
         self.p1 = wx.Panel(self.Splitter)
         self.p1.SetAutoLayout(True)
@@ -111,7 +121,7 @@ class Cluster(wx.Panel):
             LayoutAnchors(self.txtCluster, True, True, True, True))
         self.txtCluster.Show(False)
         
-        self.titleBar = TitleBar(self, id=-1, text="Cluster Analysis",
+        self.titleBar = TitleBar(self, id_=-1, text="Cluster Analysis",
                                  style=bp.BP_USE_GRADIENT,
                                  alignment=bp.BP_ALIGN_LEFT)
         
@@ -120,19 +130,16 @@ class Cluster(wx.Panel):
         
         self._init_cluster_sizers()
 
-    def __init__(self, parent, id, pos, size, style, name):
-        self._init_ctrls(parent)
-        
-        self.parent = parent
-        
-    def Reset(self):
+    def reset(self):
+        """"""
+        # noinspection PyTypeChecker
         curve = PolyLine([[0, 0], [1, 1]], colour='white', width=1,
                          style=wx.PENSTYLE_TRANSPARENT)
         curve = PlotGraphics([curve], 'Hierarchical Cluster Analysis', '', '')
 
         self.plcCluster.Draw(curve)
         
-    def OnSplitterDclick(self, event):
+    def on_splitter_dclick(self, _):
         if self.Splitter.GetSashPosition() <= 5:
             self.Splitter.SetSashPosition(250)
         else:
@@ -140,11 +147,23 @@ class Cluster(wx.Panel):
         
     
 class TitleBar(bp.ButtonPanel):
-    def _init_btnpanel_ctrls(self, prnt):
-        bp.ButtonPanel.__init__(self, parent=prnt, id=-1, text="Cluster Analysis",
+    """"""
+    def __init__(self, parent, id_, text, style, alignment):
+        """"""
+        bp.ButtonPanel.__init__(self, parent=parent, id=-1,
+                                text="Cluster Analysis",
                                 agwStyle=bp.BP_USE_GRADIENT,
                                 alignment=bp.BP_ALIGN_LEFT)
 
+        _, _, _, _ = id_, text, style, alignment
+        self._init_btnpanel_ctrls()
+        self.create_btns()
+        self.parent = parent
+        self.data = None
+        self.clusterid = None
+
+    def _init_btnpanel_ctrls(self):
+        """ """
         choices = ['Raw spectra', 'Processed spectra', 'PC Scores', 'DF Scores']
         self.cbxData = wx.Choice(choices=choices, id=-1, name='cbxData',
                                  parent=self, pos=wx.Point(118, 21),
@@ -176,13 +195,7 @@ class TitleBar(bp.ButtonPanel):
                                        longHelp='Clustering Options')
         self.Bind(wx.EVT_BUTTON, self.on_btn_set_params,
                   id=self.setParams.GetId())
-        
-    def __init__(self, parent, id, text, style, alignment):
-        
-        self._init_btnpanel_ctrls(parent)
-        self.create_btns()
-        self.parent = parent
-    
+
     def create_btns(self):
         self.Freeze()
         self.SetProperties()
@@ -198,11 +211,15 @@ class TitleBar(bp.ButtonPanel):
         self.Thaw()
 
         self.DoLayout()
-        
-    def SetProperties(self):
 
-        # Sets the colours for the two demos: called only if the user didn't
-        # modify the colours and sizes using the Settings Panel
+    # noinspection PyPep8Naming
+    def SetProperties(self):
+        """Sets the colours for the two demos.
+
+        Called only if the user didn't modify the colours and sizes
+         using the Settings Panel
+
+         """
         bpArt = self.GetBPArt()
         
         # set the color the text is drawn with
@@ -220,7 +237,8 @@ class TitleBar(bp.ButtonPanel):
     
     def get_data(self, data):
         self.data = data
-    
+
+    # noinspection PyMethodMayBeStatic
     def on_btn_export_cluster(self, event):
         event.Skip()
     
@@ -435,7 +453,7 @@ class TitleBar(bp.ButtonPanel):
         return nodeid, index
 
     def treeindex(self, clusters, linkdist, order):
-        nodeindex = 0
+        """"""
         nnodes = len(clusters)
         nodecounts = np.zeros(nnodes)
         nodeorder = np.zeros(nnodes, 'd')
@@ -467,11 +485,12 @@ class TitleBar(bp.ButtonPanel):
         index = self.treesort(order, nodeorder, nodecounts, clusters)
         return index
 
+    # noinspection PyMethodMayBeStatic
     def treesort(self, order, nodeorder, nodecounts, NodeElement):
         nNodes = len(NodeElement)
         nElements = nNodes + 1
         neworder = np.zeros(nElements, 'd')
-        clusterids = range(nElements)
+        clusterids = list(range(nElements))
         for i in range(nNodes):
             i1 = NodeElement[i][0]
             i2 = NodeElement[i][1]
@@ -487,7 +506,8 @@ class TitleBar(bp.ButtonPanel):
             else:
                 order2 = order[i2]
                 count2 = 1
-            # If order1 and order2 are equal, their order is determined by the order in which they were clustered
+            # If order1 and order2 are equal, their order is determined
+            # by the order in which they were clustered
             if i1 < i2:
                 if order1 < order2:
                     increase = count1
@@ -515,16 +535,20 @@ class TitleBar(bp.ButtonPanel):
                     if clusterid == i1 or clusterid == i2:
                         clusterids[j] = -i - 1
         return np.argsort(neworder)
-    
+
+    # noinspection PyTypeChecker, PyMethodMayBeStatic
     def draw_tree(self, canvas, tree, order, labels, tit='', xL='', yL=''):
+        """      """
         # colourList = ['BLUE', 'BROWN', 'CYAN', 'GREY', 'GREEN', 'MAGENTA',
         #               'ORANGE', 'PURPLE', 'VIOLET']
-        
+
+        # TODO: Reactivate labels when PolyMarker get fixed
+        _ = labels
         # set font size
         font_size = 8
 
         canvas.fontSizeAxis = font_size
-        canvas.enableLegend(0)
+        canvas.enableLegend = False
         
         # do level 1
         # List, Cols, ccount = [], [], 0
@@ -558,22 +582,29 @@ class TitleBar(bp.ButtonPanel):
         #         colour=Cols[i-1], legend=Nlist[i-1]))
 
         # elif self.parent.optDlg.rbPlotName.GetValue() is True:
+
+        # TODO: Create a new class PolyMaker inheriting from wx PolyMaker and
+        #       try to implement method _text and class _attributes 'labels' as
+        #       in pychem_305g/plot.py/PolyMarker
         Line = []
         count = 0
         for i in range(len(order)):
             Line.append(PolyMarker(np.array([[0, count], [0, count]]),
-                                   marker='text',
-                                   labels=[labels[int(order[i])],
-                                           labels[int(order[i])]]))
+                                   marker='text'))
+            #                       labels=[labels[int(order[i])],
+            #                       labels[int(order[i])]]))
             count += 2
                 
         # plot distances
-        Line.append(PolyMarker(np.array([[0, -2]]), marker='text', labels='0'))
+        # TODO: Implement attribute 'labels' in PolyMarker
+        Line.append(PolyMarker(np.array([[0, -2]]), marker='text'))   # , labels='0'))
         Line.append(PolyMarker(np.array([[max(tree[:, 3]), -2]]),
-                               marker='text', labels='% .2f' % max(tree[:, 3])))
-        
+                               marker='text'))                        # , labels='% .2f' % max(tree[:, 3])))
+        # TODO: idx is not used !!
+        # noinspection PyUnusedLocal
         idx = np.reshape(np.arange(len(tree)+1), (len(tree)+1, ))
         Nodes = {}
+        y1, y2 = None, None
         for i in range(len(tree)):
             # just samples
             if tree[i, 1] >= 0:
@@ -693,6 +724,8 @@ class TitleBar(bp.ButtonPanel):
                 
     def report_partitioning(self, textctrl, clusterid,
                             error, nfound, title, centroids=None):
+        """"""
+        _ = clusterid
         # report summary
         hphn20 = '-' * 23
         hphn10 = '-' * 10
@@ -712,11 +745,11 @@ class TitleBar(bp.ButtonPanel):
                 for i in range(centroids.shape[0]):
                     for j in range(centroids.shape[1]):
                         if j == 0:
-                            centres = '\t'.join((centres, str(i+1), '\t\t', '% .2f' % centroids[i, j]))
+                            centres = '\t%s\t%i\t\t%.2f' % (centres, i+1, centroids[i, j])
                         elif 0 < j < centroids.shape[1]-1:
-                            centres = ''.join((centres, '%.2f' % centroids[i, j], '\t'))
+                            centres = '%s%.2f\t' % (centres, centroids[i, j])
                         else:
-                            centres = ''.join((centres, '%.2f' % centroids[i, j], '\n'))
+                            centres = '%s%.2f\n' % (centres, centroids[i, j])
             else:
                 centres = '\n\n'
         else:
@@ -754,6 +787,18 @@ class TitleBar(bp.ButtonPanel):
         textctrl.SetValue(report)
 
 class SelFun(fpb.FoldPanelBar):
+    """"""
+    def __init__(self, parent):
+        fpb.FoldPanelBar.__init__(self, parent, -1, pos=wx.DefaultPosition,
+                                  size=wx.DefaultSize,
+                                  agwStyle=fpb.FPB_SINGLE_FOLD)
+
+        self._init_selfun_ctrls()
+
+        self.Expand(self.clustType)
+        self.Expand(self.distType)
+        self.Expand(self.linkType)
+
     def _init_coll_gbs_cluster_method(self, parent):
         parent.Add(self.rbKmeans, (0, 0), flag=wx.EXPAND, span=(1, 2))
         parent.Add(self.rbKmedian, (1, 0), flag=wx.EXPAND, span=(1, 2))
@@ -805,10 +850,8 @@ class SelFun(fpb.FoldPanelBar):
         self.linkType.SetSizer(self.gbsLinkageMethod)
         self.distType.SetSizer(self.gbsDistanceMeasure)
         
-    def _init_selfun_ctrls(self, prnt):
-        fpb.FoldPanelBar.__init__(self, prnt, -1, pos=wx.DefaultPosition, 
-                                  size=wx.DefaultSize,
-                                  agwStyle=fpb.FPB_SINGLE_FOLD)
+    def _init_selfun_ctrls(self):
+
         self.SetConstraints(LayoutAnchors(self, True, True, True, True))
         self.SetAutoLayout(True)
         
@@ -1014,14 +1057,10 @@ class SelFun(fpb.FoldPanelBar):
         
         self._init_selparam_sizers()
         
-    def __init__(self, parent):
-        self._init_selfun_ctrls(parent)
-        
-        self.Expand(self.clustType)
-        self.Expand(self.distType)
-        self.Expand(self.linkType)
-        
+    # noinspection PyUnresolvedReferences
     def on_ckbx_use_class(self, _):
+        """"""
+        # TODO: Definition of cbUseClass was commented above. This will crash
         if self.cbUseClass.GetValue() is False:
             self.spnNoPass.Enable(True)
         else:

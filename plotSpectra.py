@@ -14,6 +14,7 @@
 import wx
 # import wx.combo
 from wx.lib.plot import PolyLine, PlotGraphics
+from wx.lib.buttons import GenBitmapToggleButton as ToggleBtn
 import wx.lib.agw.buttonpanel as bp
 # import wx.lib.agw.foldpanelbar as fpb
 # import wx.lib.agw.customtreectrl as ctc
@@ -24,7 +25,7 @@ import scipy as sp
 import string
 import os
 import copy
-# import mva.process
+import mva.process
 import numpy as np
 from numpy import newaxis as nax
 from Pca import MyPlotCanvas
@@ -66,17 +67,23 @@ def GridRowDel(grid, data):
         pass
 
 class PeakCalculations(wx.Dialog):
+    """"""
+    def __init__(self, parent, xlim, data, canvas):
+        self._init_pc_ctrls(parent)
+
+        self._xlim = xlim
+        self._data = data
+        self._canvas = canvas
+        self._prnt = parent
+
     def _init_pc_sizers(self):
         # generated method, don't edit
         self.grsPeakCalcs = wx.GridSizer(cols=2, hgap=2, rows=4, vgap=2)
-
-        self._init_coll_grsPeakCalcs_Items(self.grsPeakCalcs)
-
+        self._init_coll_grs_peak_calcs(self.grsPeakCalcs)
         self.SetSizer(self.grsPeakCalcs)
 
-    def _init_coll_grsPeakCalcs_Items(self, parent):
+    def _init_coll_grs_peak_calcs(self, parent):
         # generated method, don't edit
-
         parent.Add(self.btnIntensity, 0, border=0, flag=wx.EXPAND)
         parent.Add(self.btnIntensityFit, 0, border=0, flag=wx.EXPAND)
         parent.Add(self.btnAreaAxis, 0, border=0, flag=wx.EXPAND)
@@ -89,48 +96,50 @@ class PeakCalculations(wx.Dialog):
     def _init_pc_ctrls(self, prnt):
         # generated method, don't edit
         wx.Dialog.__init__(self, id=-1, name='', parent=prnt,
-              pos=wx.Point(471, 248), size=wx.Size(264, 165),
-              style=wx.DIALOG_MODAL | wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER | wx.CAPTION | wx.MAXIMIZE_BOX,
-              title='Peak Calculations')
+                           pos=wx.Point(471, 248), size=wx.Size(264, 165),
+                           style=wx.DIALOG_MODAL | wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER | wx.CAPTION | wx.MAXIMIZE_BOX,
+                           title='Peak Calculations')
         self.SetClientSize(wx.Size(258, 133))
         self.Center(wx.BOTH)
 
-        self.btnIntensity = wx.lib.buttons.GenBitmapToggleButton(bitmap=wx.Bitmap(os.path.join('bmp', 'peakimax.png')),
-              id=-1, name='btnIntensity', parent=self, pos=wx.Point(0, 0), 
-              size=wx.Size(128, 31), style=0)
+        bmp = wx.Bitmap(os.path.join('bmp', 'peakimax.png'))
+        self.btnIntensity = ToggleBtn(bitmap=bmp, id=-1, name='btnIntensity',
+                                      parent=self, pos=wx.Point(0, 0),
+                                      size=wx.Size(128, 31), style=0)
         self.btnIntensity.SetToggle(True)
         self.btnIntensity.SetLabel('')
         self.btnIntensity.SetToolTip('Calculate the maximum intensity in the selected region')
 
-        self.btnAreaAxis = wx.lib.buttons.GenBitmapToggleButton(bitmap=wx.Bitmap(os.path.join('bmp', 'peakareaaxis.png')),
-              id=-1, name='btnAreaAxis', parent=self, pos=wx.Point(130, 0), 
-              size=wx.Size(128, 31), style=0)
+        bmp = wx.Bitmap(os.path.join('bmp', 'peakareaaxis.png'))
+        self.btnAreaAxis = ToggleBtn(bitmap=bmp, id=-1, name='btnAreaAxis',
+                                     parent=self, pos=wx.Point(130, 0),
+                                     size=wx.Size(128, 31), style=0)
         self.btnAreaAxis.SetToggle(True)
         self.btnAreaAxis.SetLabel('')
         self.btnAreaAxis.SetToolTip('Calculate the total area to the axis')
 
-        self.btnAreaBaseline = wx.lib.buttons.GenBitmapToggleButton(bitmap=wx.Bitmap(os.path.join('bmp', 'peakareabase.png')),
+        self.btnAreaBaseline = ToggleBtn(bitmap=wx.Bitmap(os.path.join('bmp', 'peakareabase.png')),
               id=-1, name='btnAreaBaseline', parent=self, pos=wx.Point(0, 33), 
               size=wx.Size(128, 31), style=0)
         self.btnAreaBaseline.SetToggle(True)
         self.btnAreaBaseline.SetLabel('')
         self.btnAreaBaseline.SetToolTip('Calculate the total area to the baseline')
 
-        self.btnAreaFitAxis = wx.lib.buttons.GenBitmapToggleButton(bitmap=wx.Bitmap(os.path.join('bmp', 'peakcfitareaaxis.png')),
+        self.btnAreaFitAxis = ToggleBtn(bitmap=wx.Bitmap(os.path.join('bmp', 'peakcfitareaaxis.png')),
               id=-1, name='btnAreaFitAxis', parent=self, pos=wx.Point(130, 33), 
               size=wx.Size(128, 31), style=0)
         self.btnAreaFitAxis.SetToggle(True)
         self.btnAreaFitAxis.SetLabel('')
         self.btnAreaFitAxis.SetToolTip('Curvefit peak and calculate area to the X-axis')
 
-        self.btnAreaFitBaseline = wx.lib.buttons.GenBitmapToggleButton(bitmap=wx.Bitmap(os.path.join('bmp', 'peakcfitareabase.png')),
+        self.btnAreaFitBaseline = ToggleBtn(bitmap=wx.Bitmap(os.path.join('bmp', 'peakcfitareabase.png')),
               id=-1, name='btnAreaFitBaseline', parent=self, pos=wx.Point(0, 66), 
               size=wx.Size(128, 31), style=0)
         self.btnAreaFitBaseline.SetToggle(True)
         self.btnAreaFitBaseline.SetLabel('')
         self.btnAreaFitBaseline.SetToolTip('Curvefit peak and calculate area to baseline')
 
-        self.btnIntensityFit = wx.lib.buttons.GenBitmapToggleButton(bitmap=wx.Bitmap(os.path.join('bmp', 'peakifitmax.png')),
+        self.btnIntensityFit = ToggleBtn(bitmap=wx.Bitmap(os.path.join('bmp', 'peakifitmax.png')),
               id=-1, name='btnSpare', parent=self, pos=wx.Point(130, 66), 
               size=wx.Size(128, 31), style=0)
         self.btnIntensityFit.SetToggle(True)
@@ -152,13 +161,7 @@ class PeakCalculations(wx.Dialog):
 
         self._init_pc_sizers()
 
-    def __init__(self, parent, xlim, data, canvas):
-        self._init_pc_ctrls(parent)
-        
-        self._xlim = xlim
-        self._data = data
-        self._canvas = canvas
-        self._prnt = parent
+
     
     def GetXdata(self, start=None):
         # use raw or processed data
@@ -414,6 +417,15 @@ class plotSpectra(wx.Panel):
         dlg.ShowModal()
         
 class TitleBar(bp.ButtonPanel):
+
+    def __init__(self, parent, id, text, style, alignment, canvasList):
+
+        self._init_btnpanel_ctrls(parent)
+        self.create_btns()
+        self.parent = parent
+
+        self.canvas = canvasList[0]
+
     def _init_btnpanel_ctrls(self, prnt):
         bp.ButtonPanel.__init__(self, parent=prnt, id=-1,
                                 text="Spectral Preprocessing",
@@ -432,7 +444,7 @@ class TitleBar(bp.ButtonPanel):
                                             shortHelp='Interactive Mode',
                                             longHelp=long_help)
         self.btnInteractive.Enable(False)
-        self.Bind(wx.EVT_BUTTON, self.OnBtnInteractiveButton, id=self.btnInteractive.GetId())
+        self.Bind(wx.EVT_BUTTON, self.on_btn_interactive, id=self.btnInteractive.GetId())
 
         bmp = wx.Bitmap(os.path.join('bmp', 'run.png'), wx.BITMAP_TYPE_PNG)
         self.btnPlot = bp.ButtonInfo(self, -1, bmp, kind=wx.ITEM_NORMAL,
@@ -469,13 +481,7 @@ class TitleBar(bp.ButtonPanel):
                                    size=wx.Size(100, 23), style=0)
         self.cbxNumber.SetSelection(0)
 
-    def __init__(self, parent, id, text, style, alignment, canvasList):
-        
-        self._init_btnpanel_ctrls(parent)
-        self.create_btns()
-        self.parent = parent
 
-        self.canvas = canvasList[0]
         
     def create_btns(self):
         self.Freeze()
@@ -517,11 +523,11 @@ class TitleBar(bp.ButtonPanel):
         bpArt.SetColour(bp.BP_SELECTION_PEN_COLOUR,
                         wx.Colour(206, 206, 195))
     
-    def OnBtnInteractiveButton(self, event):
+    def on_btn_interactive(self, event):
         # plot the average spectrum
         self.plot_spectra(average=True)
         # add details of current plot to toolbar
-        self.canvas.PopulateToolbar()
+        self.canvas.populate_toolbar()
         # interactive mode for plotting screen - allows to calculate peak areas etc
         self.canvas.enableInteractive(True)
     
@@ -609,10 +615,10 @@ class TitleBar(bp.ButtonPanel):
         # Run pre-processing
         x = copy.deepcopy(self.data['raw'])
         for each in self.data['processlist']:
-            exec(each[1])
+            exec(each[1], locals(), globals())
         
         self.data['proc'] = x
-        self.parent.prnt.prnt.GetExperimentDetails(case=1)
+        self.parent.parent.parent.GetExperimentDetails(case=1)
     
     def OnBtnSetProcButton(self, event):
         if self.parent.Splitter.GetSashPosition() <= 5:
@@ -710,9 +716,9 @@ class Process(wx.Dialog):
         self.lbtxt.Show(False)
         
         self.ftval = wx.Slider(self, ID_VALSLIDE, 10, 1, 100, (30, 60), (250, -1), 
-                              wx.SL_HORIZONTAL | wx.SL_AUTOTICKS | wx.SL_LABELS)
+                               wx.SL_HORIZONTAL | wx.SL_AUTOTICKS | wx.SL_LABELS)
         self.ftval.Bind(wx.EVT_SCROLL_CHANGED, self.OnValSlider, id=ID_VALSLIDE) 
-        self.ftval.SetTickFreq(5, 1)
+        self.ftval.SetTickFreq(5)
         self.ftval.Show(False)
         
         self.box = wx.BoxSizer(wx.VERTICAL)

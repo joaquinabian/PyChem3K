@@ -31,7 +31,7 @@ import mva.fitfun
 import mva.process
 
 from Pca import plotLine
-from Pca import plotScores
+from Pca import plot_scores
 from Pca import plotLoads
 from Pca import MyPlotCanvas
 from Pca import PlotPlsModel
@@ -450,18 +450,18 @@ class TitleBar(bp.ButtonPanel):
         # Set loadings plot options
         #
         # GA scores plot
-        plotScores(self.parent.plcGaModelPlot1, self.data['gadfadfscores'],
-                   cl=self.data['class'][:, 0],
-                   labels=self.data['label'],
-                   validation=self.data['validation'],
-                   col1=self.spnGaScoreFrom.GetValue() - 1,
-                   col2=self.spnGaScoreTo.GetValue() - 1, title='DF Scores',
-                   xLabel='t[%f]' % self.spnGaScoreFrom.GetValue(),
-                   yLabel='t[%f]' % self.spnGaScoreTo.GetValue(),
-                   xval=True, text=self.parent.prnt.tbMain.tbPoints.GetValue(),
-                   pconf=self.parent.prnt.tbMain.tbConf.GetValue(),
-                   symb=self.parent.prnt.tbMain.tbSymbols.GetValue(),
-                   usecol=[], usesym=[])
+        plot_scores(self.parent.plcGaModelPlot1, self.data['gadfadfscores'],
+                    cl=self.data['class'][:, 0],
+                    labels=self.data['label'],
+                    validation=self.data['validation'],
+                    col1=self.spnGaScoreFrom.GetValue() - 1,
+                    col2=self.spnGaScoreTo.GetValue() - 1, title='DF Scores',
+                    xLabel='t[%f]' % self.spnGaScoreFrom.GetValue(),
+                    yLabel='t[%f]' % self.spnGaScoreTo.GetValue(),
+                    xval=True, text=self.parent.prnt.tbMain.tbPoints.GetValue(),
+                    pconf=self.parent.prnt.tbMain.tbConf.GetValue(),
+                    symb=self.parent.prnt.tbMain.tbSymbols.GetValue(),
+                    usecol=[], usesym=[])
 
         # DF loadings
         exec(
@@ -1180,17 +1180,17 @@ class SelParam(fpb.FoldPanelBar):
             if loads.shape[1] > 1:
                 self.tbar.spnGaScoreTo.SetValue(2)
             
-            plotScores(self.prnt.splitPrnt.plcGaModelPlot1, scores,
-                       cl=self.tbar.data['class'][:, 0],
-                       labels=self.tbar.data['label'],
-                       validation=self.tbar.data['validation'],
-                       col1=self.tbar.spnGaScoreFrom.GetValue()-1,
-                       col2=self.tbar.spnGaScoreTo.GetValue()-1,
-                       title='DF Scores',
-                       xLabel='t[%f]' % self.tbar.spnGaScoreFrom.GetValue(),
-                       yLabel='t[%f]' % self.tbar.spnGaScoreTo.GetValue(),
-                       xval=True, text=True, pconf=True,
-                       symb=False, usecol=[], usesym=[])
+            plot_scores(self.prnt.splitPrnt.plcGaModelPlot1, scores,
+                        cl=self.tbar.data['class'][:, 0],
+                        labels=self.tbar.data['label'],
+                        validation=self.tbar.data['validation'],
+                        col1=self.tbar.spnGaScoreFrom.GetValue()-1,
+                        col2=self.tbar.spnGaScoreTo.GetValue()-1,
+                        title='DF Scores',
+                        xLabel='t[%f]' % self.tbar.spnGaScoreFrom.GetValue(),
+                        yLabel='t[%f]' % self.tbar.spnGaScoreTo.GetValue(),
+                        xval=True, text=True, pconf=True,
+                        symb=False, usecol=[], usesym=[])
             
         if self.prnt.splitPrnt.dtype in ['PLS']:
             # select only chrom vars from x
@@ -1426,29 +1426,29 @@ class SelParam(fpb.FoldPanelBar):
             coords = np.reshape(np.take(xdata, [int(chrom[pos1])], 1), (len(xdata), 1))
             L1 = 'Dummy'
             L2 = str(self.tbar.data['indlabelsfull'][int(chrom[pos1])])
-            plotScores(canvas, coords, cl=self.tbar.data['class'][:, 0],
-                       labels=self.tbar.data['label'],
-                       validation=self.tbar.data['validation'],
-                       col1=0, col2=0, title=canvas.last_draw[0].title, xLabel=L1,
-                       yLabel=L2, xval=True,
-                       pconf=False,   # , self.prnt.splitPrnt.parent.parent.tbMain.tbConf.GetValue(),
-                       text=self.prnt.splitPrnt.prnt.tbMain.tbPoints.GetValue(),
-                       symb=self.prnt.splitPrnt.prnt.tbMain.tbSymbols.GetValue(),
-                       usecol=[], usesym=[])
+            plot_scores(canvas, coords, cl=self.tbar.data['class'][:, 0],
+                        labels=self.tbar.data['label'],
+                        validation=self.tbar.data['validation'],
+                        col1=0, col2=0, title=canvas.last_draw[0].title, xLabel=L1,
+                        yLabel=L2, xval=True,
+                        pconf=False,  # , self.prnt.splitPrnt.parent.parent.tbMain.tbConf.GetValue(),
+                        text=self.prnt.splitPrnt.prnt.tbMain.tbPoints.GetValue(),
+                        symb=self.prnt.splitPrnt.prnt.tbMain.tbSymbols.GetValue(),
+                        usecol=[], usesym=[])
                         
         else:
             coords = np.reshape(np.take(xdata, [int(chrom[pos1]), int(chrom[pos2])], 1), (len(xdata), 2))
             L1 = str(self.tbar.data['indlabelsfull'][int(chrom[pos1])])
             L2 = str(self.tbar.data['indlabelsfull'][int(chrom[pos2])])
-            plotScores(canvas, coords, cl=self.tbar.data['class'][:, 0],
-                       labels=self.tbar.data['label'],
-                       validation=self.tbar.data['validation'],
-                       col1=0, col2=1, title=canvas.last_draw[0].title, xLabel=L1,
-                       yLabel=L2, xval=True,
-                       pconf=False,  # self.prnt.splitPrnt.parent.parent.tbMain.tbConf.GetValue(),
-                       text=self.prnt.splitPrnt.prnt.tbMain.tbPoints.GetValue(),
-                       symb=self.prnt.splitPrnt.prnt.tbMain.tbSymbols.GetValue(),
-                       usecol=[], usesym=[])
+            plot_scores(canvas, coords, cl=self.tbar.data['class'][:, 0],
+                        labels=self.tbar.data['label'],
+                        validation=self.tbar.data['validation'],
+                        col1=0, col2=1, title=canvas.last_draw[0].title, xLabel=L1,
+                        yLabel=L2, xval=True,
+                        pconf=False,  # self.prnt.splitPrnt.parent.parent.tbMain.tbConf.GetValue(),
+                        text=self.prnt.splitPrnt.prnt.tbMain.tbPoints.GetValue(),
+                        symb=self.prnt.splitPrnt.prnt.tbMain.tbSymbols.GetValue(),
+                        usecol=[], usesym=[])
         
         self.tbar.data['gavarcoords'] = coords
         

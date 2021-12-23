@@ -26,9 +26,9 @@ from mva.chemometrics import _index
 from numpy import newaxis as nax
 from Bio.Cluster import treecluster
 from Pca import plotLine
-from Pca import plotScores
+from Pca import plot_scores
 from Pca import plotLoads
-from Pca import SetButtonState
+from Pca import set_btn_state
 from Pca import MyPlotCanvas
 
 [wxID_DFA, wxID_DFABTNEXPDFA, wxID_DFABTNGOGADFA, wxID_DFABTNGOPCA,
@@ -321,7 +321,7 @@ class TitleBar(bp.ButtonPanel):
     def on_run_dfa(self, _):
         xdata, loads, xvaldata = None, None, None
         scores, eigs = None, None
-        tbar = self.parent.prnt.prnt.plPca.titleBar
+        tbar = self.parent.prnt.parent.plPca.titleBar
         klass = self.data['class'][:, 0]
         try:
             # run discriminant function analysis
@@ -449,32 +449,33 @@ class TitleBar(bp.ButtonPanel):
 
     def on_spn_dfa_score1(self, _):
         self.plot_dfa()
-        SetButtonState(self.spnDfaScore1.GetValue(),
-                       self.spnDfaScore2.GetValue(),
-                       self.parent.prnt.prnt.tbMain)
+        set_btn_state(self.spnDfaScore1.GetValue(),
+                      self.spnDfaScore2.GetValue(),
+                      self.parent.prnt.prnt.tbMain)
 
     def on_spn_dfa_score2(self, _):
         self.plot_dfa()
-        SetButtonState(self.spnDfaScore1.GetValue(),
-                       self.spnDfaScore2.GetValue(),
-                       self.parent.prnt.prnt.tbMain)
+        set_btn_state(self.spnDfaScore1.GetValue(),
+                      self.spnDfaScore2.GetValue(),
+                      self.parent.prnt.prnt.tbMain)
 
     def plot_dfa(self):
         # plot scores
-        plotScores(self.parent.plcDFAscores, self.data['dfscores'],
-                   cl=self.data['class'][:, 0],
-                   labels=self.data['label'],
-                   validation=self.data['validation'],
-                   col1=self.spnDfaScore1.GetValue() - 1,
-                   col2=self.spnDfaScore2.GetValue() - 1,
-                   title='DFA Scores',
-                   xLabel='t[' + str(self.spnDfaScore1.GetValue()) + ']',
-                   yLabel='t[' + str(self.spnDfaScore2.GetValue()) + ']',
-                   xval=self.cbDfaXval.GetValue(),
-                   symb=self.parent.prnt.prnt.tbMain.tbSymbols.GetValue(),
-                   text=self.parent.prnt.prnt.tbMain.tbPoints.GetValue(),
-                   pconf=self.parent.prnt.prnt.tbMain.tbConf.GetValue(),
-                   usecol=[], usesym=[])
+        tb_main = self.parent.prnt.parent.tbMain
+        plot_scores(self.parent.plcDFAscores, self.data['dfscores'],
+                    cl=self.data['class'][:, 0],
+                    labels=self.data['label'],
+                    validation=self.data['validation'],
+                    col1=self.spnDfaScore1.GetValue() - 1,
+                    col2=self.spnDfaScore2.GetValue() - 1,
+                    title='DFA Scores',
+                    xLabel='t[' + str(self.spnDfaScore1.GetValue()) + ']',
+                    yLabel='t[' + str(self.spnDfaScore2.GetValue()) + ']',
+                    xval=self.cbDfaXval.GetValue(),
+                    symb=tb_main.tbSymbols.GetValue(),
+                    text=tb_main.tbPoints.GetValue(),
+                    pconf=tb_main.tbConf.GetValue(),
+                    usecol=[], usesym=[])
 
         # plot loadings
         if self.cbxData.GetSelection() == 0:
@@ -489,7 +490,7 @@ class TitleBar(bp.ButtonPanel):
                       col2=self.spnDfaScore2.GetValue() - 1, title=label,
                       xLabel='w[' + str(self.spnDfaScore1.GetValue()) + ']',
                       yLabel='w[' + str(self.spnDfaScore2.GetValue()) + ']',
-                      type=self.parent.prnt.prnt.tbMain.GetLoadPlotIdx(),
+                      type=tb_main.GetLoadPlotIdx(),
                       usecol=[], usesym=[])
 
         else:
@@ -510,10 +511,10 @@ class TitleBar(bp.ButtonPanel):
                 self.data['label'][_index(self.data['class'][:, 0], each)[0]])
 
         tree = treecluster(data=mS, method='m', dist='e')
-        tree, order = self.parent.prnt.prnt.plCluster.titleBar.treestructure(
+        tree, order = self.parent.prnt.parent.plCluster.titleBar.treestructure(
             tree,
             np.arange(len(tree) + 1))
-        self.parent.prnt.prnt.plCluster.titleBar.draw_tree(
+        self.parent.prnt.parent.plCluster.titleBar.draw_tree(
             self.parent.plcDfaCluster,
             tree, order, mSn, tit='Hierarchical Cluster Analysis',
             xL='Euclidean Distance', yL='Sample')

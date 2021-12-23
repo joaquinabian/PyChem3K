@@ -13,7 +13,8 @@
 import wx
 import wx.aui
 from wx.lib.buttons import GenToggleButton as wxTogBut
-from wx.lib.plot.polyobjects import PolyMarker, PolyLine, PlotGraphics
+from wx.lib.plot.polyobjects import PolyLine, PlotGraphics
+# from wx.lib.plot.polyobjects import PolyMarker
 from plot import PolyEllipse
 import wx.lib.plot.plotcanvas as wlpc
 import wx.lib.stattext
@@ -22,18 +23,17 @@ import wx.lib.agw.foldpanelbar as fpb
 from wx.lib.anchors import LayoutAnchors
 from wx.lib.stattext import GenStaticText
 
-import scipy as sp
-import numpy as np
-import os
+from os.path import join as op_join
 import copy
-import string
-import mva.chemometrics as chemtrics
-from commons import error_box
-
+import numpy as np
 from numpy import newaxis as nax
+from commons import error_box
+from commons import PolyMarker
+
+import mva.chemometrics as chemtrics
 from mva.chemometrics import _index
 
-[wxID_PCA, wxID_PCAPLCPCALOADSV, wxID_PCAPLCPCASCORE, wxID_PCAPLCPCEIGS, 
+[wxID_PCA, wxID_PCAPLCPCALOADSV, wxID_PCAPLCPCASCORE, wxID_PCAPLCPCEIGS,
  wxID_PCAPLCPCVAR, 
  ] = [wx.NewId() for _init_ctrls in range(5)]
 
@@ -56,7 +56,7 @@ from mva.chemometrics import _index
  ] = [wx.NewId() for _init_plot_menu_Items in range(5)]
 
 
-def SetButtonState(s1, s2, tb):
+def set_btn_state(s1, s2, tb):
     # toolbar button enabled condition
     if s1 == s2:
         state = False
@@ -69,7 +69,7 @@ def SetButtonState(s1, s2, tb):
     for button in buttons:
         button.Enable(state)
 
-def CreateSymColSelect(canvas, output):
+def create_sym_col_select(canvas, output):
     # populate symbol select pop-up
     # first destroy current
     canvas.tbMain.SymPopUpWin.Destroy()
@@ -95,7 +95,7 @@ def CreateSymColSelect(canvas, output):
         exec('canvas.tbMain.SymPopUpWin.st' + sc + ' = wx.StaticText(canvas.tbMain.SymPopUpWin, -1, ' +
              'each[0])')
         exec('canvas.tbMain.SymPopUpWin.btn' + sc + ' = wx.BitmapButton(canvas.tbMain.SymPopUpWin, ' +
-             'bitmap=wx.Bitmap(os.path.join("bmp", "' + each[1] + '.bmp"), wx.BITMAP_TYPE_BMP), id_=-1)')
+             'bitmap=wx.Bitmap(op_join("bmp", "' + each[1] + '.bmp"), wx.BITMAP_TYPE_BMP), id_=-1)')
         exec('canvas.tbMain.SymPopUpWin.btn' + sc + '.symname = "' + each[1] + '"')
         exec('canvas.tbMain.SymPopUpWin.btn' + sc + '.Bind(wx.EVT_BUTTON, canvas.tbMain.SymPopUpWin.on_btn_symbol' + ')')
         exec('canvas.tbMain.SymPopUpWin.cp' + sc + ' = wx.ColourPickerCtrl(canvas.tbMain.SymPopUpWin, ' +
@@ -111,10 +111,10 @@ def CreateSymColSelect(canvas, output):
     # add standard ctrls
     spuw.grsSelect.Add(canvas.tbMain.SymPopUpWin.btnClose, 0,
                        border=0, flag=wx.EXPAND)
-    canvas.tbMain.SymPopUpWin.grsSelect.Add(canvas.tbMain.SymPopUpWin.btnApply, 0,
-                      border=0, flag=wx.EXPAND)
-    canvas.tbMain.SymPopUpWin.grsSelect.Add(canvas.tbMain.SymPopUpWin.stSpacer, 0,
-                      border=0, flag=wx.EXPAND)
+    canvas.tbMain.SymPopUpWin.grsSelect.Add(canvas.tbMain.SymPopUpWin.btnApply,
+                                            0, border=0, flag=wx.EXPAND)
+    canvas.tbMain.SymPopUpWin.grsSelect.Add(canvas.tbMain.SymPopUpWin.stSpacer,
+                                            0, border=0, flag=wx.EXPAND)
     # add dynamic ctrls to sizer
     for nwin in range(count):
         exec('canvas.tbMain.SymPopUpWin.grsSelect.Add(canvas.tbMain.SymPopUpWin.st' +
@@ -155,7 +155,7 @@ def BoxPlot(canvas, x, labels, **_attr):
         # upper outlier
         uo = group[group > uw]
         # plot b&w
-        solid = wx.SOLID
+        solid = wx.PENSTYLE_SOLID
         objects.append(PolyLine([[count - .25, m], [count + .25, m]],
                                 width=1, colour='blue', style=solid))
         objects.append(PolyLine([[count - .25, lq], [count + .25, lq]],
@@ -188,9 +188,9 @@ def BoxPlot(canvas, x, labels, **_attr):
     # canvas.Draw(PlotGraphics(objects, _attr['title'], _attr['xLabel'],
     #                               _attr['yLabel'], xTickLabels=uG))
     canvas.Draw(PlotGraphics(objects, _attr['title'], _attr['xLabel'],
-                                  _attr['yLabel']))
+                             _attr['yLabel']))
                 
-def plotErrorBar(canvas, **_attr):
+def plot_error_bar(canvas, **_attr):
     """Errorbar plot
             Defaults:                                               
                 'x'= None           - xaxis values, column vector
@@ -210,18 +210,19 @@ def plotErrorBar(canvas, **_attr):
     ledgtext = ['Train', 'Validation', 'Test']
 
     # user defined
-    if _attr['usesym'] != []:
+    if _attr['usesym']:
         symbols = _attr['usesym']
-    if _attr['usecol'] != []:
+    if _attr['usecol']:
         colours = _attr['usecol']
     
     objects = []
     if _attr['lsfit'] is True:
         # show linear fit
         objects.append(PolyLine(np.array([[_attr['x'].min(), _attr['x'].min()],
-              [_attr['x'].max(), _attr['x'].max()]]), legend='Linear fit', colour='cyan',
-              width=1, style=wx.SOLID))
-              
+                                [_attr['x'].max(), _attr['x'].max()]]),
+                                legend='Linear fit', colour='cyan',
+                                width=1, style=wx.PENSTYLE_SOLID))
+
     for val in range(max(_attr['validation']) + 1):
         # get average and stdev of predictions for each calibration point
         average, stdev = [], []
@@ -234,8 +235,10 @@ def plotErrorBar(canvas, **_attr):
         
         # markers
         objects.append(PolyMarker(np.concatenate((uXsub[:, nax],
-              np.array(average)[:, nax]), 1), legend=ledgtext[val], colour=colours[val],
-              marker=usesym[val], size=1.5, fillstyle=wx.SOLID))
+                                  np.array(average)[:, nax]), 1),
+                                  legend=ledgtext[val], colour=colours[val],
+                                  marker=usesym[val], size=1.5,
+                                  fillstyle=wx.BRUSHSTYLE_SOLID))
         
         # errorbars & horizontal bars
         for line, uxval in enumerate(uXsub):
@@ -245,18 +248,18 @@ def plotErrorBar(canvas, **_attr):
             objects.append(
                 PolyLine(np.array([[uxval, avgln - stdln],
                                    [uxval, avgln + stdln]]),
-                         colour=colours[val], width=1, style=wx.SOLID))
+                         colour=colours[val], width=1, style=wx.PENSTYLE_SOLID))
             # horizontal bars +ve
             amxs = .01 * abs(max(uXsub))
             objects.append(
                 PolyLine(np.array([[uxval - amxs, avgln + stdln],
                                    [uxval + amxs, avgln + stdln]]),
-                         colour=colours[val], width=1, style=wx.SOLID))
+                         colour=colours[val], width=1, style=wx.PENSTYLE_SOLID))
             # horizontal bars -ve
             objects.append(
                 PolyLine(np.array([[uxval - amxs, avgln-stdln],
                                    [uxval + amxs, avgln-stdln]]),
-                         colour=colours[val], width=1, style=wx.SOLID))
+                         colour=colours[val], width=1, style=wx.PENSTYLE_SOLID))
         
     # axis limits
     atx = _attr['x']
@@ -288,12 +291,13 @@ def PlotPlsModel(canvas, model='full', tbar=None, **_attr):
                 'col1'       = 0        - col for xaxis
                 'col2'       = 1        - col for yaxis
     """
+    typex = _attr['type']
 
     if model in ['full']:
         canvPref = 'plcPredPls'
         prnt = canvas.prnt.prnt
         nBook = canvas.prnt
-    elif model in ['ga']:
+    elif model == 'ga':
         canvPref = 'plcGaModelPlot'
         prnt = canvas.prnt.prnt.prnt.splitPrnt
         nBook = canvas.prnt
@@ -304,7 +308,7 @@ def PlotPlsModel(canvas, model='full', tbar=None, **_attr):
         canvas.prnt.SetTabSize((0, 1))
         canvas.prnt.SetPageText(0, '')
     
-    if _attr['type'] == 0:
+    if typex == 0:
         numPlots = _attr['predictions'].shape[1]
     else:
         numPlots = _attr['predictions'].shape[1] + 1
@@ -315,10 +319,10 @@ def PlotPlsModel(canvas, model='full', tbar=None, **_attr):
         nBook.DeletePage(page)
     
     for const in range(numPlots):
-        if _attr['type'] == 0:
+        if typex == 0:
             cL = _attr['cL'][:, const][:, nax]
             pRed = _attr['predictions'][:, const][:, nax]
-        elif (_attr['type'] == 1) & (const > 0) is True:
+        elif (typex == 1) & (const > 0) is True:
             cL = _attr['plScL'][:, const-1][:, nax]
             pRed = _attr['predictions'][:, const-1][:, nax]
         
@@ -336,8 +340,8 @@ def PlotPlsModel(canvas, model='full', tbar=None, **_attr):
         exec("prnt." + canvPref + sc1 + ".fontSizeLegend = 8")
         exec("prnt." + canvPref + sc1 + ".SetAutoLayout(True)")
         exec("prnt." + canvPref + sc1 +
-              ".SetConstraints(LayoutAnchors(prnt." + canvPref + sc1 +
-              ", True, True, True, True))")
+             ".SetConstraints(LayoutAnchors(prnt." + canvPref + sc1 +
+             ", True, True, True, True))")
 
         # create new nb page
         if _attr['predictions'].shape[1] > 1:
@@ -352,25 +356,28 @@ def PlotPlsModel(canvas, model='full', tbar=None, **_attr):
         cmd = "ncanv = prnt." + canvPref + sc1
         exec(cmd, locals(), globals())
         
-        if (_attr['type'] == 1) and (const == 0):
+        if (typex == 1) and (const == 0):
             # plot pls-da scores
-            plotScores(ncanv, _attr['scores'], cl=_attr['cL'][:, 0],
-                  labels=_attr['label'], validation=_attr['validation'], 
-                  col1=_attr['col1'], col2=_attr['col2'], title='PLS Scores',
-                  xLabel='t[' + str(_attr['col1']+1) + ']', 
-                  yLabel='t[' + str(_attr['col2']+1) + ']', 
-                  xval=True, pconf=False, symb=_attr['symbols'], 
-                  text=_attr['usetxt'], usecol=_attr['usecol'],
-                  usesym=_attr['usesym'])
+            plot_scores(ncanv, _attr['scores'], cl=_attr['cL'][:, 0],
+                        labels=_attr['label'], validation=_attr['validation'],
+                        col1=_attr['col1'], col2=_attr['col2'],
+                        title='PLS Scores',
+                        xLabel='t[%i]' % _attr['col1']+1,
+                        yLabel='t[%i]' % _attr['col2']+1,
+                        xval=True, pconf=False, symb=_attr['symbols'],
+                        text=_attr['usetxt'], usecol=_attr['usecol'],
+                        usesym=_attr['usesym'])
         
         else:  
             if _attr['symbols']:
                 # pls predictions as errorbar plot
-                plotErrorBar(ncanv, x=cL, y=pRed, validation=_attr['validation'],
-                      title='PLS Predictions: ' + str(_attr['factors']+1) + \
-                      ' factors, RMS(Indep. Test) ' + '%.2f' %_attr['RMSEPT'], 
-                      xLabel='Actual', yLabel='Predicted', lsfit=True, 
-                      usesym=_attr['usesym'], usecol=_attr['usecol'])
+                title = 'PLS Predictions: %i factors, RMS(Indep. Test) %.2f'  % \
+                        (_attr['factors']+1, _attr['RMSEPT'])
+                plot_error_bar(ncanv, x=cL, y=pRed,
+                               validation=_attr['validation'],
+                               title=title, xLabel='Actual', yLabel='Predicted',
+                               lsfit=True, usesym=_attr['usesym'],
+                               usecol=_attr['usecol'])
             else:
                 # pls predictions as scatter plot
                 TrnPnts = np.zeros((1, 2), 'd')
@@ -395,18 +402,25 @@ def PlotPlsModel(canvas, model='full', tbar=None, **_attr):
                 ValPnts = ValPnts[1:len(ValPnts) + 1]
                 TstPnts = TstPnts[1:len(TstPnts) + 1]
                 
-                TrnPntObj = PolyMarker(TrnPnts, legend='Train', colour='black',
-                      marker='square', size=1.5, fillstyle=wx.TRANSPARENT)
+                TrnPntObj = PolyMarker(TrnPnts, legend='Train',
+                                       colour='black',
+                                       marker='square', size=1.5,
+                                       fillstyle=wx.BRUSHSTYLE_TRANSPARENT)
                 
-                ValPntObj = PolyMarker(ValPnts, legend='Cross Val.', colour='red',
-                      marker='circle', size=1.5, fillstyle=wx.TRANSPARENT)
+                ValPntObj = PolyMarker(ValPnts, legend='Cross Val.',
+                                       colour='red',
+                                       marker='circle', size=1.5,
+                                       fillstyle=wx.BRUSHSTYLE_TRANSPARENT)
                 
-                TstPntObj = PolyMarker(TstPnts, legend='Indep. Test', colour='blue',
-                      marker='triangle', size=1.5, fillstyle=wx.TRANSPARENT)
+                TstPntObj = PolyMarker(TstPnts, legend='Indep. Test',
+                                       colour='blue',
+                                       marker='triangle', size=1.5,
+                                       fillstyle=wx.BRUSHSTYLE_TRANSPARENT)
                 
                 LinearObj = PolyLine(np.array([[cL.min(), cL.min()],
-                      [cL.max(), cL.max()]]), legend='Linear fit', colour='cyan',
-                      width=1, style=wx.SOLID)
+                                              [cL.max(), cL.max()]]),
+                                     legend='Linear fit', colour='cyan',
+                                     width=1, style=wx.PENSTYLE_SOLID)
                 
                 PlsModel = PlotGraphics([TrnPntObj, ValPntObj, TstPntObj, LinearObj],
                                         ' '.join(('PLS Predictions:',
@@ -443,15 +457,16 @@ def plotLine(plotCanvas, plotArr, **_attr):
     """
     
     colourList = [wx.Colour('blue'), wx.Colour('red'),
-          wx.Colour('green'), wx.Colour('light_grey'),
-          wx.Colour('cyan'), wx.Colour('black')]
+                  wx.Colour('green'), wx.Colour('light_grey'),
+                  wx.Colour('cyan'), wx.Colour('black')]
     
     if _attr['type'] == 'single':
         pA = plotArr[_attr['rownum'], 0:len(_attr['xaxis'])][:, nax]
         Line = PolyLine(np.concatenate((_attr['xaxis'], pA), 1),
-              colour='black', width=_attr['wdth'], style=wx.SOLID)
+                        colour='black', width=_attr['wdth'],
+                        style=wx.PENSTYLE_SOLID)
         NewplotLine = PlotGraphics([Line], _attr['tit'],
-              _attr['xLabel'], _attr['yLabel'])
+                                   _attr['xLabel'], _attr['yLabel'])
     elif _attr['type'] == 'multi':
         ColourCount = 0
         Line = []
@@ -460,12 +475,15 @@ def plotLine(plotCanvas, plotArr, **_attr):
             pA = pA[:, nax]
             if _attr['ledge'] is not None:
                 Line.append(PolyLine(np.concatenate((_attr['xaxis'], pA), 1),
-                            legend=_attr['ledge'][i], colour=colourList[ColourCount],
-                            width=_attr['wdth'], style=wx.SOLID))
+                                     legend=_attr['ledge'][i],
+                                     colour=colourList[ColourCount],
+                                     width=_attr['wdth'],
+                                     style=wx.PENSTYLE_SOLID))
             else:
                 Line.append(PolyLine(np.concatenate((_attr['xaxis'], pA), 1),
-                            colour=colourList[ColourCount], width=_attr['wdth'],
-                            style=wx.SOLID))
+                                     colour=colourList[ColourCount],
+                                     width=_attr['wdth'],
+                                     style=wx.PENSTYLE_SOLID))
             ColourCount += 1
             if ColourCount == len(colourList):
                 ColourCount = 0
@@ -485,19 +503,21 @@ def plotStem(plotCanvas, plotArr, **_attr):
                 'wdth'= 1,     - Line width
     """
     
-    #plotArr is an n x 2 array
+    # plotArr is an n x 2 array
     plotStem = []
     for i in range(plotArr.shape[0]):
         newCoords = np.array([[plotArr[i, 0], 0], [plotArr[i, 0], plotArr[i, 1]]])
         plotStem.append(PolyLine(newCoords, colour='black',
-              width=_attr['wdth'], style=wx.SOLID))
+                                 width=_attr['wdth'], style=wx.PENSTYLE_SOLID))
     
-    plotStem.append(PolyLine(np.array([[plotArr[0, 0] - (.1 * plotArr[0, 0]), 0],
-          [plotArr[len(plotArr) - 1, 0] + (.1 * plotArr[0, 0]), 0]]), colour='black',
-          width=1, style=wx.SOLID))
+    plotStem.append(PolyLine(
+        np.array([[plotArr[0, 0] - (.1 * plotArr[0, 0]), 0],
+                  [plotArr[len(plotArr) - 1, 0] + (.1 * plotArr[0, 0]), 0]]),
+        colour='black',
+        width=1, style=wx.PENSTYLE_SOLID))
     
     plotStem = PlotGraphics(plotStem, _attr['tit'],
-          _attr['xLabel'], _attr['yLabel'])
+                            _attr['xLabel'], _attr['yLabel'])
     
     plotCanvas.Draw(plotStem)
 
@@ -524,14 +544,13 @@ def plotSymbols(plotCanvas, coords, **_attr):
     
     desCl = np.unique(_attr['text'])
     eCount = 0
-    if _attr['usecol'] == []:
-        colours = [wx.NamedColour('blue'), wx.NamedColour('red'),
-              wx.NamedColour('green'), 
-              wx.NamedColour('cyan'), wx.NamedColour('black')]
+    if not _attr['usecol']:
+        colours = [wx.Colour('blue'), wx.Colour('red'), wx.Colour('green'),
+                   wx.Colour('cyan'), wx.Colour('black')]
     else:
         colours = _attr['usecol']
     
-    if _attr['usesym'] == []:
+    if not _attr['usesym']:
         symbols = ['circle', 'square', 'plus',
                    'triangle', 'cross', 'triangle_down']
     else:
@@ -547,15 +566,15 @@ def plotSymbols(plotCanvas, coords, **_attr):
             countColour = 0
         
         # slice coords
-        list = coords[np.array(_attr['text']) == each, :]
+        alist = coords[np.array(_attr['text']) == each, :]
 
         if _attr['col1'] != _attr['col2']:
-            list = np.take(list, (_attr['col1'], _attr['col2']), 1)
+            alist = np.take(alist, (_attr['col1'], _attr['col2']), 1)
         else:
             sCount = copy.deepcopy(eCount)+1 
-            eCount = eCount+len(list)
-            list = np.concatenate((np.arange(sCount, eCount + 1)[:, nax],
-                                  list[:, _attr['col1']][:, nax]), 1)
+            eCount = eCount+len(alist)
+            alist = np.concatenate((np.arange(sCount, eCount + 1)[:, nax],
+                                   alist[:, _attr['col1']][:, nax]), 1)
                         
             # col = wx.Colour(round(np.rand(1).tolist()[0]*255),
             #                 round(np.rand(1).tolist()[0]*255),
@@ -564,24 +583,24 @@ def plotSymbols(plotCanvas, coords, **_attr):
         output.append([each, symbols[countSym], colours[countColour]])
         
         if _attr['usemask'] is False:
-            plotSym.append(PolyMarker(list, marker=symbols[countSym],
+            plotSym.append(PolyMarker(alist, marker=symbols[countSym],
                                       fillcolour=colours[countColour],
                                       colour=colours[countColour],
                                       size=2, legend=each))
                 
         else:
-            listM = _attr['mask'][np.array(_attr['text'])==each]
+            listM = _attr['mask'][np.array(_attr['text']) == each]
             for m in range(3):
                 if m == 0:
                     # include legend entry
-                    plotSym.append(PolyMarker(list[listM == m],
+                    plotSym.append(PolyMarker(alist[listM == m],
                                               marker=symbols[countSym],
                                               fillcolour=colours[countColour],
                                               colour=colours[countColour],
                                               size=2.5, legend=each))
                 else:
                     # no legend
-                    plotSym.append(PolyMarker(list[listM == m],
+                    plotSym.append(PolyMarker(alist[listM == m],
                                               marker=symbols[countSym],
                                               fillcolour=colours[countColour],
                                               colour=colours[countColour],
@@ -590,13 +609,14 @@ def plotSymbols(plotCanvas, coords, **_attr):
                         if symbols[countSym] not in ['cross', 'plus']:
                             # overlay white circle/square to indicate
                             # validation/test sample
-                            plotSym.append(PolyMarker(list[listM == m],
-                                  marker=valSym[m - 1], colour=wx.Colour('white'),
-                                  fillcolour=wx.Colour('white'), size=1))
+                            plotSym.append(PolyMarker(
+                                alist[listM == m],
+                                marker=valSym[m - 1], colour=wx.Colour('white'),
+                                fillcolour=wx.Colour('white'), size=1))
                         else:
                             # overlay white square to indicate validation sample
                             plotSym.insert(len(plotSym) - 1,
-                                           PolyMarker(list[listM == m],
+                                           PolyMarker(alist[listM == m],
                                                       marker=valSym[m - 1],
                                                       colour=wx.Colour('black'),
                                                       fillcolour=wx.Colour('white'),
@@ -606,7 +626,7 @@ def plotSymbols(plotCanvas, coords, **_attr):
         countColour += 1
         
     draw_plotSym = PlotGraphics(plotSym, _attr['tit'],
-                                xLabel= _attr['xL'], yLabel=_attr['yL'])
+                                xLabel=_attr['xL'], yLabel=_attr['yL'])
     
     if plotCanvas is not None:
         plotCanvas.Draw(draw_plotSym)
@@ -650,41 +670,47 @@ def plotText(plotCanvas, coords, **_attr):
                 idx = _index(_attr['mask'], getColour)
             else:
                 idx = range(len(coords))
-            plotText.append(PolyMarker(np.take(np.take(coords,
-                  [_attr['col1'], _attr['col2']], 1), idx, 0), marker='text',
-                  legend=np.take(_attr['text'], idx, 0),
-                  colour=colours[getColour]))
+            plotText.append(PolyMarker(
+                np.take(np.take(coords, [_attr['col1'], _attr['col2']], 1),
+                        idx, 0),
+                marker='text', legend=np.take(_attr['text'], idx, 0),
+                colour=colours[getColour]))
     # plot 1d
     else:
         points = np.take(coords, [_attr['col1']], 1)
         nCl = np.unique(_attr['text'])
         eCount = 0
         for each in nCl:
-            slice = points[np.array(_attr['text']) == each]
+            aslice = points[np.array(_attr['text']) == each]
             lbls = np.array(_attr['text'])[np.array(_attr['text']) == each]
             
             sCount = copy.deepcopy(eCount) + 1
-            eCount = eCount + len(slice)
+            eCount = eCount + len(aslice)
             
             pointSub = np.concatenate((np.arange(sCount, eCount + 1)[:, nax],
-                  slice), 1)
+                                       aslice), 1)
             
             if _attr['usemask'] is False:
                 plotText.append(PolyMarker(pointSub, marker='text',
-                      legend=lbls.tolist()))
+                                           legend=lbls.tolist()))
             else:
-                msk = np.array(_attr['mask'])[np.array(_attr['text'])==each].tolist()
+                msk = np.array(_attr['mask'])
+                txt = np.array(_attr['text'])
                 for each in range(3):
-                    plotText.append(PolyMarker(np.take(pointSub, _index(msk, each), 0),
-                          marker='text', legend=np.take(lbls, _index(msk, each)).tolist(),
-                          colour=colours[each]))
+                    msk_lst = msk[txt == each].tolist()
+                    msk_idx = _index(msk_lst, each)
+                    plotText.append(
+                        PolyMarker(np.take(pointSub, msk_idx, 0),
+                                   marker='text',
+                                   legend=np.take(lbls, msk_idx.tolist(),
+                                   colour=colours[each])))
                 
     if (coords.shape[1] > 1) & (_attr['col1'] != _attr['col2']):
         draw_plotText = PlotGraphics(plotText, _attr['tit'],
-              xLabel=_attr['xL'], yLabel=_attr['yL'])
+                                     xLabel=_attr['xL'], yLabel=_attr['yL'])
     else:
         draw_plotText = PlotGraphics(plotText, _attr['tit'],
-              xLabel='', yLabel=_attr['yL'])
+                                     xLabel='', yLabel=_attr['yL'])
             
     if plotCanvas is not None:
         plotCanvas.Draw(draw_plotText)
@@ -715,6 +741,7 @@ def plotLoads(canvas, loads, **_attr):
                                  loads[:, _attr['col2']][:, nax]), 1)
         meanCoords = np.reshape(np.mean(select, 0), (1, 2))
         std = np.mean(np.std(select))
+        inIdx = None
         if _attr['type'] == 0:
             # plot labels
             labels = []
@@ -726,9 +753,9 @@ def plotLoads(canvas, loads, **_attr):
         
         else:
             test = np.sqrt((loads[:, _attr['col1']]-meanCoords[0, 0]) ** 2 +
-                  (loads[:, _attr['col2']]-meanCoords[0, 1]) ** 2)
+                           (loads[:, _attr['col2']]-meanCoords[0, 1]) ** 2)
             index = np.arange(len(_attr['xaxis']))
-            
+
             if _attr['type'] == 1: 
                 # >1*std error & labels
                 outIdx = index[test > std]
@@ -737,7 +764,7 @@ def plotLoads(canvas, loads, **_attr):
                 getOutliers = np.take(select, outIdx, 0)
 
                 # plot labels
-                labels=[]
+                labels = []
                 for each in outIdx:
                     labels.append(_attr['xaxis'][each])
                 textPlot = plotText(None, getOutliers, mask=None, cLass=None, 
@@ -799,7 +826,7 @@ def plotLoads(canvas, loads, **_attr):
                                               usesym=_attr['usesym'])
                 
                 # create window in background for changing symbols/colours
-                CreateSymColSelect(canvas, output)
+                create_sym_col_select(canvas, output)
                                             
                 for each in symPlot:
                     plot.append(each)
@@ -825,7 +852,7 @@ def plotLoads(canvas, loads, **_attr):
                                  _attr['yLabel']))
         
         
-def plotScores(canvas, scores, **_attr):
+def plot_scores(canvas, scores, **_attr):
     """Model scores plot
         **_attr - key word _attributes
             Defaults:
@@ -848,7 +875,7 @@ def plotScores(canvas, scores, **_attr):
     # make sure we can plot txt
     
     if (canvas.GetName() not in ['plcDFAscores']) & \
-        (len(canvas.GetName().split('plcGaModelPlot')) == 1):
+            (len(canvas.GetName().split('plcGaModelPlot')) == 1):
         canvas.tbMain.tbConf.SetValue(False)
         if (canvas.tbMain.tbPoints.GetValue() is not True) & \
            (canvas.tbMain.tbSymbols.GetValue() is not True):
@@ -870,19 +897,24 @@ def plotScores(canvas, scores, **_attr):
         
         mScores = np.zeros((1, 2))
         for i in range(len(nCl)):
-            mScores = np.concatenate((mScores, np.mean(np.take(scores,
-                  _index(_attr['cl'], nCl[i]), 0), 0)[nax, :]), 0)
+            mScores = np.concatenate(
+                (mScores, np.mean(np.take(scores, _index(_attr['cl'], nCl[i]),
+                                          0), 0)[nax, :]), 0)
         mScores = mScores[1: len(mScores)]
         
         if _attr['symb'] is True:
             # plot symbols
-            sym_plot, output = plotSymbols(None, scores, mask=_attr['validation'],
-                  cLass=_attr['cl'], text=_attr['labels'], usemask=_attr['xval'],
-                  col1=0, col2=1, tit='', xL='', yL='', usecol=_attr['usecol'],
-                  usesym=_attr['usesym'])
+            sym_plot, output = plotSymbols(None, scores,
+                                           mask=_attr['validation'],
+                                           cLass=_attr['cl'],
+                                           text=_attr['labels'],
+                                           usemask=_attr['xval'], col1=0,
+                                           col2=1, tit='', xL='', yL='',
+                                           usecol=_attr['usecol'],
+                                           usesym=_attr['usesym'])
             
             # create window in background for changing symbols/colours
-            CreateSymColSelect(canvas, output)
+            create_sym_col_select(canvas, output)
             
             for each in sym_plot:
                 plot.append(each)
@@ -910,10 +942,11 @@ def plotScores(canvas, scores, **_attr):
                                    size=2, marker='plus'))
             # force boundary
             plot.append(PolyMarker([[min(mScores[:, 0] - 2.15),
-                          min(mScores[:, 1] - 2.15)], [max(mScores[:, 0] + 2.15),
-                          max(mScores[:, 1] + 2.15)]], colour='white', size=1,
-                          marker='circle'))
-                  
+                                     min(mScores[:, 1] - 2.15)],
+                                    [max(mScores[:, 0] + 2.15),
+                                     max(mScores[:, 1] + 2.15)]],
+                                   colour='white', size=1, marker='circle'))
+
             # class centroid label
             if (_attr['symb'] is False) & (_attr['text'] is False):
                 uC, centLab, centLabOrds = np.unique(_attr['cl']), [], []
@@ -958,7 +991,7 @@ def plotScores(canvas, scores, **_attr):
                                            usesym=_attr['usesym'])
             
             # create window in background for changing symbols/colours
-            CreateSymColSelect(canvas, output)
+            create_sym_col_select(canvas, output)
                                         
             for each in sym_plot:
                 plot.append(each)
@@ -989,7 +1022,7 @@ class SymColSelectTool(wx.Dialog):
         for each in self.symctrls:
             exec('symlist.append(self.' + each + '.symname)')
         # plot loadings
-        self.prnt.doPlot(loadType=3, symcolours=collist, symsymbols=symlist)
+        self.prnt.do_plot(loadType=3, symcolours=collist, symsymbols=symlist)
         self.prnt.loadIdx = 3
     
     def on_btn_symbol(self, evt):
@@ -1029,43 +1062,43 @@ class SymDialog(wx.Dialog):
         self.SetClientSize(wx.Size(140, 119))
         self.SetToolTip(u'')
 
-        bmp = wx.Bitmap(os.path.join('bmp', 'square.bmp'), wx.BITMAP_TYPE_BMP)
+        bmp = wx.Bitmap(op_join('bmp', 'square.bmp'), wx.BITMAP_TYPE_BMP)
         self.tbSquare = wx.BitmapButton(bitmap=bmp, id=-1, name=u'tbSquare',
                                         parent=self, pos=wx.Point(0, 0),
                                         size=wx.Size(69, 38), style=0)
-        self.tbSquare.Bind(wx.EVT_BUTTON, self.OnTbSquareButton)
+        self.tbSquare.Bind(wx.EVT_BUTTON, self.on_tb_square)
 
-        bmp = wx.Bitmap(os.path.join('bmp', 'circle.bmp'), wx.BITMAP_TYPE_BMP)
+        bmp = wx.Bitmap(op_join('bmp', 'circle.bmp'), wx.BITMAP_TYPE_BMP)
         self.tbCircle = wx.BitmapButton(bitmap=bmp, id=-1, name=u'tbCircle',
                                         parent=self, pos=wx.Point(71, 0),
                                         size=wx.Size(69, 38), style=0)
-        self.tbCircle.Bind(wx.EVT_BUTTON, self.OnTbCircleButton)
+        self.tbCircle.Bind(wx.EVT_BUTTON, self.on_tb_circle)
 
-        bmp = wx.Bitmap(os.path.join('bmp', 'plus.bmp'), wx.BITMAP_TYPE_BMP)
+        bmp = wx.Bitmap(op_join('bmp', 'plus.bmp'), wx.BITMAP_TYPE_BMP)
         self.tbPlus = wx.BitmapButton(bitmap=bmp, id=-1, name=u'tbPlus',
                                       parent=self, pos=wx.Point(0, 40),
                                       size=wx.Size(69, 38), style=0)
-        self.tbPlus.Bind(wx.EVT_BUTTON, self.OnTbPlusButton)
+        self.tbPlus.Bind(wx.EVT_BUTTON, self.on_tb_plus)
 
-        bmp = wx.Bitmap(os.path.join('bmp', 'triangle.bmp'), wx.BITMAP_TYPE_BMP)
+        bmp = wx.Bitmap(op_join('bmp', 'triangle.bmp'), wx.BITMAP_TYPE_BMP)
         self.tbTriangleUp = wx.BitmapButton(bitmap=bmp, id=-1,
                                             name=u'tbTriangleUp', parent=self,
                                             pos=wx.Point(71, 40),
                                             size=wx.Size(69, 38), style=0)
-        self.tbTriangleUp.Bind(wx.EVT_BUTTON, self.OnTbTriangleUpButton)
+        self.tbTriangleUp.Bind(wx.EVT_BUTTON, self.on_tb_triangle_up)
 
-        bmp = wx.Bitmap(os.path.join('bmp', 'triangle_down.bmp'), wx.BITMAP_TYPE_BMP)
+        bmp = wx.Bitmap(op_join('bmp', 'triangle_down.bmp'), wx.BITMAP_TYPE_BMP)
         self.tbTriangleDown = wx.BitmapButton(bitmap=bmp, id=-1,
                                               name=u'tbTriangleDown',
                                               parent=self, pos=wx.Point(0, 80),
                                               size=wx.Size(69, 38), style=0)
-        self.tbTriangleDown.Bind(wx.EVT_BUTTON, self.OnTbTriangleDownButton)
+        self.tbTriangleDown.Bind(wx.EVT_BUTTON, self.on_tb_triangle_down)
 
-        bmp = wx.Bitmap(os.path.join('bmp', 'cross.bmp'), wx.BITMAP_TYPE_BMP)
+        bmp = wx.Bitmap(op_join('bmp', 'cross.bmp'), wx.BITMAP_TYPE_BMP)
         self.tbCross = wx.BitmapButton(bitmap=bmp, id=-1, name=u'tbCross',
                                        parent=self, pos=wx.Point(71, 80),
                                        size=wx.Size(69, 38), style=0)
-        self.tbCross.Bind(wx.EVT_BUTTON, self.OnTbCrossButton)
+        self.tbCross.Bind(wx.EVT_BUTTON, self.on_tb_cross)
 
         self._init_sizers()
 
@@ -1073,40 +1106,61 @@ class SymDialog(wx.Dialog):
         self._init_ctrls(parent)
         self.btn = btn
         
-    def OnTbSquareButton(self, _):
-        self.btn.SetBitmapLabel(wx.Bitmap(os.path.join('bmp', 'square.bmp')))
+    def on_tb_square(self, _):
+        self.btn.SetBitmapLabel(wx.Bitmap(op_join('bmp', 'square.bmp')))
         self.btn.symname = 'square'
         self.Destroy()
 
-    def OnTbCircleButton(self, _):
-        self.btn.SetBitmapLabel(wx.Bitmap(os.path.join('bmp', 'circle.bmp')))
+    def on_tb_circle(self, _):
+        self.btn.SetBitmapLabel(wx.Bitmap(op_join('bmp', 'circle.bmp')))
         self.btn.symname = 'circle'
         self.Destroy()
 
-    def OnTbPlusButton(self, _):
-        self.btn.SetBitmapLabel(wx.Bitmap(os.path.join('bmp', 'plus.bmp')))
+    def on_tb_plus(self, _):
+        self.btn.SetBitmapLabel(wx.Bitmap(op_join('bmp', 'plus.bmp')))
         self.btn.symname = 'plus'
         self.Destroy()
 
-    def OnTbTriangleUpButton(self, _):
-        self.btn.SetBitmapLabel(wx.Bitmap(os.path.join('bmp', 'triangle.bmp')))
+    def on_tb_triangle_up(self, _):
+        self.btn.SetBitmapLabel(wx.Bitmap(op_join('bmp', 'triangle.bmp')))
         self.btn.symname = 'triangle'
         self.Destroy()
 
-    def OnTbTriangleDownButton(self, _):
-        bmp = wx.Bitmap(os.path.join('bmp', 'triangle_down.bmp'))
+    def on_tb_triangle_down(self, _):
+        bmp = wx.Bitmap(op_join('bmp', 'triangle_down.bmp'))
         self.btn.SetBitmapLabel(bmp)
         self.btn.symname = 'triangle_down'
         self.Destroy()
 
-    def OnTbCrossButton(self, _):
-        bmp = wx.Bitmap(os.path.join('bmp', 'cross.bmp'))
+    def on_tb_cross(self, _):
+        bmp = wx.Bitmap(op_join('bmp', 'cross.bmp'))
         self.btn.SetBitmapLabel(bmp)
         self.btn.symname = 'cross'
         self.Destroy()
 
 class MyPlotCanvas(wlpc.PlotCanvas):
-    def _init_plot_menu_Items(self, parent):
+    def __init__(self, parent, id, pos, size, style, name, toolbar):
+        wlpc.PlotCanvas.__init__(self, parent, id, pos, size, style, name)
+
+        wlpc.PlotCanvas._interEnabled = False
+        wlpc.PlotCanvas._justDragged = False
+
+        self.xSpec = 'min'
+        self.ySpec = 'min'
+
+        self.Bind(wx.EVT_RIGHT_DOWN, self.OnMouseRightDown)
+        self.Bind(wx.EVT_LEFT_DOWN, self.OnMouseLeftDown)
+
+        self._init_utils()
+        self.prnt = parent
+        self.tbMain = toolbar
+
+    def _init_utils(self):
+        self.plotMenu = wx.Menu(title='')
+
+        self._init_plot_menu(self.plotMenu)
+
+    def _init_plot_menu(self, parent):
         
         parent.Append(helpString='', id=MNUPLOTCOPY, kind=wx.ITEM_NORMAL,
                       item='Copy Figure')
@@ -1117,29 +1171,12 @@ class MyPlotCanvas(wlpc.PlotCanvas):
         parent.Append(helpString='', id=MNUPLOTSAVE, kind=wx.ITEM_NORMAL,
                       item='Save')
 
-        self.Bind(wx.EVT_MENU, self.OnMnuPlotCopy, id=MNUPLOTCOPY)
-        self.Bind(wx.EVT_MENU, self.OnMnuPlotPrint, id=MNUPLOTPRINT)
-        self.Bind(wx.EVT_MENU, self.OnMnuPlotSave, id=MNUPLOTSAVE)
-        self.Bind(wx.EVT_MENU, self.OnMnuPlotCoords, id=MNUPLOTCOORDS)
-              
-    def _init_utils(self):
-        self.plotMenu = wx.Menu(title='')
+        self.Bind(wx.EVT_MENU, self.on_mnu_plot_copy, id=MNUPLOTCOPY)
+        self.Bind(wx.EVT_MENU, self.on_mnu_plot_print, id=MNUPLOTPRINT)
+        self.Bind(wx.EVT_MENU, self.on_mnu_plot_save, id=MNUPLOTSAVE)
+        self.Bind(wx.EVT_MENU, self.on_mnu_plot_coords, id=MNUPLOTCOORDS)
         
-        self._init_plot_menu_Items(self.plotMenu)
-    
-    def __init__(self, parent, id, pos, size, style, name, toolbar):
-        wlpc.PlotCanvas.__init__(self, parent, id, pos, size, style, name)
-        self.xSpec = 'min'
-        self.ySpec = 'min'
-
-        self.Bind(wx.EVT_RIGHT_DOWN, self.OnMouseRightDown)
-        self.Bind(wx.EVT_LEFT_DOWN, self.OnMouseLeftDown)
-                
-        self._init_utils()
-        self.prnt = parent
-        self.tbMain = toolbar        
-        
-    def OnMnuPlotCopy(self, _):
+    def on_mnu_plot_copy(self, _):
         # for windows
         self.Redraw(wx.MetafileDC()).SetClipboard()
 
@@ -1148,10 +1185,10 @@ class MyPlotCanvas(wlpc.PlotCanvas):
         # wx.TheClipboard.SetData(self.Copy())
         # wx.TheClipboard.Close()
     
-    def OnMnuPlotPrint(self, _):
+    def on_mnu_plot_print(self, _):
         self.Printout()
     
-    def OnMnuPlotSave(self, _):
+    def on_mnu_plot_save(self, _):
         self.SaveFile()
     
     # def OnMnuPlotProperties(self, event):
@@ -1176,7 +1213,7 @@ class MyPlotCanvas(wlpc.PlotCanvas):
     #      dlg.Iconize(False)
     #      dlg.ShowModal()
     
-    def OnMnuPlotCoords(self, _):
+    def on_mnu_plot_coords(self, _):
         # send coords to clipboard
         getPoints = self.last_draw[0].objects
         coords = []
@@ -1194,7 +1231,7 @@ class MyPlotCanvas(wlpc.PlotCanvas):
     
     def OnMouseLeftDown(self, event):
         # put info in tb
-        self.PopulateToolbar()
+        self.populate_toolbar()
         # get coords for zoom centre
         self._zoomCorner1[0], self._zoomCorner1[1] = self._getXY(event)
         self._screenCoordinates = np.array(event.GetPosition())
@@ -1205,11 +1242,12 @@ class MyPlotCanvas(wlpc.PlotCanvas):
             if self.last_draw is not None:
                 graphics, xAxis, yAxis = self.last_draw
                 xy = self.PositionScreenToUser(self._screenCoordinates)
-                graphics.objects.append(PolyLine([[xy[0], yAxis[0]],
-                      [xy[0], yAxis[1]]], colour='red'))
+                graphics.objects.append(
+                    PolyLine([[xy[0], yAxis[0]], [xy[0], yAxis[1]]],
+                             colour='red'))
                 self._Draw(graphics, xAxis, yAxis)
         
-    def PopulateToolbar(self):
+    def populate_toolbar(self):
         # enable plot toolbar
         self.tbMain.Enable(True)
         self.tbMain.Refresh()
@@ -1218,17 +1256,17 @@ class MyPlotCanvas(wlpc.PlotCanvas):
         self.tbMain.canvas = self
         self.tbMain.graph = self.last_draw[0]
         
-        self.tbMain.txtPlot.SetValue(self.tbMain.graph.getTitle())
-        self.tbMain.txtXlabel.SetValue(self.tbMain.graph.getXLabel())
-        self.tbMain.txtYlabel.SetValue(self.tbMain.graph.getYLabel())
+        self.tbMain.txtPlot.SetValue(self.tbMain.graph.title)
+        self.tbMain.txtXlabel.SetValue(self.tbMain.graph.xLabel)
+        self.tbMain.txtYlabel.SetValue(self.tbMain.graph.yLabel)
         
-        self.tbMain.spnAxesFont.SetValue(self.GetFontSizeAxis())
-        self.tbMain.spn_title.SetValue(self.GetFontSizeTitle())
+        self.tbMain.spnAxesFont.SetValue(self.fontSizeAxis)
+        self.tbMain.spn_title.SetValue(self.fontSizeTitle)
         
-        self.minXrange = self.GetXCurrentRange()[0]
-        self.maxXrange = self.GetXCurrentRange()[1]
-        self.minYrange = self.GetYCurrentRange()[0]
-        self.maxYrange = self.GetYCurrentRange()[1]
+        self.minXrange = self.xCurrentRange[0]
+        self.maxXrange = self.xCurrentRange[1]
+        self.minYrange = self.yCurrentRange[0]
+        self.maxYrange = self.yCurrentRange[1]
         
         self.tbMain.Increment = (self.maxXrange - self.minXrange)/100
         
@@ -1290,55 +1328,82 @@ class MyPlotCanvas(wlpc.PlotCanvas):
             self.tbMain.tbLoadLabStd1.Enable(False)
             self.tbMain.tbLoadLabStd2.Enable(False)
             self.tbMain.tbLoadSymStd2.Enable(False)
+
+    def enableDrag(self, value):
+        """Set True to enable drag."""
+        if value not in [True, False]:
+            raise TypeError("Value should be True or False")
+        if value:
+            if self.GetEnableZoom():
+                self.enableZoom = False
+            if self.GetEnableInteractive():
+                self.enableInteractive(False)
+            self.SetCursor(self.HandCursor)
+        else:
+            self.SetCursor(wx.CROSS_CURSOR)
+        self._dragEnabled = value
+
+    def enableInteractive(self, value):
+        """Set True to enable interactive mode - RMJ 03/2008."""
+        if value not in [True, False]:
+            raise TypeError("Value should be True or False")
+        if value:
+            if self.GetEnableZoom():
+                self.enableZoom = False
+            if self.GetEnableDrag():
+                self.enableDrag(False)
+            self.SetCursor(wx.Cursor(wx.CURSOR_PENCIL))
+        else:
+            self.SetCursor(wx.CROSS_CURSOR)
+        self._interEnabled = value
+
+    def GetEnableInteractive(self):
+        return self._interEnabled
         
 
 class Pca(wx.Panel):
     # principal component analysis
-    def _init_coll_grsPca1_Items(self, parent):
+    def _init_coll_grs_pca1(self, parent):
         # generated method, don't edit
-
         parent.Add(self.plcPCAscore, 0, border=0, flag=wx.EXPAND)
         parent.Add(self.plcPcaLoadsV, 0, border=0, flag=wx.EXPAND)
         parent.Add(self.plcPCvar, 0, border=0, flag=wx.EXPAND)
         parent.Add(self.plcPCeigs, 0, border=0, flag=wx.EXPAND)
 
-    def _init_coll_bxsPca1_Items(self, parent):
+    def _init_coll_bxs_pca1(self, parent):
         # generated method, don't edit
-
         parent.Add(self.bxsPca2, 1, border=0, flag=wx.EXPAND)
 
-    def _init_coll_bxsPca2_Items(self, parent):
+    def _init_coll_bxs_pca2(self, parent):
         # generated method, don't edit
-
         parent.Add(self.titleBar, 0, border=0, flag=wx.EXPAND)
         parent.Add(self.grsPca1, 1, border=0, flag=wx.EXPAND)
 
     def _init_sizers(self):
         # generated method, don't edit
         self.bxsPca1 = wx.BoxSizer(orient=wx.HORIZONTAL)
-
         self.bxsPca2 = wx.BoxSizer(orient=wx.VERTICAL)
-
         self.grsPca1 = wx.GridSizer(cols=2, hgap=2, rows=2, vgap=2)
 
-        self._init_coll_bxsPca1_Items(self.bxsPca1)
-        self._init_coll_bxsPca2_Items(self.bxsPca2)
-        self._init_coll_grsPca1_Items(self.grsPca1)
+        self._init_coll_bxs_pca1(self.bxsPca1)
+        self._init_coll_bxs_pca2(self.bxsPca2)
+        self._init_coll_grs_pca1(self.grsPca1)
         
         self.SetSizer(self.bxsPca1)
 
     def _init_ctrls(self, prnt):
         # generated method, don't edit
         wx.Panel.__init__(self, id=wxID_PCA, name='Pca', parent=prnt,
-              pos=wx.Point(-12, 22), size=wx.Size(1024, 599),
-              style=wx.TAB_TRAVERSAL)
+                          pos=wx.Point(-12, 22), size=wx.Size(1024, 599),
+                          style=wx.TAB_TRAVERSAL)
         self.SetClientSize(wx.Size(1016, 565))
         self.SetAutoLayout(True)
         self.SetToolTip('')
         self.prnt = prnt
         
         self.plcPCeigs = MyPlotCanvas(id=-1, name='plcPCeigs',
-                                      parent=self, pos=wx.Point(589, 283), size=wx.Size(200, 200),
+                                      parent=self, pos=wx.Point(589, 283),
+                                      size=wx.Size(200, 200),
                                       style=0, toolbar=self.prnt.parent.tbMain)
         self.plcPCeigs.SetToolTip('')
         self.plcPCeigs.fontSizeTitle = 10
@@ -1348,9 +1413,10 @@ class Pca(wx.Panel):
             LayoutAnchors(self.plcPCeigs, False, True, False, True))
         self.plcPCeigs.fontSizeLegend = 8
         
-        self.plcPCvar = MyPlotCanvas(
-            id=-1, name='plcPCvar', parent=self, pos=wx.Point(176, 283),
-            size=wx.Size(200, 200), style=0, toolbar=self.prnt.parent.tbMain)
+        self.plcPCvar = MyPlotCanvas(id=-1, name='plcPCvar', parent=self,
+                                     pos=wx.Point(176, 283),
+                                     size=wx.Size(200, 200), style=0,
+                                     toolbar=self.prnt.parent.tbMain)
         self.plcPCvar.fontSizeAxis = 8
         self.plcPCvar.fontSizeTitle = 10
         self.plcPCvar.enableZoom = True
@@ -1395,12 +1461,13 @@ class Pca(wx.Panel):
         self.titleBar.spnNumPcs2.SetValue(2)
         
         objects = {'plcPCeigs': ['Eigenvalues', 'Principal Component', 'Eigenvalue'],
-            'plcPCvar': ['Percentage Explained Variance', 'Principal Component', 'Cumulative % Variance'],
-            'plcPCAscore': ['PCA Scores', 't[1]', 't[2]'],
-            'plcPcaLoadsV': ['PCA Loading', 'w[1]', 'w[2]']}
+                   'plcPCvar': ['Percentage Explained Variance',
+                                'Principal Component', 'Cumulative % Variance'],
+                   'plcPCAscore': ['PCA Scores', 't[1]', 't[2]'],
+                   'plcPcaLoadsV': ['PCA Loading', 'w[1]', 'w[2]']}
 
         curve = PolyLine([[0, 0], [1, 1]], colour='white', width=1,
-                         style=wx.TRANSPARENT)
+                         style=wx.PENSTYLE_TRANSPARENT)
         
         for each in objects.keys():
             exec('self.' + each + '.Draw(PlotGraphics([curve], ' +
@@ -1415,19 +1482,19 @@ class TitleBar(bp.ButtonPanel):
                                 alignment=bp.BP_ALIGN_LEFT)
         self.Bind(wx.EVT_PAINT, self.OnButtonPanelPaint)
         
-        bmp = wx.Bitmap(os.path.join('bmp', 'run.png'), wx.BITMAP_TYPE_PNG)
+        bmp = wx.Bitmap(op_join('bmp', 'run.png'), wx.BITMAP_TYPE_PNG)
         self.btnRunPCA = bp.ButtonInfo(self, -1, bmp, kind=wx.ITEM_NORMAL,
                                        shortHelp='Run PCA',
                                        longHelp='Run Principal Component Analysis')
         self.btnRunPCA.Enable(False)
-        self.Bind(wx.EVT_BUTTON, self.OnBtnRunPCAButton, id=self.btnRunPCA.GetId())
+        self.Bind(wx.EVT_BUTTON, self.on_btn_run_pca, id=self.btnRunPCA.GetId())
 
-        bmp = wx.Bitmap(os.path.join('bmp', 'export.png'), wx.BITMAP_TYPE_PNG)
+        bmp = wx.Bitmap(op_join('bmp', 'export.png'), wx.BITMAP_TYPE_PNG)
         self.btnExportPcaResults = bp.ButtonInfo(self, -1, bmp, kind=wx.ITEM_NORMAL,
                                                  shortHelp='Export PCA Results',
                                                  longHelp='Export PCA Results')
         self.btnExportPcaResults.Enable(False)
-        self.Bind(wx.EVT_BUTTON, self.OnBtnExportPcaResultsButton, id=self.btnExportPcaResults.GetId())
+        self.Bind(wx.EVT_BUTTON, self.on_btn_export_pca_results, id=self.btnExportPcaResults.GetId())
 
         choices = ['Raw spectra', 'Processed spectra']
         self.cbxData = wx.Choice(choices=choices, id=-1, name='cbxData',
@@ -1436,9 +1503,10 @@ class TitleBar(bp.ButtonPanel):
         self.cbxData.SetSelection(0)
               
         self.cbxPcaType = wx.Choice(choices=['NIPALS', 'SVD'], id=-1,
-              name='cbxPcaType', parent=self, pos=wx.Point(56, 23),
-              size=wx.Size(64, 23), style=0)
-        self.cbxPcaType.Bind(wx.EVT_COMBOBOX, self.OnCbxPcaType, id=ID_PCATYPE)
+                                    name='cbxPcaType', parent=self,
+                                    pos=wx.Point(56, 23),
+                                    size=wx.Size(64, 23), style=0)
+        self.cbxPcaType.Bind(wx.EVT_COMBOBOX, self.on_cbx_pca_type, id=ID_PCATYPE)
         self.cbxPcaType.SetSelection(0)
         
         choices = ['Correlation matrix', 'Covariance matrix']
@@ -1462,14 +1530,15 @@ class TitleBar(bp.ButtonPanel):
                                       size=wx.Size(46, 23),
                                       style=wx.SP_ARROW_KEYS)
         self.spnNumPcs1.Enable(0)
-        self.spnNumPcs1.Bind(wx.EVT_SPINCTRL, self.OnSpnNumPcs1, id=-1)      
+        self.spnNumPcs1.Bind(wx.EVT_SPINCTRL, self.on_spn_num_pcs1, id=-1)
         
-        self.spnNumPcs2 = wx.SpinCtrl(id=ID_NUMPCS2, initial=1,
-              max=100, min=1, name='spnNumPcs2', parent=self,
-              pos=wx.Point(240, 184), size=wx.Size(46, 23),
-              style=wx.SP_ARROW_KEYS)
+        self.spnNumPcs2 = wx.SpinCtrl(id=ID_NUMPCS2, initial=1, max=100, min=1,
+                                      name='spnNumPcs2', parent=self,
+                                      pos=wx.Point(240, 184),
+                                      size=wx.Size(46, 23),
+                                      style=wx.SP_ARROW_KEYS)
         self.spnNumPcs2.Enable(0)
-        self.spnNumPcs2.Bind(wx.EVT_SPINCTRL, self.OnSpnNumPcs2, id=-1)
+        self.spnNumPcs2.Bind(wx.EVT_SPINCTRL, self.on_spn_num_pcs2, id=-1)
         
     def __init__(self, parent, id, text, style, alignment):
         
@@ -1477,25 +1546,22 @@ class TitleBar(bp.ButtonPanel):
         
         self.parent = parent
         
-        self.CreateButtons()
+        self.create_buttons()
     
-    def CreateButtons(self):
+    def create_buttons(self):
         self.Freeze()
-        
         self.SetProperties()
-                    
+        style = wx.TRANSPARENT_WINDOW
+
         self.AddControl(self.cbxData)
         self.AddControl(self.cbxPreprocType)
         self.AddControl(self.cbxPcaType)
-        self.AddControl(GenStaticText(self, -1, 'No. PCs:',
-                                      style=wx.TRANSPARENT_WINDOW))
+        self.AddControl(GenStaticText(self, -1, 'No. PCs:', style=style))
         self.AddControl(self.spnPCAnum)
         self.AddSeparator()
-        self.AddControl(GenStaticText(self, -1, 'PC',
-                                      style=wx.TRANSPARENT_WINDOW))
+        self.AddControl(GenStaticText(self, -1, 'PC', style=style))
         self.AddControl(self.spnNumPcs1)
-        self.AddControl(GenStaticText(self, -1, ' vs. ',
-                                      style=wx.TRANSPARENT_WINDOW))
+        self.AddControl(GenStaticText(self, -1, ' vs. ', style=style))
         self.AddControl(self.spnNumPcs2)
         self.AddSeparator()
         self.AddButton(self.btnRunPCA)
@@ -1503,7 +1569,6 @@ class TitleBar(bp.ButtonPanel):
         self.AddButton(self.btnExportPcaResults)
         
         self.Thaw()
-
         self.DoLayout()
         
     def OnButtonPanelPaint(self, event):
@@ -1521,17 +1586,17 @@ class TitleBar(bp.ButtonPanel):
         background = self.GetBackgroundColour()            
         bpArt.SetColour(bp.BP_TEXT_COLOUR, wx.BLUE)
         bpArt.SetColour(bp.BP_BORDER_COLOUR,
-                       bp.BrightenColour(background, 0.85))
+                        bp.BrightenColour(background, 0.85))
         bpArt.SetColour(bp.BP_SEPARATOR_COLOUR,
-                       bp.BrightenColour(background, 0.85))
+                        bp.BrightenColour(background, 0.85))
         bpArt.SetColour(bp.BP_BUTTONTEXT_COLOUR, wx.BLACK)
         bpArt.SetColour(bp.BP_SELECTION_BRUSH_COLOUR, wx.Colour(242, 242, 235))
         bpArt.SetColour(bp.BP_SELECTION_PEN_COLOUR, wx.Colour(206, 206, 195))
 
-    def OnBtnRunPCAButton(self, _):
-        self.runPca()
+    def on_btn_run_pca(self, _):
+        self.run_pca()
     
-    def OnBtnExportPcaResultsButton(self, _):
+    def on_btn_export_pca_results(self, _):
         dlg = wx.FileDialog(self, "Choose a file", ".", "", 
                             "Any files (*.*)|*.*", wx.FD_SAVE)
         try:
@@ -1552,7 +1617,7 @@ class TitleBar(bp.ButtonPanel):
         finally:
             dlg.Destroy()
         
-    def OnCbxPcaType(self, event):
+    def on_cbx_pca_type(self, _):
         if self.cbxPcaType.GetValue() == 1:
             self.spnPCAnum.Enable(0)
         else:
@@ -1561,7 +1626,7 @@ class TitleBar(bp.ButtonPanel):
     def get_data(self, data):
         self.data = data
     
-    def runPca(self):
+    def run_pca(self):
         # Run principal component analysis
         try:
             self.spnNumPcs1.Enable(1)
@@ -1581,13 +1646,12 @@ class TitleBar(bp.ButtonPanel):
                 
             if self.cbxPcaType.GetSelection() == 1:
                 # run PCA using SVD
-                self.data['pcscores'], self.data['pcloads'], self.data['pcpervar'], self.data['pceigs'] = \
+                scores, loads, self.data['pcpervar'], eigs = \
                     chemtrics.pca_svd(xdata, self.data['pcatype'])
                 
-                self.data['pcscores'] = self.data['pcscores'][:, 0: len(self.data['pceigs'])]
-                
-                self.data['pcloads'] = self.data['pcloads'][0: len(self.data['pceigs']), :]
-                
+                self.data['pcscores'] = scores[:, 0: len(eigs)]
+                self.data['pcloads'] = loads[0: len(eigs), :]
+                self.data['pceigs'] = eigs
                 self.data['niporsvd'] = 'svd'
                                 
             elif self.cbxPcaType.GetSelection() == 0:
@@ -1608,19 +1672,20 @@ class TitleBar(bp.ButtonPanel):
             
             # check for metadata & setup limits for dfa
             tbar = self.parent.prnt.parent.plDfa.titleBar
-            if (sum(self.data['class'][:, 0]) != 0) and (self.data['class'] is not None):
+            klass = self.data['class']
+            if (sum(klass[:, 0]) != 0) and (klass is not None):
                 tbar.cbxData.SetSelection(0)
                 tbar.spnDfaPcs.SetRange(2, len(self.data['pceigs']))
-                tbar.spnDfaDfs.SetRange(1, len(np.unique(self.data['class'][:, 0])) - 1)
+                tbar.spnDfaDfs.SetRange(1, len(np.unique(klass[:, 0])) - 1)
         
             # plot results
-            self.PlotPca()
+            self.plot_pca()
             
         except Exception as error:
             error_box(self, '%s' % str(error))
             raise
             
-    def PlotPca(self):
+    def plot_pca(self):
         # Plot pca scores and loadings
         pc1 = self.spnNumPcs1.GetValue()
         pc2 = self.spnNumPcs2.GetValue()
@@ -1633,17 +1698,20 @@ class TitleBar(bp.ButtonPanel):
              '%.2f' % (self.data['pcpervar'][pc2] -
                        self.data['pcpervar'][pc2-1]) + '%)'
         
-        plotScores(self.parent.plcPCAscore, self.data['pcscores'], cl=self.data['class'][:, 0],
-                   labels=self.data['label'], validation=self.data['validation'],
-                   col1=pc1-1, col2=pc2-1,
-                   title='PCA Scores', xLabel=xL, yLabel=yL, xval=False, pconf=False,
-                   symb=self.parent.prnt.parent.tbMain.tbSymbols.GetValue(),
-                   text=self.parent.prnt.parent.tbMain.tbPoints.GetValue(),
-                   usecol=[], usesym=[])
+        plot_scores(self.parent.plcPCAscore, self.data['pcscores'],
+                    cl=self.data['class'][:, 0],
+                    labels=self.data['label'],
+                    validation=self.data['validation'],
+                    col1=pc1-1, col2=pc2-1, pconf=False,
+                    title='PCA Scores', xLabel=xL, yLabel=yL, xval=False,
+                    symb=self.parent.prnt.parent.tbMain.tbSymbols.GetValue(),
+                    text=self.parent.prnt.parent.tbMain.tbPoints.GetValue(),
+                    usecol=[], usesym=[])
         
         # Plot loadings
         if pc1 != pc2:
-            plotLoads(self.parent.plcPcaLoadsV, np.transpose(self.data['pcloads']),
+            plotLoads(self.parent.plcPcaLoadsV,
+                      np.transpose(self.data['pcloads']),
                       xaxis=self.data['indlabels'], col1=pc1-1,
                       col2=pc2-1, title='PCA Loadings',
                       xLabel='w[' + str(pc1) + ']',
@@ -1676,53 +1744,50 @@ class TitleBar(bp.ButtonPanel):
         self.spnNumPcs2.Enable(True)
         self.btnExportPcaResults.Enable(True)
         
-    def OnSpnNumPcs1(self, event):
+    def on_spn_num_pcs1(self, _):
         pc1 = self.spnNumPcs1.GetValue()
         pc2 = self.spnNumPcs2.GetValue()
-        self.PlotPca()
-        SetButtonState(pc1, pc2,
-                       self.parent.prnt.prnt.tbMain)
+        self.plot_pca()
+        set_btn_state(pc1, pc2, self.parent.prnt.prnt.tbMain)
               
-    def OnSpnNumPcs2(self, event):
+    def on_spn_num_pcs2(self, _):
         pc1 = self.spnNumPcs1.GetValue()
         pc2 = self.spnNumPcs2.GetValue()
-        self.PlotPca()
-        SetButtonState(pc1, pc2,
-                       self.parent.prnt.prnt.tbMain)
+        self.plot_pca()
+        set_btn_state(pc1, pc2, self.parent.prnt.prnt.tbMain)
               
 class plotProperties(wx.Dialog):
     def _init_grsDfscores(self):
         # generated method, don't edit
         self.grsDfScores = wx.GridSizer(cols=2, hgap=4, rows=2, vgap=4)
 
-        self._init_coll_grsDfscores_Items(self.grsDfScores)
+        self._init_coll_grs_df_scores(self.grsDfScores)
 
         self.scorePnl.SetSizer(self.grsDfScores)
 
-    def _init_coll_grsDfscores_Items(self, parent):
+    def _init_coll_grs_df_scores(self, parent):
         # generated method, don't edit
 
         parent.Add(self.tbConf, 0, border=0, flag=wx.EXPAND)
         parent.Add(self.tbPoints, 0, border=0, flag=wx.EXPAND)
         parent.Add(self.tbSymbols, 0, border=0, flag=wx.EXPAND)
     
-    def _init_grsLoadings(self):
+    def _init_grs_loads(self):
         # generated method, don't edit
         self.grsLoadings = wx.GridSizer(cols=2, hgap=4, rows=2, vgap=4)
 
-        self._init_coll_grsLoadings_Items(self.grsLoadings)
+        self._init_coll_grs_loads(self.grsLoadings)
 
         self.loadPnl.SetSizer(self.grsLoadings)
     
-    def _init_coll_grsLoadings_Items(self, parent):
+    def _init_coll_grs_loads(self, parent):
         # generated method, don't edit
-
         parent.Add(self.tbLoadLabels, 0, border=0, flag=wx.EXPAND)
         parent.Add(self.tbLoadLabStd1, 0, border=0, flag=wx.EXPAND)
         parent.Add(self.tbLoadLabStd2, 0, border=0, flag=wx.EXPAND)
         parent.Add(self.tbLoadSymStd2, 0, border=0, flag=wx.EXPAND)
         
-    def _init_coll_gbsPlotProps_Items(self, parent):
+    def _init_coll_gbs_plot_props(self, parent):
         # generated method, don't edit
         flag = wx.EXPAND
         parent.Add(self.stTitle, (0, 0), border=4, flag=flag, span=(1, 1))
@@ -1761,15 +1826,10 @@ class plotProperties(wx.Dialog):
         parent.Add(self.btnApply, (7, 1), border=4, flag=flag, span=(1, 5))
         parent.AddSpacer(wx.Size(8, 8), (8, 0), flag=flag, span=(2, 6))
 
-    def _init_coll_gbsPlotProps_Growables(self, parent):
+    def _init_coll_gbs_plot_props_growables(self, parent):
         # generated method, don't edit
-
-        parent.AddGrowableCol(0)
-        parent.AddGrowableCol(1)
-        parent.AddGrowableCol(2)
-        parent.AddGrowableCol(3)
-        parent.AddGrowableCol(4)
-        parent.AddGrowableCol(5)
+        for col in range(6):
+            parent.AddGrowableCol(col)
 
     def _init_plot_prop_sizers(self):
         # generated method, don't edit
@@ -1781,25 +1841,29 @@ class plotProperties(wx.Dialog):
         self.gbsPlotProps.SetEmptyCellSize(wx.Size(0, 0))
         self.gbsPlotProps.SetFlexibleDirection(wx.HORIZONTAL)
 
-        self._init_coll_gbsPlotProps_Items(self.gbsPlotProps)
-        self._init_coll_gbsPlotProps_Growables(self.gbsPlotProps)
+        self._init_coll_gbs_plot_props(self.gbsPlotProps)
+        self._init_coll_gbs_plot_props_growables(self.gbsPlotProps)
 
         self.genPnl.SetSizer(self.gbsPlotProps)
 
     def _init_plot_prop_ctrls(self, prnt):
-        wx.Dialog.__init__(self, id=-1, name='', parent=prnt, pos=wx.Point(0, 0),
-              size=wx.Size(530, 480), style=wx.MAXIMIZE_BOX | wx.DIALOG_MODAL | 
-              wx.DEFAULT_DIALOG_STYLE, title='Plot Properties')
+        wx.Dialog.__init__(self, id=-1, name='', parent=prnt,
+                           pos=wx.Point(0, 0), size=wx.Size(530, 480),
+                           style=wx.MAXIMIZE_BOX | wx.DIALOG_MODAL |
+                           wx.DEFAULT_DIALOG_STYLE, title='Plot Properties')
         self.SetAutoLayout(True)
         
-        self.foldPnl = fpb.FoldPanelBar(self, -1, wx.DefaultPosition, (525, 450),
-              fpb.FPB_DEFAULT_STYLE, fpb.FPB_EXCLUSIVE_FOLD)
-        self.foldPnl.SetConstraints(LayoutAnchors(self.foldPnl, True, True, True, True))
+        self.foldPnl = fpb.FoldPanelBar(self, -1, wx.DefaultPosition,
+                                        (525, 450),
+                                        fpb.FPB_DEFAULT_STYLE,
+                                        fpb.FPB_EXCLUSIVE_FOLD)
+        self.foldPnl.SetConstraints(
+            LayoutAnchors(self.foldPnl, True, True, True, True))
         self.foldPnl.SetAutoLayout(True)
         
         icons = wx.ImageList(16, 16)
-        icons.Add(wx.Bitmap(os.path.join('bmp', 'arrown.png'), wx.BITMAP_TYPE_PNG))
-        icons.Add(wx.Bitmap(os.path.join('bmp', 'arrows.png'), wx.BITMAP_TYPE_PNG))
+        icons.Add(wx.Bitmap(op_join('bmp', 'arrown.png'), wx.BITMAP_TYPE_PNG))
+        icons.Add(wx.Bitmap(op_join('bmp', 'arrows.png'), wx.BITMAP_TYPE_PNG))
         
         self.genSets = self.foldPnl.AddFoldPanel("General properties", 
                                                  collapsed=True,
@@ -1821,8 +1885,8 @@ class plotProperties(wx.Dialog):
         self.genPnl.SetToolTip('')
         
         self.scorePnl = wx.Panel(id=-1, name='scorePnl', parent=self.scoreSets,
-              pos=wx.Point(0, 0), size=wx.Size(20, 100),
-              style=wx.TAB_TRAVERSAL)
+                                 pos=wx.Point(0, 0), size=wx.Size(20, 100),
+                                 style=wx.TAB_TRAVERSAL)
         self.scorePnl.SetToolTip('')     
         
         self.loadPnl = wx.Panel(id=-1, name='loadPnl', parent=self.loadSets,
@@ -1871,7 +1935,7 @@ class plotProperties(wx.Dialog):
                                     pos=wx.Point(15, 0), size=wx.Size(40, 21),
                                     style=0, value='')
         self.txtTitle.SetToolTip('')
-        self.txtTitle.Bind(wx.EVT_TEXT, self.OnTxtTitle)
+        self.txtTitle.Bind(wx.EVT_TEXT, self.on_txt_title)
 
         self.txtYlabel = wx.TextCtrl(id=-1, name='txtYlabel', parent=self.genPnl,
                                      pos=wx.Point(15, 78), size=wx.Size(40, 21),
@@ -1892,42 +1956,42 @@ class plotProperties(wx.Dialog):
                                      parent=self.genPnl, pos=wx.Point(96, 103),
                                      size=wx.Size(15, 21), style=wx.SP_VERTICAL)
         self.spnXmin.SetToolTip('')
-        self.spnXmin.Bind(wx.EVT_SPIN_DOWN, self.OnSpnXminSpinDown)
-        self.spnXmin.Bind(wx.EVT_SPIN_UP, self.OnSpnXminSpinUp)
-        self.spnXmin.Bind(wx.EVT_SPIN, self.OnSpnXmin)
+        self.spnXmin.Bind(wx.EVT_SPIN_DOWN, self.on_spn_xmin_down)
+        self.spnXmin.Bind(wx.EVT_SPIN_UP, self.on_spn_xmin_up)
+        self.spnXmin.Bind(wx.EVT_SPIN, self.on_spn_xmin)
 
         self.spnXmax = wx.SpinButton(id=-1, name='spnXmax',
                                      parent=self.genPnl, pos=wx.Point(240, 103),
                                      size=wx.Size(15, 21), style=wx.SP_VERTICAL)
         self.spnXmax.SetToolTip('')
-        self.spnXmax.Bind(wx.EVT_SPIN_DOWN, self.OnSpnXmaxSpinDown)
-        self.spnXmax.Bind(wx.EVT_SPIN_UP, self.OnSpnXmaxSpinUp)
-        self.spnXmax.Bind(wx.EVT_SPIN, self.OnSpnXmax)
+        self.spnXmax.Bind(wx.EVT_SPIN_DOWN, self.on_spn_xmax_down)
+        self.spnXmax.Bind(wx.EVT_SPIN_UP, self.on_spn_xmax_up)
+        self.spnXmax.Bind(wx.EVT_SPIN, self.on_spn_xmax)
 
         self.spnYmax = wx.SpinButton(id=-1, name='spnYmax',
                                      parent=self.genPnl, pos=wx.Point(240, 131),
                                      size=wx.Size(15, 21), style=wx.SP_VERTICAL)
         self.spnYmax.SetToolTip('')
-        self.spnYmax.Bind(wx.EVT_SPIN_DOWN, self.OnSpnYmaxSpinDown)
-        self.spnYmax.Bind(wx.EVT_SPIN_UP, self.OnSpnYmaxSpinUp)
-        self.spnYmax.Bind(wx.EVT_SPIN, self.OnSpnYmax)
+        self.spnYmax.Bind(wx.EVT_SPIN_DOWN, self.on_spn_ymax_down)
+        self.spnYmax.Bind(wx.EVT_SPIN_UP, self.on_spn_ymax_up)
+        self.spnYmax.Bind(wx.EVT_SPIN, self.on_spn_ymax)
 
         self.spnYmin = wx.SpinButton(id=-1, name='spnYmin',
                                      parent=self.genPnl, pos=wx.Point(96, 131),
                                      size=wx.Size(15, 21), style=wx.SP_VERTICAL)
         self.spnYmin.SetToolTip('')
-        self.spnYmin.Bind(wx.EVT_SPIN_DOWN, self.OnSpnYminSpinDown)
-        self.spnYmin.Bind(wx.EVT_SPIN_UP, self.OnSpnYminSpinUp)
-        self.spnYmin.Bind(wx.EVT_SPIN, self.OnSpnYmin)
+        self.spnYmin.Bind(wx.EVT_SPIN_DOWN, self.on_spn_ymin_down)
+        self.spnYmin.Bind(wx.EVT_SPIN_UP, self.on_spn_ymin_up)
+        self.spnYmin.Bind(wx.EVT_SPIN, self.on_spn_ymin)
 
-        self.txtXmax = wx.TextCtrl(id=-1, name='txtXmax',
-              parent=self.genPnl, pos=wx.Point(192, 103), size=wx.Size(40, 21),
-              style=0, value='')
+        self.txtXmax = wx.TextCtrl(id=-1, name='txtXmax', parent=self.genPnl,
+                                   pos=wx.Point(192, 103), size=wx.Size(40, 21),
+                                   style=0, value='')
         self.txtXmax.SetToolTip('')
 
-        self.txtYmax = wx.TextCtrl(id=-1, name='txtYmax',
-              parent=self.genPnl, pos=wx.Point(192, 131), size=wx.Size(40, 21),
-              style=0, value='')
+        self.txtYmax = wx.TextCtrl(id=-1, name='txtYmax', parent=self.genPnl,
+                                   pos=wx.Point(192, 131), size=wx.Size(40, 21),
+                                   style=0, value='')
         self.txtYmax.SetToolTip('')
 
         self.txtYmin = wx.TextCtrl(id=-1, name='txtYmin',
@@ -1950,46 +2014,47 @@ class plotProperties(wx.Dialog):
         self.spnFontSizeAxes.SetToolTip('')
         self.spnFontSizeAxes.SetValue(8)
         self.spnFontSizeAxes.SetRange(4, 76)
-        self.spnFontSizeAxes.Bind(wx.EVT_SPIN, self.OnSpnFontSizeAxes)
+        self.spnFontSizeAxes.Bind(wx.EVT_SPIN, self.on_spn_font_size_axes)
         
-        self.spnFontSizeTitle = wx.SpinCtrl(id=-1,
-              initial=8, max=76, min=4, name='spnFontSizeTitle', parent=self.genPnl,
-              pos=wx.Point(15, 28), size=wx.Size(40, 21),
-              style=wx.SP_ARROW_KEYS)
+        self.spnFontSizeTitle = wx.SpinCtrl(id=-1, initial=8, max=76, min=4,
+                                            name='spnFontSizeTitle',
+                                            parent=self.genPnl,
+                                            pos=wx.Point(15, 28),
+                                            size=wx.Size(40, 21),
+                                            style=wx.SP_ARROW_KEYS)
         self.spnFontSizeTitle.SetToolTip('')
         self.spnFontSizeTitle.SetValue(8)
         self.spnFontSizeTitle.SetRange(4, 76)
-        self.spnFontSizeTitle.Bind(wx.EVT_SPIN, self.OnSpnFontSizeTitle)
+        self.spnFontSizeTitle.Bind(wx.EVT_SPIN, self.on_spn_font_size_title)
         
-        self.tbGrid = wxTogBut(id=-1, name='tbGrid',
-                                      label='Grid', parent=self.genPnl,
-                                      pos=wx.Point(248, 48),
-                                      size=wx.Size(40, 21), style=0)
+        self.tbGrid = wxTogBut(id=-1, name='tbGrid', label='Grid',
+                               parent=self.genPnl, pos=wx.Point(248, 48),
+                               size=wx.Size(40, 21), style=0)
         self.tbGrid.SetValue(False)
         self.tbGrid.SetToolTip('')
-        self.tbGrid.Bind(wx.EVT_BUTTON, self.OnTbGridButton)
+        self.tbGrid.Bind(wx.EVT_BUTTON, self.on_tb_grid)
               
-        self.tbDrag = wxTogBut(id=-1, name='tbDrag',
-                                      label='Drag', parent=self.genPnl,
-                                      pos=wx.Point(248, 48),
-                                      size=wx.Size(40, 21), style=0)
+        self.tbDrag = wxTogBut(id=-1, name='tbDrag', label='Drag',
+                               parent=self.genPnl, pos=wx.Point(248, 48),
+                               size=wx.Size(40, 21), style=0)
         self.tbDrag.SetValue(False)
         self.tbDrag.SetToolTip('')
-        self.tbDrag.Bind(wx.EVT_BUTTON, self.OnTbDragButton)
+        self.tbDrag.Bind(wx.EVT_BUTTON, self.on_tb_drag_button)
         
-        self.tbPointLabel = wxTogBut(id=-1,
-              label='Points', name='tbPointLabel', parent=self.genPnl,
-              pos=wx.Point(248, 48), size=wx.Size(40, 21), style=0)
+        self.tbPointLabel = wxTogBut(id=-1, label='Points',
+                                     name='tbPointLabel', parent=self.genPnl,
+                                     pos=wx.Point(248, 48),
+                                     size=wx.Size(40, 21), style=0)
         self.tbPointLabel.SetValue(False)
         self.tbPointLabel.SetToolTip('')
-        self.tbPointLabel.Bind(wx.EVT_BUTTON, self.OnTbPointLabelButton)
+        self.tbPointLabel.Bind(wx.EVT_BUTTON, self.on_tb_point_label)
         
-        self.tbZoom = wxTogBut(id=-1,
-              label='Zoom', name='tbZoom', parent=self.genPnl,
-              pos=wx.Point(248, 48), size=wx.Size(40, 21), style=0)
+        self.tbZoom = wxTogBut(id=-1, label='Zoom', name='tbZoom',
+                               parent=self.genPnl, pos=wx.Point(248, 48),
+                               size=wx.Size(40, 21), style=0)
         self.tbZoom.SetValue(True)
         self.tbZoom.SetToolTip('')
-        self.tbZoom.Bind(wx.EVT_BUTTON, self.OnTbZoomButton)
+        self.tbZoom.Bind(wx.EVT_BUTTON, self.on_tb_zoom_button)
         
         self.cbApply = wx.CheckBox(id=-1, name='cbApply',
                                    label='Immediate Apply',
@@ -2000,37 +2065,36 @@ class plotProperties(wx.Dialog):
                                   name='btnApply', parent=self.genPnl,
                                   pos=wx.Point(192, 136),
                                   size=wx.Size(40, 21), style=0)
-        self.btnApply.Bind(wx.EVT_BUTTON, self.OnBtnApply)
+        self.btnApply.Bind(wx.EVT_BUTTON, self.on_btn_apply)
         
         self.tbConf = wxTogBut(id=-1, name='tbConf',
-                                                 label='95% Confidence Circles',
-                                                 parent=self.scorePnl,
-                                                 pos=wx.Point(248, 48),
-                                                 size=wx.Size(40, 21))
+                               label='95% Confidence Circles',
+                               parent=self.scorePnl, pos=wx.Point(248, 48),
+                               size=wx.Size(40, 21))
         self.tbConf.SetValue(True)
         self.tbConf.SetToolTip('')
-        self.tbConf.Bind(wx.EVT_BUTTON, self.OnTbConfButton)
+        self.tbConf.Bind(wx.EVT_BUTTON, self.on_tb_conf)
         
-        self.tbPoints = wxTogBut(id=-1,
-              label='Labels', name='tbPoints', parent=self.scorePnl,
-              pos=wx.Point(248, 48), size=wx.Size(40, 21))
+        self.tbPoints = wxTogBut(id=-1, label='Labels',
+                                 name='tbPoints', parent=self.scorePnl,
+                                 pos=wx.Point(248, 48), size=wx.Size(40, 21))
         self.tbPoints.SetValue(True)
         self.tbPoints.SetToolTip('')
-        self.tbPoints.Bind(wx.EVT_BUTTON, self.OnTbPointsButton)
+        self.tbPoints.Bind(wx.EVT_BUTTON, self.on_tb_points)
         
         self.tbSymbols = wxTogBut(id=-1, name='tbSymbols', label='Symbols',
                                   parent=self.scorePnl, pos=wx.Point(248, 48),
                                   size=wx.Size(40, 21))
         self.tbSymbols.SetValue(False)
         self.tbSymbols.SetToolTip('')
-        self.tbSymbols.Bind(wx.EVT_BUTTON, self.OnTbSymbolsButton)
+        self.tbSymbols.Bind(wx.EVT_BUTTON, self.on_tb_symbols)
         
         self.tbLoadLabels = wx.Button(id=-1, name='tbLoadLabels',
                                       label='Labels', parent=self.loadPnl,
                                       pos=wx.Point(248, 48),
                                       size=wx.Size(40, 21))
         self.tbLoadLabels.SetToolTip('')
-        self.tbLoadLabels.Bind(wx.EVT_BUTTON, self.OnTbLoadLabelsButton)
+        self.tbLoadLabels.Bind(wx.EVT_BUTTON, self.on_tb_load_labels)
         
         self.tbLoadLabStd1 = wx.Button(id=-1, name='tbLoadLabStd1',
                                        label='Labels & 1 Std',
@@ -2038,7 +2102,7 @@ class plotProperties(wx.Dialog):
                                        pos=wx.Point(248, 48),
                                        size=wx.Size(40, 21))
         self.tbLoadLabStd1.SetToolTip('')
-        self.tbLoadLabStd1.Bind(wx.EVT_BUTTON, self.OnTbLoadLabStd1Button)
+        self.tbLoadLabStd1.Bind(wx.EVT_BUTTON, self.on_tb_load_lab_std1)
         
         self.tbLoadLabStd2 = wx.Button(id=-1, name='tbLoadLabStd2',
                                        label='Labels & 2 Std',
@@ -2046,17 +2110,20 @@ class plotProperties(wx.Dialog):
                                        pos=wx.Point(248, 48),
                                        size=wx.Size(40, 21))
         self.tbLoadLabStd2.SetToolTip('')
-        self.tbLoadLabStd2.Bind(wx.EVT_BUTTON, self.OnTbLoadLabStd2Button)
+        self.tbLoadLabStd2.Bind(wx.EVT_BUTTON, self.on_tb_load_lab_std2)
         
-        self.tbLoadSymStd2 = wx.Button(id=-1,
-              label='Symbols & 2 Std', name='tbLoadSymStd2', parent=self.loadPnl,
-              pos=wx.Point(248, 48), size=wx.Size(40, 21))
+        self.tbLoadSymStd2 = wx.Button(id=-1, label='Symbols & 2 Std',
+                                       name='tbLoadSymStd2',
+                                       parent=self.loadPnl,
+                                       pos=wx.Point(248, 48),
+                                       size=wx.Size(40, 21))
         self.tbLoadSymStd2.SetToolTip('')
-        self.tbLoadSymStd2.Bind(wx.EVT_BUTTON, self.OnTbLoadSymStd2Button)
+        self.tbLoadSymStd2.Bind(wx.EVT_BUTTON, self.on_tb_load_sym_std2)
         
-        self.foldPnl.AddFoldPanelWindow(self.genSets, self.genPnl, fpb.FPB_ALIGN_WIDTH)
-        self.foldPnl.AddFoldPanelWindow(self.scoreSets, self.scorePnl, fpb.FPB_ALIGN_WIDTH)
-        self.foldPnl.AddFoldPanelWindow(self.loadSets, self.loadPnl, fpb.FPB_ALIGN_WIDTH)
+        style = fpb.FPB_ALIGN_WIDTH
+        self.foldPnl.AddFoldPanelWindow(self.genSets, self.genPnl, style)
+        self.foldPnl.AddFoldPanelWindow(self.scoreSets, self.scorePnl, style)
+        self.foldPnl.AddFoldPanelWindow(self.loadSets, self.loadPnl, style)
         
         #  self.btnFont = wx.Button(id_=-1, label='Font',
         #        name='btnFont', parent=self.genSets, pos=wx.Point(192, 136),
@@ -2067,7 +2134,7 @@ class plotProperties(wx.Dialog):
         
         self._init_grsDfscores()
         
-        self._init_grsLoadings()
+        self._init_grs_loads()
 
     def __init__(self, parent):
         self._init_plot_prop_ctrls(parent)
@@ -2107,72 +2174,72 @@ class plotProperties(wx.Dialog):
         if self.canvas.GetEnablePointLabel():
             self.tbPointLabel.SetValue(1)
     
-    def OnTbLoadLabelsButton(self, _):
+    def on_tb_load_labels(self, _):
         # plot loadings
-        self.doPlot(loadType=0)
+        self.do_plot(loadType=0)
         
-    def OnTbLoadLabStd1Button(self, _):
+    def on_tb_load_lab_std1(self, _):
         # plot loadings
-        self.doPlot(loadType=1)
+        self.do_plot(loadType=1)
         
-    def OnTbLoadLabStd2Button(self, _):
+    def on_tb_load_lab_std2(self, _):
         # plot loadings
-        self.doPlot(loadType=2)
+        self.do_plot(loadType=2)
         
-    def OnTbLoadSymStd2Button(self, _):
+    def on_tb_load_sym_std2(self, _):
         # plot loadings
-        self.doPlot(loadType=3)
+        self.do_plot(loadType=3)
         
-    def OnTbConfButton(self, _):
+    def on_tb_conf(self, _):
         if (self.tbPoints.GetValue() is False) & \
               (self.tbConf.GetValue() is False) & \
               (self.tbSymbols.GetValue() is False) is False:
             # plot scores
-            self.doPlot()
+            self.do_plot()
         
-    def OnTbPointsButton(self, _):
+    def on_tb_points(self, _):
         if (self.tbPoints.GetValue() is False) & \
               (self.tbConf.GetValue() is False) & \
               (self.tbSymbols.GetValue() is False) is False:
             # plot scores
-            self.doPlot()
+            self.do_plot()
     
-    def OnTbSymbolsButton(self, _):
+    def on_tb_symbols(self, _):
         if (self.tbPoints.GetValue() is False) & \
               (self.tbConf.GetValue() is False) & \
               (self.tbSymbols.GetValue() is False) is False:
             # plot scores
-            self.doPlot()
+            self.do_plot()
     
-    def doPlot(self, loadType=0):
+    def do_plot(self, loadType=0):
         tbar = self.canvas.prnt.titleBar
         ptbar = self.canvas.prnt.prnt.splitPrnt.titleBar
         pprnt = self.canvas.prnt.prnt.prnt.splitPrnt
         if self.canvas.GetName() in ['plcDFAscores']:
-            plotScores(self.canvas, tbar.data['dfscores'],
-                       cl=tbar.data['class'][:, 0],
-                       labels=tbar.data['label'],
-                       validation=tbar.data['validation'],
-                       col1=tbar.spnDfaScore1.GetValue() - 1,
-                       col2=tbar.spnDfaScore2.GetValue() - 1,
-                       title=self.graph.title, xLabel=self.graph.xLabel,
-                       yLabel=self.graph.yLabel,
-                       xval=tbar.cbDfaXval.GetValue(),
-                       text=self.tbPoints.GetValue(),
-                       pconf=self.tbConf.GetValue(),
-                       symb=self.tbSymbols.GetValue(), usecol=[], usesym=[])
+            plot_scores(self.canvas, tbar.data['dfscores'],
+                        cl=tbar.data['class'][:, 0],
+                        labels=tbar.data['label'],
+                        validation=tbar.data['validation'],
+                        col1=tbar.spnDfaScore1.GetValue() - 1,
+                        col2=tbar.spnDfaScore2.GetValue() - 1,
+                        title=self.graph.title, xLabel=self.graph.xLabel,
+                        yLabel=self.graph.yLabel,
+                        xval=tbar.cbDfaXval.GetValue(),
+                        text=self.tbPoints.GetValue(),
+                        pconf=self.tbConf.GetValue(),
+                        symb=self.tbSymbols.GetValue(), usecol=[], usesym=[])
         
         elif self.canvas.GetName() in ['plcPCAscore']:
-            plotScores(self.canvas, tbar.data['pcscores'],
-                       cl=tbar.data['class'][:, 0],
-                       labels=tbar.data['label'],
-                       validation=tbar.data['validation'],
-                       col1=tbar.spnNumPcs1.GetValue() - 1,
-                       col2=tbar.spnNumPcs2.GetValue() - 1,
-                       title=self.graph.title, xLabel=self.graph.xLabel,
-                       yLabel=self.graph.yLabel, xval=False,
-                       text=self.tbPoints.GetValue(), pconf=False,
-                       symb=self.tbSymbols.GetValue(), usecol=[], usesym=[])
+            plot_scores(self.canvas, tbar.data['pcscores'],
+                        cl=tbar.data['class'][:, 0],
+                        labels=tbar.data['label'],
+                        validation=tbar.data['validation'],
+                        col1=tbar.spnNumPcs1.GetValue() - 1,
+                        col2=tbar.spnNumPcs2.GetValue() - 1,
+                        title=self.graph.title, xLabel=self.graph.xLabel,
+                        yLabel=self.graph.yLabel, xval=False,
+                        text=self.tbPoints.GetValue(), pconf=False,
+                        symb=self.tbSymbols.GetValue(), usecol=[], usesym=[])
         
         elif len(self.GetName().split('plcPredPls')) > 1:
             self.canvas = PlotPlsModel(self.canvas, model='full',
@@ -2192,28 +2259,28 @@ class plotProperties(wx.Dialog):
                                        plScL=tbar.data['pls_class'])
             
         elif self.canvas.GetName() in ['plcGaFeatPlot']:
-            plotScores(self.canvas, ptbar.data['gavarcoords'],
-                       cl=ptbar.data['class'][:, 0],
-                       labels=ptbar.data['label'],
-                       validation=ptbar.data['validation'],
-                       col1=0, col2=1, title=self.graph.title,
-                       xLabel=self.graph.xLabel, yLabel=self.graph.yLabel,
-                       xval=True, text=self.tbPoints.GetValue(), pconf=False,
-                       symb=self.tbSymbols.GetValue(), usecol=[], usesym=[])
+            plot_scores(self.canvas, ptbar.data['gavarcoords'],
+                        cl=ptbar.data['class'][:, 0],
+                        labels=ptbar.data['label'],
+                        validation=ptbar.data['validation'],
+                        col1=0, col2=1, title=self.graph.title,
+                        xLabel=self.graph.xLabel, yLabel=self.graph.yLabel,
+                        xval=True, text=self.tbPoints.GetValue(), pconf=False,
+                        symb=self.tbSymbols.GetValue(), usecol=[], usesym=[])
         
         elif len(self.GetName().split('plcGaModelPlot')) > 1:
             if self.canvas.prnt.prnt.splitPrnt.type in ['DFA']:
-                plotScores(self.canvas, ptbar.data['gadfadfscores'],
-                           cl=ptbar.data['class'][:, 0],
-                           labels=ptbar.data['label'],
-                           validation=ptbar.data['validation'],
-                           col1=ptbar.spnGaScoreFrom.GetValue() - 1,
-                           col2=ptbar.spnGaScoreTo.GetValue() - 1,
-                           title=self.graph.title, xLabel=self.graph.xLabel,
-                           yLabel=self.graph.yLabel, xval=True,
-                           text=self.tbPoints.GetValue(),
-                           pconf=self.tbConf.GetValue(),
-                           symb=self.tbSymbols.GetValue(), usecol=[], usesym=[])
+                plot_scores(self.canvas, ptbar.data['gadfadfscores'],
+                            cl=ptbar.data['class'][:, 0],
+                            labels=ptbar.data['label'],
+                            validation=ptbar.data['validation'],
+                            col1=ptbar.spnGaScoreFrom.GetValue() - 1,
+                            col2=ptbar.spnGaScoreTo.GetValue() - 1,
+                            title=self.graph.title, xLabel=self.graph.xLabel,
+                            yLabel=self.graph.yLabel, xval=True,
+                            text=self.tbPoints.GetValue(),
+                            pconf=self.tbConf.GetValue(),
+                            symb=self.tbSymbols.GetValue(), usecol=[], usesym=[])
             else:
                 self.canvas = PlotPlsModel(self.canvas, model='ga',
                                            tbar=self.canvas.prnt.prnt.splitPrnt.prnt.prnt.tbMain,
@@ -2296,24 +2363,24 @@ class plotProperties(wx.Dialog):
     #         self.canvas.SetForegroundColour(self.colour)
     #         self.canvas.Redraw()
     
-    def OnTxtTitle(self, _):
+    def on_txt_title(self, _):
         if self.cbApply.GetValue() is True:
             self.graph.setTitle(self.txtTitle.GetValue())
             self.canvas.Redraw()
             
-    def OnTbGridButton(self, _):
+    def on_tb_grid(self, _):
         self.canvas.enableGrid(self.tbGrid.GetValue())
     
-    def OnTbDragButton(self, _):
+    def on_tb_drag_button(self, _):
         self.canvas.enableDrag(self.tbDrag.GetValue())
     
-    def OnTbPointLabelButton(self, _):
+    def on_tb_point_label(self, _):
         self.canvas.enablePointLabel(self.tbPointLabel.GetValue())
     
-    def OnTbZoomButton(self, _):
+    def on_tb_zoom_button(self, _):
         self.canvas.enableZoom(self.tbZoom.GetValue())
         
-    def OnBtnApply(self, _):
+    def on_btn_apply(self, _):
         self.canvas.fontSizeAxis = self.spnFontSizeAxes.GetValue()
         self.canvas.fontSizeTitle = self.spnFontSizeTitle.GetValue()
         
@@ -2335,12 +2402,12 @@ class plotProperties(wx.Dialog):
         
         self.Close()
     
-    def OnSpnFontSizeAxes(self, _):
+    def on_spn_font_size_axes(self, _):
         if self.cbApply.GetValue() is True:
             self.canvas.fontSizeAxis = self.spnFontSizeAxes.GetValue()
             self.canvas.Redraw()
         
-    def OnSpnFontSizeTitle(self, _):
+    def on_spn_font_size_title(self, _):
         if self.cbApply.GetValue() is True:
             self.canvas.fontSizeTitle = self.spnFontSizeTitle.GetValue()
             self.canvas.Redraw()
@@ -2357,54 +2424,54 @@ class plotProperties(wx.Dialog):
                                      np.array([ymin, ymax])]
         self.canvas.Redraw()
     
-    def OnSpnXmin(self, _):
+    def on_spn_xmin(self, _):
         self.resizeAxes()
     
-    def OnSpnXmax(self, _):
+    def on_spn_xmax(self, _):
         self.resizeAxes()
     
-    def OnSpnYmin(self, _):
+    def on_spn_ymin(self, _):
         self.resizeAxes()
     
-    def OnSpnYmax(self, _):
+    def on_spn_ymax(self, _):
         self.resizeAxes()
     
-    def OnSpnXminSpinUp(self, _):
+    def on_spn_xmin_up(self, _):
         curr = float(self.txtXmin.GetValue())
         curr = curr + self.Increment
         self.txtXmin.SetValue('%.3f' % curr)
 
-    def OnSpnXminSpinDown(self, _):
+    def on_spn_xmin_down(self, _):
         curr = float(self.txtXmin.GetValue())
         curr = curr - self.Increment
         self.txtXmin.SetValue('%.3f' % curr)
 
-    def OnSpnXmaxSpinUp(self, _):
+    def on_spn_xmax_up(self, _):
         curr = float(self.txtXmax.GetValue())
         curr = curr + self.Increment
         self.txtXmax.SetValue('%.3f' % curr)
 
-    def OnSpnXmaxSpinDown(self, _):
+    def on_spn_xmax_down(self, _):
         curr = float(self.txtXmax.GetValue())
         curr = curr - self.Increment
         self.txtXmax.SetValue('%.3f' % curr)
 
-    def OnSpnYmaxSpinUp(self, _):
+    def on_spn_ymax_up(self, _):
         curr = float(self.txtYmax.GetValue())
         curr = curr + self.Increment
         self.txtYmax.SetValue('%.3f' % curr)
 
-    def OnSpnYmaxSpinDown(self, _):
+    def on_spn_ymax_down(self, _):
         curr = float(self.txtYmax.GetValue())
         curr = curr - self.Increment
         self.txtYmax.SetValue('%.3f' % curr)
 
-    def OnSpnYminSpinUp(self, _):
+    def on_spn_ymin_up(self, _):
         curr = float(self.txtYmin.GetValue())
         curr = curr + self.Increment
         self.txtYmin.SetValue('%.3f' % curr)
 
-    def OnSpnYminSpinDown(self, _):
+    def on_spn_ymin_down(self, _):
         curr = float(self.txtYmin.GetValue())
         curr = curr - self.Increment
         self.txtYmin.SetValue('%.3f' % curr)

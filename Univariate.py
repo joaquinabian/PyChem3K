@@ -26,9 +26,9 @@ import os
 
 from numpy import newaxis as nax
 from Pca import BoxPlot
-from Pca import plotScores
+from Pca import plot_scores
 from Pca import PlotPlsModel
-from Pca import SetButtonState
+from Pca import set_btn_state
 from Pca import MyPlotCanvas
 from mva.process import meancent
 from mva.process import scale01
@@ -563,13 +563,13 @@ class TitleBar(bp.ButtonPanel):
         print('data_class -> ', self.data['class'][:5])
         cl = self.data['class'][:, 0]
 
-        plotScores(self.parent.plcScatter, x, cl=cl,
-                   labels=self.data['label'],
-                   validation=self.data['validation'],
-                   col1=0, col2=0, title='Scatter Plot',
-                   xLabel='Group', yLabel='Value',
-                   xval=False, pconf=False, symb=None, text=True,
-                   usecol=[], usesym=[])
+        plot_scores(self.parent.plcScatter, x, cl=cl,
+                    labels=self.data['label'],
+                    validation=self.data['validation'],
+                    col1=0, col2=0, title='Scatter Plot',
+                    xLabel='Group', yLabel='Value',
+                    xval=False, pconf=False, symb=None, text=True,
+                    usecol=[], usesym=[])
         
         # roc curve
         colCount = 0

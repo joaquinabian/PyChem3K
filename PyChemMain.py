@@ -31,13 +31,13 @@ from wx.adv import AboutDialogInfo, SashWindow, SW_3D, AboutBox
 import exp_setup
 import plotSpectra
 import Pca
-import Cluster
+import cluster
 import Dfa
 import Plsr
 import Ga
 import Univariate
 
-from Pca import plotScores
+from Pca import plot_scores
 from Pca import plotLoads
 from Pca import PlotPlsModel
 from Pca import SymColSelectTool
@@ -445,37 +445,37 @@ class PlotToolBar(wx.ToolBar):
     def doPlot(self, loadType=0, symcolours=[], symsymbols=[]):
         if self.canvas.GetName() in ['plcDFAscores']:
             if self.canvas.prnt.titleBar.data['dfscores'] is not None:
-                plotScores(self.canvas,
-                           self.canvas.prnt.titleBar.data['dfscores'],
-                           cl=self.canvas.prnt.titleBar.data['class'][:, 0],
-                           labels=self.canvas.prnt.titleBar.data['label'],
-                           validation=self.canvas.prnt.titleBar.data[
+                plot_scores(self.canvas,
+                            self.canvas.prnt.titleBar.data['dfscores'],
+                            cl=self.canvas.prnt.titleBar.data['class'][:, 0],
+                            labels=self.canvas.prnt.titleBar.data['label'],
+                            validation=self.canvas.prnt.titleBar.data[
                                'validation'],
-                           col1=self.canvas.prnt.titleBar.spnDfaScore1.GetValue() - 1,
-                           col2=self.canvas.prnt.titleBar.spnDfaScore2.GetValue() - 1,
-                           title=self.graph.title, xLabel=self.graph.xLabel,
-                           yLabel=self.graph.yLabel,
-                           xval=self.canvas.prnt.titleBar.cbDfaXval.GetValue(),
-                           text=self.tbPoints.GetValue(),
-                           pconf=self.tbConf.GetValue(),
-                           symb=self.tbSymbols.GetValue(), usecol=symcolours,
-                           usesym=symsymbols)
+                            col1=self.canvas.prnt.titleBar.spnDfaScore1.GetValue() - 1,
+                            col2=self.canvas.prnt.titleBar.spnDfaScore2.GetValue() - 1,
+                            title=self.graph.title, xLabel=self.graph.xLabel,
+                            yLabel=self.graph.yLabel,
+                            xval=self.canvas.prnt.titleBar.cbDfaXval.GetValue(),
+                            text=self.tbPoints.GetValue(),
+                            pconf=self.tbConf.GetValue(),
+                            symb=self.tbSymbols.GetValue(), usecol=symcolours,
+                            usesym=symsymbols)
 
         elif self.canvas.GetName() in ['plcPCAscore']:
             if self.canvas.prnt.titleBar.data['pcscores'] is not None:
-                plotScores(self.canvas,
-                           self.canvas.prnt.titleBar.data['pcscores'],
-                           cl=self.canvas.prnt.titleBar.data['class'][:, 0],
-                           labels=self.canvas.prnt.titleBar.data['label'],
-                           validation=self.canvas.prnt.titleBar.data[
+                plot_scores(self.canvas,
+                            self.canvas.prnt.titleBar.data['pcscores'],
+                            cl=self.canvas.prnt.titleBar.data['class'][:, 0],
+                            labels=self.canvas.prnt.titleBar.data['label'],
+                            validation=self.canvas.prnt.titleBar.data[
                                'validation'],
-                           col1=self.canvas.prnt.titleBar.spnNumPcs1.GetValue() - 1,
-                           col2=self.canvas.prnt.titleBar.spnNumPcs2.GetValue() - 1,
-                           title=self.graph.title, xLabel=self.graph.xLabel,
-                           yLabel=self.graph.yLabel, xval=False,
-                           text=self.tbPoints.GetValue(), pconf=False,
-                           symb=self.tbSymbols.GetValue(), usecol=symcolours,
-                           usesym=symsymbols)
+                            col1=self.canvas.prnt.titleBar.spnNumPcs1.GetValue() - 1,
+                            col2=self.canvas.prnt.titleBar.spnNumPcs2.GetValue() - 1,
+                            title=self.graph.title, xLabel=self.graph.xLabel,
+                            yLabel=self.graph.yLabel, xval=False,
+                            text=self.tbPoints.GetValue(), pconf=False,
+                            symb=self.tbSymbols.GetValue(), usecol=symcolours,
+                            usesym=symsymbols)
 
         elif len(self.canvas.GetName().split('plcPredPls')) > 1:
             self.canvas = PlotPlsModel(self.canvas, model='full',
@@ -513,22 +513,22 @@ class PlotToolBar(wx.ToolBar):
                                            'pls_class'])
 
         elif self.canvas.GetName() in ['plcGaFeatPlot']:
-            plotScores(self.canvas,
-                       self.canvas.prnt.prnt.splitPrnt.titleBar.data[
+            plot_scores(self.canvas,
+                        self.canvas.prnt.prnt.splitPrnt.titleBar.data[
                            'gavarcoords'],
-                       cl=self.canvas.prnt.prnt.splitPrnt.titleBar.data[
+                        cl=self.canvas.prnt.prnt.splitPrnt.titleBar.data[
                               'class'][:, 0],
-                       labels=self.canvas.prnt.prnt.splitPrnt.titleBar.data[
+                        labels=self.canvas.prnt.prnt.splitPrnt.titleBar.data[
                            'label'],
-                       validation=self.canvas.prnt.prnt.splitPrnt.titleBar.data[
+                        validation=self.canvas.prnt.prnt.splitPrnt.titleBar.data[
                            'validation'],
-                       col1=0, col2=1, title=self.graph.title,
-                       xLabel=self.graph.xLabel,
-                       yLabel=self.graph.yLabel, xval=True,
-                       text=self.tbPoints.GetValue(),
-                       pconf=False, symb=self.tbSymbols.GetValue(),
-                       usecol=symcolours,
-                       usesym=symsymbols)
+                        col1=0, col2=1, title=self.graph.title,
+                        xLabel=self.graph.xLabel,
+                        yLabel=self.graph.yLabel, xval=True,
+                        text=self.tbPoints.GetValue(),
+                        pconf=False, symb=self.tbSymbols.GetValue(),
+                        usecol=symcolours,
+                        usesym=symsymbols)
 
         elif len(self.canvas.GetName().split('plcGaModelPlot')) > 1:
 
@@ -536,7 +536,7 @@ class PlotToolBar(wx.ToolBar):
 
             if self.splitPrnt.dtype in ['DFA']:
                 if self.splitPrnt.titleBar.data['gadfadfscores'] is not None:
-                    plotScores(
+                    plot_scores(
                         self.canvas,
                         self.splitPrnt.titleBar.data['gadfadfscores'],
                         cl=self.splitPrnt.titleBar.data['class'][:, 0],
@@ -979,7 +979,7 @@ class PyChemMain(wx.Frame):
                              style=wx.TAB_TRAVERSAL)
         self.plPca.SetToolTip('')
 
-        self.plCluster = Cluster.Cluster(id=wxID_PCMPLCLUSTER,
+        self.plCluster = cluster.Cluster(id_=wxID_PCMPLCLUSTER,
                                          name='plCluster',
                                          parent=self.nbMain, pos=wx.Point(0, 0),
                                          size=wx.Size(1008, 635),
@@ -993,7 +993,7 @@ class PyChemMain(wx.Frame):
                              style=wx.TAB_TRAVERSAL)
         self.plDfa.SetToolTip('')
 
-        self.plPls = Plsr.Plsr(id=wxID_PCMPLPLS, name='plPls',
+        self.plPls = Plsr.Plsr(id_=wxID_PCMPLPLS, name='plPls',
                                parent=self.nbMain, pos=wx.Point(0, 0),
                                size=wx.Size(1008, 635),
                                style=wx.TAB_TRAVERSAL)
@@ -1524,7 +1524,7 @@ class PyChemMain(wx.Frame):
         self.plExpset.Reset(case)
         self.plPca.Reset()
         self.plDfa.reset()
-        self.plCluster.Reset()
+        self.plCluster.reset()
         self.plPls.Reset()
         self.plGadfa.Reset()
         self.plGapls.Reset()
@@ -2076,7 +2076,7 @@ class PyChemMain(wx.Frame):
                                                                                :,
                                                                                0])) - 1)
                                 # plot pca results
-                                self.plPca.titleBar.PlotPca()
+                                self.plPca.titleBar.plot_pca()
                             elif i == 'dfs':
                                 # set spn limits
                                 self.plDfa.titleBar.spnDfaScore1.SetRange(1,
@@ -2124,7 +2124,7 @@ class PyChemMain(wx.Frame):
                             item.text == '1') is True:
                         self.plCluster.titleBar.run_cluster()
                     elif (item.tag == 'doPlsr') & (item.text == '1') is True:
-                        self.plPls.titleBar.runPls()
+                        self.plPls.titleBar.run_pls()
                     elif (item.tag == 'doUni') & (item.text != '0') is True:
                         if self.plUnivariate.titleBar.cbxData.GetSelection() == 0:
                             x = sp.take(self.data['rawtrunc'],
