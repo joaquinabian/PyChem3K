@@ -24,12 +24,14 @@ def _padarray(myarray, frame, typex):
     """Used in a number of funcs to pad out array cols at start and
     end so that the original shape of the array is maintained
     following processing
+
     """
-    (div, mod) = divmod(frame, 2)    # pad array to keep original shape after averaging
+    # pad array to keep original shape after averaging
+    (div, mod) = divmod(frame, 2)
     if mod != 0:
-        pad = (frame-1)/2
+        pad = (frame-1) // 2
     else:
-        pad = frame/2
+        pad = frame // 2
     start, end = None, None
     size = myarray.shape    
     if typex == 'av':
@@ -102,9 +104,13 @@ def normhigh(myarray):
 
 
 def normtot(myarray):
-    """Normalises to a total of 1 for each row"""
+    """Normalises to a total of 1 for each row
+
+    """
     size_of_myarray = myarray.shape
-    sum_of_cols = np.transpose(np.resize(np.sum(myarray, 1), (size_of_myarray[1], size_of_myarray[0])))
+    sum_of_cols = np.transpose(np.resize(
+        np.sum(myarray, 1), (size_of_myarray[1], size_of_myarray[0])
+    ))
     return_normal = myarray/sum_of_cols
     return return_normal
 
@@ -112,22 +118,23 @@ def normtot(myarray):
 def meancent(myarray):
     """Mean-centre array (in-place) along axis 0.
 
-    
     >>> a = np.array([[1, 2, 3, 4], [0.1, 0.2, -0.7, 0.6]])
     >>> a
     array([[ 1. ,  2. ,  3. ,  4. ],
            [ 0.1,  0.2, -0.7,  0.6]])
-    >>> np.mean(a)
-    array([ 2.5 ,  0.05])
+    >>> np.mean(a, axis=1)
+    array([2.5 , 0.05])
     >>> meancent(a)
-    >>> a
     array([[ 0.45,  0.9 ,  1.85,  1.7 ],
            [-0.45, -0.9 , -1.85, -1.7 ]])
+
     """
-    # Get the mean of each colm
+    # Get the mean of each column
     means = np.mean(myarray, axis=0)
     return np.subtract(myarray, means)
 
+
+# noinspection PyShadowingNames
 def autoscale(a):
     """Auto-scale array
     
@@ -146,10 +153,12 @@ def autoscale(a):
     std_cols = np.resize(np.sqrt((sum((a - mean_cols)**2, 0))/(a.shape[0]-1)), a.shape)
     return (a-mean_cols)/std_cols
 
+
 def avgfilt(myarray, F, dim):
     """Apply a one dimensional mean filter of frame width F.
     dim == 'r' smooths across axis=0, dim == 'c' smooths
     across axis == 1
+
     """
     if dim == 'c':
         (padarray, origsize) = _padarray(myarray, F, 'av')
@@ -173,6 +182,7 @@ def avgfilt(myarray, F, dim):
 def avgclass(myarray, mrepclass):
     """Perform avgfilt across rows by replicate
     class only
+
     """
     avg = np.zeros((1, myarray.shape[1]))
     idx = np.arange(0, mrepclass.shape[0], 1, 'i', (mrepclass.shape[0], 1))
@@ -185,6 +195,7 @@ def avgclass(myarray, mrepclass):
 def derivlin(myarray, frame):
     """Derivatisation using crude linear fit over a
     specified frame width
+
     """
     (padarray, origsize) = _padarray(myarray, frame, 'av')
     a, b = 0, frame-1
@@ -199,10 +210,12 @@ def sgolayfilt(myarray, k, F):
     """Applies a Savitsky-Golay filter of order k and frame width F.
     The order must be odd and the frame width (F) a positive integer of
     a value greater than k
+
     """
     frange = np.arange(-(F-1)/2, ((F-1)/2)+1)
     f, vande = 0, np.zeros((F, F))
-    while f < F:    # compute Vandemonde matrix
+    # compute Vandemonde matrix
+    while f < F:
         vande[f, :] = frange**f
         f = f+1
     vande = np.transpose(vande, (1, 0))
@@ -210,13 +223,16 @@ def sgolayfilt(myarray, k, F):
     # Do QR decomposition
     Q, R = sp.linalg.qr(vande, vande.shape[1])
     
-#    print vande.shape
-#    print Q.shape
-#    print R[0:vande.shape[1]]
+    # print vande.shape
+    # print Q.shape
+    # print R[0:vande.shape[1]]
+
+    # Find the matrix of differentiators
     G = np.dot(vande, np.dot(sp.linalg.inv(R[0:vande.shape[1]]),
-               np.transpose(sp.linalg.inv(R[0:vande.shape[1]]))))   # Find the matrix of differentiators
-    
-    B = np.dot(G, np.transpose(vande))   # Projection matrix
+               np.transpose(sp.linalg.inv(R[0:vande.shape[1]]))))
+
+    # Projection matrix
+    B = np.dot(G, np.transpose(vande))
     
     myarray = np.transpose(myarray)
     extract_array, extract_B = myarray[0:F, :], B[(((F-1)/2)+1):F, :]
@@ -243,9 +259,12 @@ def sgolayderiv(myarray, F):
     """Take the Savitsky-Golay derivative, F must be 5, 7 or 9
     need to make this better
 
+    This function is available in R
+    https://www.rdocumentation.org/packages/mQTL.NMR/versions/1.6.0/topics/sgolayDeriv
+
     """
     conv, numb = None, None
-    array_size = myarray.shape
+
     if F == 5:
         conv = np.array([-1, 8, 0, -8, 1])
         numb = 12
@@ -256,13 +275,15 @@ def sgolayderiv(myarray, F):
         conv = np.array([-86, 142, 193, 126, 0, -126, -193, -142, 86])
         numb = 1188
 
+    # noinspection PyTypeChecker
     conv_array = np.convolve(myarray, conv, 1)/numb
         
     return conv_array
 
 
 def baseline1(myarray):
-    """Set first bin of each row to zero
+    """Set first bin of each row to zero.
+
     """
     size = myarray.shape
     take_array = np.transpose(np.resize(np.transpose(myarray[:, 0]), (size[1], size[0])))
@@ -270,7 +291,8 @@ def baseline1(myarray):
 
 
 def baseline2(myarray):
-    """Subtract average of the first and last bin from each bin
+    """Subtract average of the first and last bin from each bin.
+
     """
     size = myarray.shape
     take_array = np.transpose(np.resize(np.transpose((myarray[:, 0]+myarray[:, size[1]-1])/2), (size[1], size[0])))
@@ -278,7 +300,8 @@ def baseline2(myarray):
 
 
 def lintrend(myarray):
-    """Subtract a linearly increasing baseline between first and last bins
+    """Subtract a linearly increasing baseline between first and last bins.
+
     """
     size, t = myarray.shape, 0
     sub = np.zeros((size[0], size[1]), 'd')
@@ -294,24 +317,30 @@ def lintrend(myarray):
     return myarray-sub
 
 
+# TODO: Check wether Implement or Remove prewittd function
+# noinspection PyUnusedLocal
 def prewittd(myarray):
     """Prewitt derivatisation from numarray
-    can't find this on sp, so will just ignore
-    for the time being
+    can't find this on sp, so will just ignore for the time being
+
     """
     return
     # return prewitt(myarray, 1)
 
 
+# TODO: Check wether Implement or Remove sobeld function
+# noinspection PyUnusedLocal
 def sobeld(myarray):
     """Sobel derivatisation from numarray
-    can't find this on sp, so will just ignore
-    for the time being
+    can't find this on sp, so will just ignore for the time being
+
     """
     return
     # return sobel(myarray, 1)
 
+
 if __name__ == "__main__":
-    import doctest
+    # noinspection PyUnresolvedReferences
     import process
+    import doctest
     doctest.testmod(process, verbose=False)
