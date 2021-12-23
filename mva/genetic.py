@@ -108,7 +108,7 @@ def select(ranksc, chrom, N):
     """
     N = round(chrom.shape[0]*N)
     cumsum = np.cumsum(ranksc, 0)
-    susrange = np.rand(N, 1)*max(max(cumsum))
+    susrange = np.random.rand(N, 1)*max(max(cumsum))
     
     sel = []
     for each in susrange:
@@ -132,7 +132,7 @@ def xover(chrom, N, p):
     N = round(cshape*N)
 
     index1 = np.arange(cshape)
-    index2 = np.unique(np.around(sp.rand(cshape, )*cshape))[0:cshape/2]
+    index2 = np.unique(np.around(sp.rand(cshape, )*cshape))[0:cshape//2]
 
     sel1, sel2 = [], []
     for i in range(len(index1)):
@@ -155,8 +155,8 @@ def xover(chrom, N, p):
             slice2 = chrom[select2[i], 0:int(xoverpnt[i])]
             nchrom[select2[i], 0:int(xoverpnt[i])] = slice1
             nchrom[select1[i], 0:int(xoverpnt[i])] = slice2
-        except ValueError:
-            raise
+        except IndexError:
+            pass
     
     return nchrom
 
