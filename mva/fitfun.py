@@ -11,6 +11,7 @@
 # Description: Fitness functions for use in genetic algorithm optimisation
 # -----------------------------------------------------------------------------
 
+import scipy as sp
 import numpy as np
 from numpy import newaxis as nax
 
