@@ -11,8 +11,10 @@
 # Description: Fitness functions for use in genetic algorithm optimisation
 # -----------------------------------------------------------------------------
 
-from mva.process import *
-from mva.chemometrics import *
+import numpy as np
+from numpy import newaxis as nax
+
+from mva.chemometrics import cva, pls
 from mva.chemometrics import _split
 from mva.chemometrics import _slice
 from mva.chemometrics import _index
@@ -20,9 +22,7 @@ from mva.chemometrics import _put
 from mva.chemometrics import _flip
 from mva.chemometrics import _bw
 from mva.genetic import _remdup
-
-import numpy as np
-from numpy import newaxis as nax
+from mva.process import meancent
 
 
 def _group(x, mrep):
@@ -32,6 +32,8 @@ def _group(x, mrep):
             grp.append(n)
     return np.reshape(np.asarray(grp, 'i'), (len(grp), 1))
 
+
+# noinspection PyUnreachableCode
 def call_dfa(chrom, xdata, DFs, mask, data):
     """Runs DFA on subset of variables from "xdata" as 
     defined by "chrom" and returns a vector of fitness 
@@ -45,11 +47,12 @@ def call_dfa(chrom, xdata, DFs, mask, data):
             collate = 0
             for nF in range(mask.shape[1]):
                 # split in to training and test
-                tr_slice, cv_slice, ts_slice, tr_grp, \
-                cv_grp, ts_grp, tr_nm, cv_nm, ts_nm = \
+                (tr_slice, cv_slice, ts_slice,
+                 tr_grp, cv_grp, ts_grp,
+                 tr_nm, cv_nm, ts_nm) = \
                     _split(aslice, data['class'][:, 0], mask[:, nF].tolist(),
                            data['label'])
-                
+
                 try:
                     u, v, eigs, dummy = cva(tr_slice, tr_grp, DFs)
                     projU = np.dot(cv_slice, v)
@@ -58,11 +61,14 @@ def call_dfa(chrom, xdata, DFs, mask, data):
             
                     B, W = _bw(u, group2)
                     L, A = sp.linalg.eig(B, W)
+                    # TODO: check why 'order' is not used
+                    # noinspection PyUnusedLocal
                     order = _flip(np.argsort(np.reshape(L.real, (len(L), ))))
                     Ls = _flip(np.sort(L.real))
                     eigval = Ls[0:DFs]
                     
                     collate += sum(eigval)
+                # TODO: remove raise after catching error
                 except ValueError:
                     raise
                     continue
@@ -106,7 +112,7 @@ def rerun_dfa(chrom, xdata, mask, groups, names, DFs):
     
     return uout, v, eigs
 
-
+# noinspection PyUnreachableCode
 def call_pls(chrom, xdata, factors, mask, data):
     """Runs pls on a subset of X-variables"""
     scores = []
@@ -125,12 +131,13 @@ def call_pls(chrom, xdata, factors, mask, data):
                         collate += pls_output['RMSEPC']
                     else:
                         collate += 10.0**5
+                # TODO: remove raise after catching error
                 except ValueError:
                     raise
                     collate = 0
                 
             if collate != 0:
-                scores.append(collate/float(mask.shape[1]))
+                scores.append(collate/mask.shape[1])
             else:
                 scores.append(10.0**5)
         else:
@@ -145,7 +152,9 @@ def rerun_pls(chrom, xdata, groups, mask, factors):
     
     return pls(aslice, groups, mask, factors)
 
+
 if __name__ == "__main__":
+    # noinspection PyUnresolvedReferences
     import fitfun
     import doctest
     doctest.testmod(fitfun, verbose=True)
