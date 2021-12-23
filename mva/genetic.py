@@ -14,7 +14,7 @@
 import copy
 import scipy as sp
 import numpy as np
-# from mva.chemometrics import _slice
+
 from mva.chemometrics import _flip
 
 
@@ -126,15 +126,20 @@ def xover(chrom, N, p):
     """Single point crossover with probability N, precision p
     """
     _ = p
-    N = round(chrom.shape[0]*N)
-    index1 = np.arange(chrom.shape[0])
-    index2 = np.unique(np.around(sp.rand(chrom.shape[0], )*chrom.shape[0]))[0:chrom.shape[0]/2]
+    cshape = chrom.shape[0]
+
+    N = round(cshape*N)
+
+    index1 = np.arange(cshape)
+    index2 = np.unique(np.around(sp.rand(cshape, )*cshape))[0:cshape/2]
+
     sel1, sel2 = [], []
     for i in range(len(index1)):
         if index1[i] not in index2:
             sel1.append(index1[i])
         else:
             sel2.append(index1[i])
+
     select1 = sel1[0:min([int(round(len(sel1)*N)), int(round(len(sel2)*N))])]
     select2 = sel2[0:min([int(round(len(sel1)*N)), int(round(len(sel2)*N))])]
     
