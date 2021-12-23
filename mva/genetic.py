@@ -76,10 +76,11 @@ def _unique(a):
 
 def crtpop(ni, nv, prec):
     """Create a random population array of size
-    ni by nv in the range 0:preci-1.  Use prec = 2
-    to create binary string
+    ni x nv in the range 0:prec-1.
+
+    Use prec = 2 to create binary string
     """
-    pop = np.around(np.rand(ni, nv)*(prec-1))
+    pop = np.around(np.random.rand(ni, nv)*(prec-1))
     
     return pop
 
