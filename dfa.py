@@ -1,30 +1,32 @@
 # .-----------------------------------------------------------------------------
-# Name:        Dfa.py
+# Name:        dfa.py
 # Purpose:     
 #
 # Author:      Roger Jarvis
 #
 # Created:     2007/05/22
-# RCS-ID:      $Id: Dfa.py, v 1.16 2009/02/26 22:19:46 rmj01 Exp $
+# RCS-ID:      $Id: dfa.py, v 1.16 2009/02/26 22:19:46 rmj01 Exp $
 # Copyright:   (c) 2006
 # Licence:     GNU General Public Licence
 # -----------------------------------------------------------------------------
 
-import wx
-import wx.lib.buttons
-from wx.lib.stattext import GenStaticText
-import wx.lib.agw.buttonpanel as bp
-from wx.lib.anchors import LayoutAnchors
-from wx.lib.plot import PlotGraphics, PolyLine
-
-import numpy as np
 import os
-from mva import chemometrics as chemtrics
-from commons import error_box
-
-from mva.chemometrics import _index
+import numpy as np
 from numpy import newaxis as nax
 from Bio.Cluster import treecluster
+
+import wx
+import wx.lib.buttons
+import wx.lib.agw.buttonpanel as bp
+from wx.lib.stattext import GenStaticText
+from wx.lib.anchors import LayoutAnchors
+from wx.lib.plot import PolyLine
+from wx.lib.plot import PlotGraphics
+
+from commons import error_box
+from mva import chemometrics as chemtrics
+# noinspection PyProtectedMember
+from mva.chemometrics import _index
 from Pca import plotLine
 from Pca import plot_scores
 from Pca import plotLoads
@@ -44,9 +46,24 @@ from Pca import MyPlotCanvas
  wxID_DFASTDFA6, wxID_DFASTDFA7,
  ] = [wx.NewId() for _init_ctrls in range(33)]
 
+# To remove inspection unused. Used on exec
+_ = PlotGraphics
 
 class Dfa(wx.Panel):
-    # discriminant function analysis
+    """Discriminant function analysis.
+
+    """
+    def __init__(self, parent, id_, pos, size, style, name):
+        """"""
+        wx.Panel.__init__(self, id=wxID_DFA, name='Dfa', parent=parent,
+                          pos=wx.Point(47, 118), size=wx.Size(796, 460),
+                          style=wx.TAB_TRAVERSAL)
+
+        _, _, _, _, _ = id_, pos, size, style, name
+
+        self.parent = parent
+        self._init_ctrls()
+
     def _init_coll_grs_dfa(self, parent):
         # generated method, don't edit
 
@@ -80,19 +97,16 @@ class Dfa(wx.Panel):
 
         self.SetSizer(self.bxsDfa1)
 
-    def _init_ctrls(self, prnt):
+    def _init_ctrls(self):
         # generated method, don't edit
-        wx.Panel.__init__(self, id=wxID_DFA, name='Dfa', parent=prnt,
-                          pos=wx.Point(47, 118), size=wx.Size(796, 460),
-                          style=wx.TAB_TRAVERSAL)
+
         self.SetClientSize(wx.Size(788, 426))
         self.SetToolTip('')
         self.SetAutoLayout(True)
-        self.prnt = prnt
 
         self.plcDFAscores = MyPlotCanvas(
             id=-1, name='plcDFAscores', parent=self, pos=wx.Point(0, 24),
-            size=wx.Size(24, 20), style=0, toolbar=self.prnt.parent.tbMain)
+            size=wx.Size(24, 20), style=0, toolbar=self.parent.parent.tbMain)
         self.plcDFAscores.fontSizeTitle = 10
         self.plcDFAscores.fontSizeAxis = 8
         self.plcDFAscores.enableZoom = True
@@ -106,7 +120,7 @@ class Dfa(wx.Panel):
         self.plcDfaLoadsV = MyPlotCanvas(id=-1, name='plcDfaLoadsV',
                                          parent=self, pos=wx.Point(-5, 24),
                                          size=wx.Size(24, 20), style=0,
-                                         toolbar=self.prnt.parent.tbMain)
+                                         toolbar=self.parent.parent.tbMain)
         self.plcDfaLoadsV.fontSizeAxis = 8
         self.plcDfaLoadsV.fontSizeTitle = 10
         self.plcDfaLoadsV.enableZoom = True
@@ -119,7 +133,7 @@ class Dfa(wx.Panel):
 
         self.plcDFAeigs = MyPlotCanvas(
             id=-1, name='plcDFAeigs', parent=self, pos=wx.Point(483, 214),
-            size=wx.Size(305, 212), style=0, toolbar=self.prnt.parent.tbMain)
+            size=wx.Size(305, 212), style=0, toolbar=self.parent.parent.tbMain)
         self.plcDFAeigs.fontSizeAxis = 8
         self.plcDFAeigs.fontSizeTitle = 10
         self.plcDFAeigs.enableZoom = True
@@ -131,7 +145,7 @@ class Dfa(wx.Panel):
 
         self.plcDfaCluster = MyPlotCanvas(
             id=-1, name='plcDfaCluster', parent=self, pos=wx.Point(176, 214),
-            size=wx.Size(305, 212), style=0, toolbar=self.prnt.parent.tbMain)
+            size=wx.Size(305, 212), style=0, toolbar=self.parent.parent.tbMain)
         self.plcDfaCluster.fontSizeAxis = 8
         self.plcDfaCluster.fontSizeTitle = 10
         self.plcDfaCluster.enableZoom = True
@@ -144,16 +158,12 @@ class Dfa(wx.Panel):
             LayoutAnchors(self.plcDfaCluster, True, True, False, True))
         self.plcDfaCluster.fontSizeLegend = 8
 
-        self.titleBar = TitleBar(self, id=-1,
+        self.titleBar = TitleBar(self, id_=-1,
                                  text="Discriminant Function Analysis",
                                  style=bp.BP_USE_GRADIENT,
                                  alignment=bp.BP_ALIGN_LEFT)
 
         self._init_sizers()
-
-    def __init__(self, parent, id_, pos, size, style, name):
-        self._init_ctrls(parent)
-        self.parent = parent
 
     def reset(self):
         self.titleBar.spnDfaScore1.Enable(0)
@@ -168,8 +178,10 @@ class Dfa(wx.Panel):
                    'plcDFAscores': ['DFA Scores', 't[1]', 't[2]'],
                    'plcDfaLoadsV': ['DFA Loading', 'w[1]', 'w[2]']}
 
-        curve = PolyLine([[0, 0], [1, 1]],
-                         colour='white', width=1, style=wx.TRANSPARENT)
+        # TODO: Check what curve is for
+        # noinspection PyUnusedLocal,PyTypeChecker
+        curve = PolyLine([[0, 0], [1, 1]], colour='white',
+                         width=1, style=wx.PENSTYLE_TRANSPARENT)
 
         for each in objects.keys():
             cmd = ('self.%s.Draw(PlotGraphics([curve], '
@@ -178,12 +190,23 @@ class Dfa(wx.Panel):
 
 
 class TitleBar(bp.ButtonPanel):
-    def _init_btnpanel_ctrls(self, prnt):
-        bp.ButtonPanel.__init__(self, parent=prnt, id=-1,
+    """"""
+    def __init__(self, parent, id_, text, style, alignment):
+        """"""
+        bp.ButtonPanel.__init__(self, parent=parent, id=-1,
                                 text="Discriminant Function Analysis",
                                 agwStyle=bp.BP_USE_GRADIENT,
                                 alignment=bp.BP_ALIGN_LEFT)
 
+        _, _, _, _ = id_, text, style, alignment
+        self._init_btnpanel_ctrls()
+        self.parent = parent
+        self.data = None
+        self.draw_dfa_eig = None
+        self.create_buttons()
+
+    def _init_btnpanel_ctrls(self):
+        """"""
         chcs = ['PC Scores', 'PLS Scores', 'Raw spectra', 'Processed spectra']
         self.cbxData = wx.Choice(choices=chcs, id=-1, name='cbxData',
                                  parent=self, pos=wx.Point(118, 21),
@@ -251,14 +274,6 @@ class TitleBar(bp.ButtonPanel):
         self.spnDfaScore2.Bind(wx.EVT_SPINCTRL, self.on_spn_dfa_score2,
                                id=-1)
 
-    def __init__(self, parent, id, text, style, alignment):
-
-        self._init_btnpanel_ctrls(parent)
-        self.parent = parent
-        self.data = None
-        self.draw_dfa_eig = None
-        self.create_buttons()
-
     def create_buttons(self):
         style = wx.TRANSPARENT_WINDOW
         self.Freeze()
@@ -284,6 +299,7 @@ class TitleBar(bp.ButtonPanel):
         self.Thaw()
         self.DoLayout()
 
+    # noinspection PyPep8Naming
     def SetProperties(self):
 
         # Sets the colours for the two demos: called only if the user didn't
@@ -321,7 +337,7 @@ class TitleBar(bp.ButtonPanel):
     def on_run_dfa(self, _):
         xdata, loads, xvaldata = None, None, None
         scores, eigs = None, None
-        tbar = self.parent.prnt.parent.plPca.titleBar
+        tbar = self.parent.parent.parent.plPca.titleBar
         klass = self.data['class'][:, 0]
         try:
             # run discriminant function analysis
