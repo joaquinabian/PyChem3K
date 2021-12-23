@@ -32,9 +32,9 @@ import exp_setup
 import plotSpectra
 import Pca
 import cluster
-import Dfa
+import dfa
 import Plsr
-import Ga
+import ga
 import Univariate
 
 from Pca import plot_scores
@@ -987,7 +987,7 @@ class PyChemMain(wx.Frame):
         self.plCluster.SetToolTip('')
         self.plCluster.parent = self
 
-        self.plDfa = Dfa.Dfa(id_=wxID_PCMPLDFA, name='plDfa',
+        self.plDfa = dfa.Dfa(id_=wxID_PCMPLDFA, name='plDfa',
                              parent=self.nbMain, pos=wx.Point(0, 0),
                              size=wx.Size(1008, 635),
                              style=wx.TAB_TRAVERSAL)
@@ -1000,14 +1000,14 @@ class PyChemMain(wx.Frame):
         self.plPls.SetToolTip('')
         self.plPls.parent = self
 
-        self.plGadfa = Ga.Ga(id=wxID_PCMPLGADFA, name='plGadfa',
+        self.plGadfa = ga.Ga(id_=wxID_PCMPLGADFA, name='plGadfa',
                              parent=self.nbMain, pos=wx.Point(0, 0),
                              size=wx.Size(1008, 635),
                              style=wx.TAB_TRAVERSAL, dtype='DFA')
         self.plGadfa.SetToolTip('')
         self.plGadfa.parent = self
 
-        self.plGapls = Ga.Ga(id=wxID_PCMPLGAPLSC, name='plGaplsc',
+        self.plGapls = ga.Ga(id_=wxID_PCMPLGAPLSC, name='plGaplsc',
                              parent=self.nbMain, pos=wx.Point(0, 0),
                              size=wx.Size(1008, 635),
                              style=wx.TAB_TRAVERSAL, dtype='PLS')
@@ -1526,8 +1526,8 @@ class PyChemMain(wx.Frame):
         self.plDfa.reset()
         self.plCluster.reset()
         self.plPls.Reset()
-        self.plGadfa.Reset()
-        self.plGapls.Reset()
+        self.plGadfa.reset()
+        self.plGapls.reset()
         self.plUnivariate.reset()
 
         # make data dictionary available to modules
@@ -1540,13 +1540,13 @@ class PyChemMain(wx.Frame):
         self.plPls.titleBar.get_data(self.data)
         self.plUnivariate.titleBar.get_data(self.data)
         self.plGadfa.titleBar.get_data(self.data)
-        self.plGadfa.titleBar.getExpGrid(self.plExpset.grdNames)
-        self.plGadfa.titleBar.getValSplitPc(
+        self.plGadfa.titleBar.get_exp_grid(self.plExpset.grdNames)
+        self.plGadfa.titleBar.get_val_split_pc(
             self.plExpset.depTitleBar.spcGenMask.GetValue())
         self.plGapls.titleBar.get_data(self.data)
-        self.plGapls.titleBar.getValSplitPc(
+        self.plGapls.titleBar.get_val_split_pc(
             self.plExpset.depTitleBar.spcGenMask.GetValue())
-        self.plGapls.titleBar.getExpGrid(self.plExpset.grdNames)
+        self.plGapls.titleBar.get_exp_grid(self.plExpset.grdNames)
 
     def xmlSave(self, path, workspace, dtype=None):
         # dtype is either "new" (in which case workspace = "Default")
@@ -2092,7 +2092,7 @@ class PyChemMain(wx.Frame):
 
                             elif i == 'gadfa':
                                 try:
-                                    self.plGadfa.titleBar.CreateGaResultsTree(
+                                    self.plGadfa.titleBar.create_ga_results_tree(
                                         self.plGadfa.optDlg.treGaResults,
                                         gacurves=self.data['gadfacurves'],
                                         chroms=self.data['gadfachroms'],
@@ -2104,7 +2104,7 @@ class PyChemMain(wx.Frame):
                                     continue
                             elif i == 'gapls':
                                 try:
-                                    self.plGapls.titleBar.CreateGaResultsTree(
+                                    self.plGapls.titleBar.create_ga_results_tree(
                                         self.plGapls.optDlg.treGaResults,
                                         gacurves=self.data['gaplscurves'],
                                         chroms=self.data['gaplschroms'],
@@ -2345,7 +2345,7 @@ class PyChemMain(wx.Frame):
 
             # change ga results lists
             try:
-                self.plGapls.titleBar.CreateGaResultsTree(
+                self.plGapls.titleBar.create_ga_results_tree(
                     self.plGapls.optDlg.treGaResults,
                     gacurves=self.data['gaplscurves'],
                     chroms=self.data['gaplschroms'],
@@ -2357,7 +2357,7 @@ class PyChemMain(wx.Frame):
                 pass
 
             try:
-                self.plGadfa.titleBar.CreateGaResultsTree(
+                self.plGadfa.titleBar.create_ga_results_tree(
                     self.plGadfa.optDlg.treGaResults,
                     gacurves=self.data['gadfacurves'],
                     chroms=self.data['gadfachroms'],

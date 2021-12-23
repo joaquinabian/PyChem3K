@@ -1,11 +1,11 @@
 # -----------------------------------------------------------------------------
-# Name:        Ga.py
+# Name:        ga.py
 # Purpose:     
 #
 # Author:      Roger Jarvis
 #
 # Created:     2007/05/22
-# RCS-ID:      $Id: Ga.py, v 1.19 2009/02/26 22:19:47 rmj01 Exp $
+# RCS-ID:      $Id: ga.py, v 1.19 2009/02/26 22:19:47 rmj01 Exp $
 # Copyright:   (c) 2006
 # Licence:     GNU General Public Licence
 # -----------------------------------------------------------------------------
@@ -36,11 +36,21 @@ from Pca import plotLoads
 from Pca import MyPlotCanvas
 from Pca import PlotPlsModel
 from exp_setup import val_split
-from commons import error_box
 
 
 class Ga(wx.Panel):
-    # genetic algorithm coupled to discriminant function analysis
+    """genetic algorithm coupled to discriminant function analysis"""
+    def __init__(self, parent, id_, pos, size, style, name, dtype):
+        """"""
+        wx.Panel.__init__(self, id=-1, name='Ga', parent=parent,
+                          pos=wx.Point(47, 118), size=wx.Size(796, 460),
+                          style=wx.TAB_TRAVERSAL)
+
+        _, _, _, _, _ = id_, pos, size, style, name
+        self.dtype = dtype
+        self.parent = parent
+        self._init_ctrls(parent)
+
     def _init_coll_bxs_ga1_items(self, parent):
         # generated method, don't edit
 
@@ -60,15 +70,13 @@ class Ga(wx.Panel):
         parent.Add(self.plcGaFeatPlot, 0, border=0, flag=wx.EXPAND)
         parent.Add(self.nbGaModPlot, 0, border=0, flag=wx.EXPAND)
     
-    def _init_coll_nbGaPlsPreds_Pages(self, parent):
-        # generated method, don't edit
-
+    def _init_coll_nb_ga_pls_preds_pages(self, parent):
+        """"""
         parent.AddPage(imageId=-1, page=self.plcGaModelPlot1, select=True,
                        text='')
     
-    def _init_coll_nbGaModPlot_Pages(self, parent):
-        # generated method, don't edit
-
+    def _init_coll_nb_ga_mod_plot_pages(self, parent):
+        """"""
         parent.AddPage(imageId=-1, page=self.plcGaOptPlot, select=True,
                        text='GA Optimisation Curve')
         parent.AddPage(imageId=-1, page=self.plcGaEigs, select=False,
@@ -93,9 +101,7 @@ class Ga(wx.Panel):
         self.p1.SetSizer(self.grsGa)
         
     def _init_ctrls(self, prnt):
-        wx.Panel.__init__(self, id=-1, name='Ga', parent=prnt,
-                          pos=wx.Point(47, 118), size=wx.Size(796, 460),
-                          style=wx.TAB_TRAVERSAL)
+
         self.SetToolTip('')
         self.SetAutoLayout(True)
         self.prnt = prnt
@@ -106,7 +112,7 @@ class Ga(wx.Panel):
                                           size=wx.Size(272, 168),
                                           style=wx.SP_3D | wx.SP_LIVE_UPDATE)
         self.Splitter.SetAutoLayout(True)
-        self.Splitter.Bind(wx.EVT_SPLITTER_DCLICK, self.OnSplitterDclick)
+        self.Splitter.Bind(wx.EVT_SPLITTER_DCLICK, self.on_splitter_dclick)
         self.Splitter.splitPrnt = self
         
         self.p1 = wx.Panel(self.Splitter)
@@ -126,7 +132,8 @@ class Ga(wx.Panel):
 
         self.nbGaPlsPreds.prnt = self.p1
 
-        toolbar = self.nbGaPlsPreds.prnt.prnt.splitPrnt.prnt.parent.tbMain
+        pretoolbar = self.nbGaPlsPreds.prnt.prnt
+        toolbar = pretoolbar.splitPrnt.prnt.parent.tbMain
         self.plcGaModelPlot1 = MyPlotCanvas(id=-1, name='plcGaModelPlot1',
                                             parent=self.nbGaPlsPreds,
                                             pos=wx.Point(0, 0),
@@ -213,7 +220,7 @@ class Ga(wx.Panel):
         self.plcGaOptPlot.fontSizeTitle = 10
         self.plcGaOptPlot.SetToolTip('')
         
-        self.titleBar = TitleBar(self, id=-1, text="",
+        self.titleBar = TitleBar(self, id_=-1, text="",
                                  style=bp.BP_USE_GRADIENT,
                                  alignment=bp.BP_ALIGN_LEFT,
                                  gatype=self.dtype)
@@ -221,17 +228,12 @@ class Ga(wx.Panel):
         self.Splitter.SplitVertically(self.optDlg, self.p1, 1)
         self.Splitter.SetMinimumPaneSize(1)
         
-        self._init_coll_nbGaModPlot_Pages(self.nbGaModPlot)
-        self._init_coll_nbGaPlsPreds_Pages(self.nbGaPlsPreds)
+        self._init_coll_nb_ga_mod_plot_pages(self.nbGaModPlot)
+        self._init_coll_nb_ga_pls_preds_pages(self.nbGaPlsPreds)
         
         self._init_sizers()
-
-    def __init__(self, parent, id, pos, size, style, name, dtype):
-        self.dtype = dtype
-        self._init_ctrls(parent)
-        self.parent = parent
     
-    def Reset(self):
+    def reset(self):
         # disable ctrls
         self.titleBar.spnGaScoreFrom.Enable(False)
         self.titleBar.spnGaScoreTo.Enable(False)
@@ -255,7 +257,7 @@ class Ga(wx.Panel):
                                     'Fitness Score']}
             
         curve = PolyLine([[0, 0], [1, 1]], colour='white', width=1,
-                         style=wx.TRANSPARENT)
+                         style=wx.PENSTYLE_TRANSPARENT)
         
         for each in objects.keys():
             exec('self.' + each + '.Draw(PlotGraphics([curve], ' +
@@ -263,19 +265,37 @@ class Ga(wx.Panel):
                  'objects["' + each + '"][1], ' +
                  'objects["' + each + '"][2]))')
     
-    def OnSplitterDclick(self, _):
+    def on_splitter_dclick(self, _):
         if self.Splitter.GetSashPosition() <= 5:
             self.Splitter.SetSashPosition(250)
         else:
             self.Splitter.SetSashPosition(1)
             
 class TitleBar(bp.ButtonPanel):
-    def _init_btnpanel_ctrls(self, prnt):
-        bp.ButtonPanel.__init__(self, parent=prnt, id=-1,
-                                text="GA-" + self.dtype,
+    """"""
+    def __init__(self, parent, id_, text, style, alignment, gatype):
+        """"""
+        bp.ButtonPanel.__init__(self, parent=parent, id=-1,
+                                text="GA-" + gatype,
                                 agwStyle=bp.BP_USE_GRADIENT,
                                 alignment=bp.BP_ALIGN_LEFT)
 
+        _, _, _, _ = id_, text, style, alignment
+
+        self.parent = parent
+        self.dtype = gatype
+        self.data = None
+        self.grid = None
+        self.pcSplit = None
+
+        self._init_btnpanel_ctrls()
+        self.create_btns()
+
+        self.spnGaScoreFrom.Show(False)
+        self.spnGaScoreTo.Show(False)
+
+    def _init_btnpanel_ctrls(self):
+        """"""
         choices = ['Raw spectra', 'Processed spectra']
         self.cbxData = wx.Choice(choices=choices, id=-1, name='cbxData',
                                  parent=self, pos=wx.Point(118, 23),
@@ -331,29 +351,14 @@ class TitleBar(bp.ButtonPanel):
                                           shortHelp='Set GA Parameters',
                                           longHelp='Set Genetic Algorithm Parameters')
         self.Bind(wx.EVT_BUTTON, self.on_btn_set_params, id=self.btnSetParams.GetId())
-        
-    def __init__(self, parent, id, text, style, alignment, gatype):
-
-        self.parent = parent
-        self.dtype = gatype
-        
-        self._init_btnpanel_ctrls(parent)
-        
-        self.spnGaScoreFrom.Show(False)
-        self.spnGaScoreTo.Show(False)
-
-        self.data = None
-        self.grid = None
-
-        self.create_btns()
     
     def get_data(self, data):
         self.data = data
         
-    def getExpGrid(self, grid):
+    def get_exp_grid(self, grid):
         self.grid = grid
     
-    def getValSplitPc(self, pc):
+    def get_val_split_pc(self, pc):
         self.pcSplit = pc
     
     def create_btns(self):
@@ -491,7 +496,7 @@ class TitleBar(bp.ButtonPanel):
                     'rgens'= 5,     - No. of repeat gens
                     'resample'= 1,  - No. of random resampling iterations
         """
-        
+
         dlg = wx.MessageDialog(self, 'This can take a while, are you sure?', 
                                'Preparing to run GA',
                                wx.OK | wx.CANCEL | wx.ICON_INFORMATION)
@@ -505,7 +510,8 @@ class TitleBar(bp.ButtonPanel):
         #    raise
         finally:
             dlg.Destroy()
-        
+
+        set_text = self.parent.parent.sbMain.SetStatusText
         if go == 1: 
             self.parent.reset()
             # try:
@@ -559,6 +565,7 @@ class TitleBar(bp.ButtonPanel):
                         # run dfa
                         scores = mva.fitfun.call_dfa(chrom, xdata, Lvs, mask,
                                                      self.data)
+                        print('DFA SCORES:', scores)
                         
                     elif self.dtype == 'PLS':
                         # set factors
@@ -579,6 +586,7 @@ class TitleBar(bp.ButtonPanel):
                         chromRecord = np.zeros((1, Vars+varFrom))
                     
                     while count < stop:
+                        print('count: ', count)
                         # linear ranking
                         ranksc, chrom, scores = genic.rank(chrom, scores)
                         
@@ -617,8 +625,9 @@ class TitleBar(bp.ButtonPanel):
                             scoresOut.append(min(min(scores)))
                         
                         # Build history for second stopping criterion
-                        if self.parent.optDlg.cbGaRepUntil.GetValue() is True:
+                        if self.parent.optDlg.cbGaRepUntil.GetValue():
                             Best = scores[0]
+                            print('Best: ', Best)
                             tChrom = chrom[0]
                             chromRecord = np.concatenate((chromRecord,
                                                           tChrom[nax, :]), 0)
@@ -635,16 +644,14 @@ class TitleBar(bp.ButtonPanel):
                         count += 1
                         
                         # report progress to status bar
-                        self.parent.prnt.sbMain.SetStatusText(' '.join(('Variable',
-                                                                        str(Vars+varFrom))), 0)
-                        self.parent.prnt.sbMain.SetStatusText(' '.join(('Run', str(Runs + 1))
-                                                                       ), 1)
-                        self.parent.prnt.sbMain.SetStatusText(' '.join(('Generation',
-                                                                        str(count))), 2)
+
+                        set_text('Variable %i' % (Vars+varFrom,), 0)
+                        set_text('Run %i' % (Runs + 1,), 1)
+                        set_text('Generation %i' % count, 2)
                         
                     # Save GA optimisation curve
                     scoresOut = np.asarray(scoresOut)
-                    
+                    print('scoresOut: ', scoresOut)
                     # concatenate run result
                     if varRange == 1:
                         if Vars+Runs == 0:
@@ -742,17 +749,24 @@ class TitleBar(bp.ButtonPanel):
                             cUrves = np.concatenate(
                                 (cUrves, np.reshape(scoresOut, (1, lscout))), 0)
                             
-            # add results to disctionary
-            exec("self.data['ga" + self.dtype.lower() + "chroms'] = chromList")
-            exec("self.data['ga" + self.dtype.lower() + "scores'] = scoreList")
-            exec("self.data['ga" + self.dtype.lower() + "curves'] = cUrves")
-            
+            print("gadfachroms :", self.data['gadfachroms'])
+            # add results to dictionary
+            type_low = self.dtype.lower()
+            cmd1 = "self.data['ga%schroms'] = chromList" % type_low
+            cmd2 = "self.data['ga%sscores'] = scoreList" % type_low
+            cmd3 = "self.data['ga%scurves'] = cUrves" % type_low
+
+            for cmd in [cmd1, cmd2, cmd3]:
+                exec(cmd, locals(), globals())
+
+            print("gadfachroms_exec :", self.data['gadfachroms'])
+
             # Create results tree
-            self.CreateGaResultsTree(self.parent.optDlg.treGaResults, 
-                                     gacurves=cUrves, chroms=chromList,
-                                     varfrom=_attr['varfrom'],
-                                     varto=_attr['varto'],
-                                     runs=_attr['runs']-1)
+            self.create_ga_results_tree(self.parent.optDlg.treGaResults,
+                                        gacurves=cUrves, chroms=chromList,
+                                        varfrom=_attr['varfrom'],
+                                        varto=_attr['varto'],
+                                        runs=_attr['runs']-1)
             
             # enable export btn
             self.btnExportGa.Enable(1)
@@ -761,11 +775,11 @@ class TitleBar(bp.ButtonPanel):
             wx.EndBusyCursor()
 
         # clear status bar
-        self.parent.prnt.sbMain.SetStatusText('Status', 0)
-        self.parent.prnt.sbMain.SetStatusText('', 1)
-        self.parent.prnt.sbMain.SetStatusText('', 2)
+        set_text('Status', 0)
+        set_text('', 1)
+        set_text('', 2)
     
-    def CreateGaResultsTree(self, tree, **_attr):
+    def create_ga_results_tree(self, tree, **_attr):
         """Populates GA results tree ctrl
             **_attr - key word _attributes
                 Defaults:
@@ -844,14 +858,29 @@ class TitleBar(bp.ButtonPanel):
             tree.Expand(TreeItemIdList[i])
 
 class SelParam(fpb.FoldPanelBar):
-    def _init_coll_gbsGaParams_Growables(self, parent):
-        
+    """"""
+    def __init__(self, parent):
+        fpb.FoldPanelBar.__init__(self, parent, -1, pos=wx.DefaultPosition,
+                                  size=wx.DefaultSize,
+                                  agwStyle=fpb.FPB_SINGLE_FOLD)
+
+        self._init_selparam_ctrls(parent)
+        self._init_selparam_sizers()
+
+        self.Expand(self.fpParams)
+        self.Expand(self.fpResults)
+
+        self.prnt = parent
+
+    # noinspection PyMethodMayBeStatic
+    def _init_coll_gbs_ga_params_growables(self, parent):
+        """"""
         parent.AddGrowableCol(0)
         parent.AddGrowableCol(1)
         parent.AddGrowableCol(2)
     
-    def _init_coll_gbsGaParams_Items(self, parent):
-        
+    def _init_coll_gbs_ga_params(self, parent):
+        """"""
         parent.Add(wx.StaticText(self.plParams, -1, 'No. vars. from',
                                  style=wx.ALIGN_RIGHT),
                    (0, 0), border=10, flag=wx.EXPAND, span=(1, 1))
@@ -940,15 +969,13 @@ class SelParam(fpb.FoldPanelBar):
         self.gbsGaParams.SetCols(3)
         self.gbsGaParams.SetRows(12)
         
-        self._init_coll_gbsGaParams_Items(self.gbsGaParams)
-        self._init_coll_gbsGaParams_Growables(self.gbsGaParams)
+        self._init_coll_gbs_ga_params(self.gbsGaParams)
+        self._init_coll_gbs_ga_params_growables(self.gbsGaParams)
         
         self.fpParams.SetSizer(self.gbsGaParams)
     
     def _init_selparam_ctrls(self, prnt):
-        fpb.FoldPanelBar.__init__(self, prnt, -1, pos=wx.DefaultPosition, 
-                                  size=wx.DefaultSize,
-                                  agwStyle=fpb.FPB_SINGLE_FOLD)
+        """"""
         self.SetAutoLayout(True)
         
         icons = wx.ImageList(16, 16)
@@ -964,7 +991,7 @@ class SelParam(fpb.FoldPanelBar):
         self.fpResults = self.AddFoldPanel("Results", collapsed=True, 
                                            foldIcons=icons)
         self.fpResults.SetAutoLayout(True)
-        self.fpResults.Bind(wx.EVT_SIZE, self.OnFpbResize)
+        self.fpResults.Bind(wx.EVT_SIZE, self.on_fpb_resize)
         
         self.plParams = wx.Panel(id=-1, name='plParams', parent=self.fpParams,
                                  pos=wx.Point(0, 0), size=wx.Size(200, 350),
@@ -1093,21 +1120,13 @@ class SelParam(fpb.FoldPanelBar):
         self.AddFoldPanelWindow(self.fpParams, self.plParams, fpb.FPB_ALIGN_WIDTH)
         self.AddFoldPanelWindow(self.fpResults, self.treGaResults, fpb.FPB_ALIGN_WIDTH)
         
-        self._init_selparam_sizers()
-
-    def __init__(self, parent):
-        self._init_selparam_ctrls(parent)
-        
-        self.Expand(self.fpParams)
-        self.Expand(self.fpResults)
-        
-        self.prnt = parent
-        
-    def OnFpbResize(self, _):
+    def on_fpb_resize(self, _):
         self.treGaResults.SetSize((self.treGaResults.GetSize()[0],
                                    self.GetSize()[1]-50))
-    
-    def CountForOptCurve(self, curve):
+
+    # noinspection PyMethodMayBeStatic
+    def count_for_opt_curve(self, curve):
+        """"""
         count = 0
         for item in curve:
             if item != 0:
@@ -1115,6 +1134,7 @@ class SelParam(fpb.FoldPanelBar):
         return count
     
     def on_ga_results_tree_item_activated(self, event):
+        """"""
         self.tbar = self.prnt.splitPrnt.titleBar
         # define dfa or pls
         exec("self.chroms = self.tbar.data['ga" + self.prnt.splitPrnt.dtype.lower() + "chroms']")
@@ -1315,7 +1335,7 @@ class SelParam(fpb.FoldPanelBar):
         self.plot_ga_vars(self.prnt.splitPrnt.plcGaFeatPlot)
         
         # plot ga optimisation curve
-        noGens = self.CountForOptCurve(self.curves[chromId])
+        noGens = self.count_for_opt_curve(self.curves[chromId])
         gaPlotOptLine = plotLine(self.prnt.splitPrnt.plcGaOptPlot,
                                  np.reshape(self.curves[chromId, 0:noGens], (1, noGens)),
                                  xaxis=np.arange(1, noGens+1)[:, nax], rownum=0,
@@ -1453,7 +1473,10 @@ class SelParam(fpb.FoldPanelBar):
         self.tbar.data['gavarcoords'] = coords
         
     def plot_ga_loads(self, chrom, loads, canvas, xL='Variable'):
+        """"""
+        _ = xL
         self.tbar = self.prnt.splitPrnt.titleBar
+
         # factors
         col1 = self.tbar.spnGaScoreFrom.GetValue()-1
         col2 = self.tbar.spnGaScoreTo.GetValue()-1
