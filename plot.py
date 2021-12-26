@@ -2126,10 +2126,10 @@ class TestFrame(wx.Frame):
         self.Bind(wx.EVT_MENU, self.OnFilePageSetup, id=200)
 
         menu.Append(201, 'Print Preview...', 'Show the current plot on page')
-        self.Bind(wx.EVT_MENU, self.OnFilePrintPreview, id=201)
+        self.Bind(wx.EVT_MENU, self.on_file_print_preview, id=201)
 
         menu.Append(202, 'Print...', 'Print the current plot')
-        self.Bind(wx.EVT_MENU, self.OnFilePrint, id=202)
+        self.Bind(wx.EVT_MENU, self.on_file_print, id=202)
 
         menu.Append(203, 'Save Plot...', 'Save current plot')
         self.Bind(wx.EVT_MENU, self.OnSaveFile, id=203)
@@ -2155,29 +2155,29 @@ class TestFrame(wx.Frame):
         self.Bind(wx.EVT_MENU, self.on_plot_7, id=261)
 
         menu.Append(211, '&Redraw', 'Redraw plots')
-        self.Bind(wx.EVT_MENU, self.OnPlotRedraw, id=211)
+        self.Bind(wx.EVT_MENU, self.on_plot_redraw, id=211)
         menu.Append(212, '&Clear', 'Clear canvas')
-        self.Bind(wx.EVT_MENU, self.OnPlotClear, id=212)
+        self.Bind(wx.EVT_MENU, self.on_plot_clear, id=212)
         menu.Append(213, '&Scale', 'Scale canvas')
-        self.Bind(wx.EVT_MENU, self.OnPlotScale, id=213)
+        self.Bind(wx.EVT_MENU, self.on_plot_scale, id=213)
         menu.Append(214, 'Enable &Zoom', 'Enable Mouse Zoom',
                     kind=wx.ITEM_CHECK)
-        self.Bind(wx.EVT_MENU, self.OnEnableZoom, id=214)
+        self.Bind(wx.EVT_MENU, self.on_enable_zoom, id=214)
         menu.Append(215, 'Enable &Grid', 'Turn on Grid', kind=wx.ITEM_CHECK)
-        self.Bind(wx.EVT_MENU, self.OnEnableGrid, id=215)
+        self.Bind(wx.EVT_MENU, self.on_enable_grid, id=215)
         menu.Append(217, 'Enable &Drag', 'Activates dragging mode',
                     kind=wx.ITEM_CHECK)
-        self.Bind(wx.EVT_MENU, self.OnEnableDrag, id=217)
+        self.Bind(wx.EVT_MENU, self.on_enable_drag, id=217)
         menu.Append(220, 'Enable &Legend', 'Turn on Legend', kind=wx.ITEM_CHECK)
-        self.Bind(wx.EVT_MENU, self.OnEnableLegend, id=220)
+        self.Bind(wx.EVT_MENU, self.on_enable_legend, id=220)
         menu.Append(222, 'Enable &Point Label', 'Show Closest Point',
                     kind=wx.ITEM_CHECK)
-        self.Bind(wx.EVT_MENU, self.OnEnablePointLabel, id=222)
+        self.Bind(wx.EVT_MENU, self.on_enable_point_label, id=222)
 
         menu.Append(225, 'Scroll Up 1', 'Move View Up 1 Unit')
-        self.Bind(wx.EVT_MENU, self.OnScrUp, id=225)
+        self.Bind(wx.EVT_MENU, self.on_scr_up, id=225)
         menu.Append(230, 'Scroll Rt 2', 'Move View Right 2 Units')
-        self.Bind(wx.EVT_MENU, self.OnScrRt, id=230)
+        self.Bind(wx.EVT_MENU, self.on_scr_rt, id=230)
         menu.Append(235, '&Plot reset', 'reset to original plot')
         self.Bind(wx.EVT_MENU, self.OnReset, id=235)
 
@@ -2185,7 +2185,7 @@ class TestFrame(wx.Frame):
 
         menu = wx.Menu()
         menu.Append(300, '&About', 'About this thing...')
-        self.Bind(wx.EVT_MENU, self.OnHelpAbout, id=300)
+        self.Bind(wx.EVT_MENU, self.on_help_about, id=300)
         self.mainmenu.Append(menu, '&Help')
 
         self.SetMenuBar(self.mainmenu)
@@ -2257,10 +2257,10 @@ class TestFrame(wx.Frame):
     def OnFilePageSetup(self, _):
         self.client.PageSetup()
 
-    def OnFilePrintPreview(self, _):
+    def on_file_print_preview(self, _):
         self.client.PrintPreview()
 
-    def OnFilePrint(self, event):
+    def on_file_print(self, _):
         self.client.printout()
 
     def OnSaveFile(self, _):
@@ -2270,15 +2270,15 @@ class TestFrame(wx.Frame):
         self.Close()
 
     def on_plot_1(self, _):
-        self.resetDefaults()
+        self.reset_defaults()
         self.client.Draw(_draw1_objects())
 
     def on_plot_2(self, _):
-        self.resetDefaults()
+        self.reset_defaults()
         self.client.Draw(_draw2_objects())
 
     def on_plot_3(self, _):
-        self.resetDefaults()
+        self.reset_defaults()
         self.client.SetFont(wx.Font(10, wx.FONTFAMILY_SCRIPT,
                                     wx.FONTSTYLE_NORMAL,
                                     wx.FONTWEIGHT_NORMAL))
@@ -2289,13 +2289,13 @@ class TestFrame(wx.Frame):
         self.client.Draw(_draw3_objects())
 
     def on_plot_4(self, _):
-        self.resetDefaults()
+        self.reset_defaults()
         drawObj = _draw4_objects()
         self.client.Draw(drawObj)
 
     def on_plot_5(self, _):
         # Empty plot with just axes
-        self.resetDefaults()
+        self.reset_defaults()
         drawObj = _draw5_objects()
         # make the axis X= (0,5), Y=(0,10)
         # (default with None is X= (-1,1), Y= (-1,1))
@@ -2303,7 +2303,7 @@ class TestFrame(wx.Frame):
 
     def on_plot_6(self, _):
         # Bar Graph Example
-        self.resetDefaults()
+        self.reset_defaults()
         # self.client.enableLegend = True   # turn on Legend
         # self.client.enableGrid(True)      # turn on Grid
         self.client.xSpec = 'none'  # turns off x-axis scale
@@ -2312,53 +2312,53 @@ class TestFrame(wx.Frame):
 
     def on_plot_7(self, _):
         # log scale example
-        self.resetDefaults()
+        self.reset_defaults()
         self.client.setLogScale((True, True))
         self.client.Draw(_draw7_objects())
 
-    def OnPlotRedraw(self, _):
+    def on_plot_redraw(self, _):
         self.client.Redraw()
 
-    def OnPlotClear(self, _):
+    def on_plot_clear(self, _):
         self.client.Clear()
 
-    def OnPlotScale(self, _):
+    def on_plot_scale(self, _):
         if self.client.last_draw is not None:
             graphics, xAxis, yAxis = self.client.last_draw
             self.client.Draw(graphics, (1, 3.05), (0, 1))
 
-    def OnEnableZoom(self, event):
+    def on_enable_zoom(self, event):
         self.client.enableZoom = event.IsChecked()
         self.mainmenu.Check(217, not event.IsChecked())
 
-    def OnEnableGrid(self, event):
+    def on_enable_grid(self, event):
         self.client.enableGrid(event.IsChecked())
 
-    def OnEnableDrag(self, event):
+    def on_enable_drag(self, event):
         self.client.enableDrag(event.IsChecked())
         self.mainmenu.Check(214, not event.IsChecked())
 
-    def OnEnableLegend(self, event):
+    def on_enable_legend(self, event):
         self.client.enableLegend(event.IsChecked())
 
-    def OnEnablePointLabel(self, event):
+    def on_enable_point_label(self, event):
         self.client.enablePointLabel(event.IsChecked())
 
-    def OnScrUp(self, _):
+    def on_scr_up(self, _):
         self.client.ScrollUp(1)
 
-    def OnScrRt(self, _):
+    def on_scr_rt(self, _):
         self.client.ScrollRight(2)
 
     def OnReset(self, _):
         self.client.Reset()
 
-    def OnHelpAbout(self, _):
+    def on_help_about(self, _):
         from wx.lib.dialogs import ScrolledMessageDialog
         about = ScrolledMessageDialog(self, __doc__, "About...")
         about.ShowModal()
 
-    def resetDefaults(self):
+    def reset_defaults(self):
         """Just to reset the fonts back to the PlotCanvas defaults"""
         self.client.SetFont(wx.Font(10, wx.FONTFAMILY_SWISS,
                                     wx.FONTSTYLE_NORMAL,

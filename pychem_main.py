@@ -1,19 +1,18 @@
 # -----------------------------------------------------------------------------
-# Name:        PyChemMain.py
+# Name:        pychem_main.py
 # Purpose:     
 #
 # Author:      Roger Jarvis
 #
 # Created:     2007/05/24
-# RCS-ID:      $Id: PyChemMain.py,v 1.26 2009/03/11 15:02:25 rmj01 Exp $
+# RCS-ID:      $Id: pychem_main.py,v 1.26 2009/03/11 15:02:25 rmj01 Exp $
 # Copyright:   (c) 2007
 # Licence:     GNU General Public Licence
 # -----------------------------------------------------------------------------
 
-import os
+from os.path import join as opjoin
 import sys
 
-import scipy as sp
 import numpy as np
 from numpy import loadtxt
 from numpy import newaxis as nax
@@ -29,19 +28,19 @@ from wx.lib.stattext import GenStaticText
 from wx.adv import AboutDialogInfo, SashWindow, SW_3D, AboutBox
 
 import exp_setup
-import plotSpectra
-import Pca
+import plot_spectra
+import pca
 import cluster
 import dfa
-import Plsr
+import plsr
 import ga
-import Univariate
+import univariate
 
-from Pca import plot_scores
-from Pca import plotLoads
-from Pca import PlotPlsModel
-from Pca import SymColSelectTool
-from plotSpectra import GridRowDel
+from pca import plot_scores
+from pca import plot_loads
+from pca import plot_pls_model
+from pca import SymColSelectTool
+from plot_spectra import GridRowDel
 from commons import error_box
 
 
@@ -85,372 +84,365 @@ def create(parent):
  ] = [wx.NewId() for _init_grid_row_menu_Items in range(1)]
 
 
+# noinspection PyUnresolvedReferences
 class PlotToolBar(wx.ToolBar):
+    """"""
     def __init__(self, parent):
+        """"""
         wx.ToolBar.__init__(self, parent, id=-1, pos=(0, 0), size=(0, 0),
                             style=wx.NO_BORDER | wx.TB_HORIZONTAL, name='')
 
-        self.stTitle = GenStaticText(self, -1, 'Title:', pos=wx.Point(2, 5),
+        self.stTitle = GenStaticText(self, -1, 'Title:', pos=(2, 5),
                                      style=wx.TRANSPARENT_WINDOW)
         self.AddControl(self.stTitle)
 
         self.txtPlot = wx.TextCtrl(id=-1, name='txtPlot', parent=self,
-                                   pos=wx.Point(26, 2), size=wx.Size(120, 21),
+                                   pos=(26, 2), size=(120, 21),
                                    style=wx.TE_PROCESS_ENTER, value='Title')
         self.txtPlot.SetToolTip('Graph Title')
-        self.txtPlot.Bind(wx.EVT_TEXT_ENTER, self.OnTxtPlot)
+        self.txtPlot.Bind(wx.EVT_TEXT_ENTER, self.on_txt_plot)
         self.AddControl(self.txtPlot)
 
         self.spn_title = wx.SpinCtrl(id=-1, initial=12, max=76, min=5,
                                      name='spnTitleFont', parent=self,
-                                     pos=wx.Point(148, 2),
-                                     size=wx.Size(50, 21),
+                                     pos=(148, 2),
+                                     size=(50, 21),
                                      style=wx.SP_ARROW_KEYS)
         self.spn_title.SetToolTip('Title Font Size')
-        self.spn_title.Bind(wx.EVT_SPIN, self.OnSpnTitleFont)
+        self.spn_title.Bind(wx.EVT_SPIN, self.on_spn_title_font)
         self.AddControl(self.spn_title)
 
         self.AddSeparator()
 
         self.stXlabel = GenStaticText(self, -1, 'X-label:',
-                                      pos=wx.Point(202, 5),
+                                      pos=(202, 5),
                                       style=wx.TRANSPARENT_WINDOW)
         self.AddControl(self.stXlabel)
 
         self.txtXlabel = wx.TextCtrl(id=-1, name='txtXlabel', parent=self,
-                                     pos=wx.Point(240, 2), size=wx.Size(70, 21),
+                                     pos=(240, 2), size=(70, 21),
                                      style=wx.TE_PROCESS_ENTER, value='X-label')
         self.txtXlabel.SetToolTip('Abscissa (X-axis) Label')
-        self.txtXlabel.Bind(wx.EVT_TEXT_ENTER, self.OnTxtXlabel)
+        self.txtXlabel.Bind(wx.EVT_TEXT_ENTER, self.on_txt_xlabel)
         self.AddControl(self.txtXlabel)
 
         self.stYlabel = GenStaticText(self, -1, 'Y-label:',
-                                      pos=wx.Point(314, 5),
+                                      pos=(314, 5),
                                       style=wx.TRANSPARENT_WINDOW)
         self.AddControl(self.stYlabel)
 
         self.txtYlabel = wx.TextCtrl(id=-1, name='txtYlabel', parent=self,
-                                     pos=wx.Point(352, 2), size=wx.Size(70, 21),
+                                     pos=(352, 2), size=(70, 21),
                                      style=wx.TE_PROCESS_ENTER, value='Y-label')
         self.txtYlabel.SetToolTip('Ordinate (Y-axis) Label')
-        self.txtYlabel.Bind(wx.EVT_TEXT_ENTER, self.OnTxtYlabel)
+        self.txtYlabel.Bind(wx.EVT_TEXT_ENTER, self.on_txt_ylabel)
         self.AddControl(self.txtYlabel)
 
         self.spnAxesFont = wx.SpinCtrl(id=-1, initial=12, max=76, min=5,
                                        name='spnTitleFont', parent=self,
-                                       pos=wx.Point(424, 2),
-                                       size=wx.Size(50, 21),
+                                       pos=(424, 2),
+                                       size=(50, 21),
                                        style=wx.SP_ARROW_KEYS)
         self.spnAxesFont.SetToolTip('Axes Font Size')
-        self.spnAxesFont.Bind(wx.EVT_SPIN, self.OnSpnAxesFont)
+        self.spnAxesFont.Bind(wx.EVT_SPIN, self.on_spn_axes_font)
         self.AddControl(self.spnAxesFont)
 
         self.AddSeparator()
 
         self.stXrange = GenStaticText(self, -1, 'X-range:',
-                                      pos=wx.Point(480, 5),
+                                      pos=(480, 5),
                                       style=wx.TRANSPARENT_WINDOW)
         self.AddControl(self.stXrange)
 
         self.txtXmin = wx.TextCtrl(id=-1, name='txtXmin', parent=self,
-                                   pos=wx.Point(522, 2), size=wx.Size(40, 21),
+                                   pos=(522, 2), size=(40, 21),
                                    style=0, value='0.0')
         self.txtXmin.SetToolTip('Minimum X-axis range')
         self.AddControl(self.txtXmin)
 
         self.spnXmin = wx.SpinButton(id=-1, name='spnXmin', parent=self,
-                                     pos=wx.Point(562, 2), size=wx.Size(15, 21),
+                                     pos=(562, 2), size=(15, 21),
                                      style=wx.SP_VERTICAL)
         self.spnXmin.SetToolTip('Minimum X-axis range')
-        self.spnXmin.Bind(wx.EVT_SPIN_DOWN, self.OnSpnXminSpinDown)
-        self.spnXmin.Bind(wx.EVT_SPIN_UP, self.OnSpnXminSpinUp)
-        self.spnXmin.Bind(wx.EVT_SPIN, self.OnSpnXmin)
+        self.spnXmin.Bind(wx.EVT_SPIN_DOWN, self.on_spn_xmin_down)
+        self.spnXmin.Bind(wx.EVT_SPIN_UP, self.on_spn_xmin_up)
+        self.spnXmin.Bind(wx.EVT_SPIN, self.on_spn_xmin)
         self.AddControl(self.spnXmin)
 
-        self.stDummy1 = GenStaticText(self, -1, ' : ', pos=wx.Point(579, 5),
+        self.stDummy1 = GenStaticText(self, -1, ' : ', pos=(579, 5),
                                       style=wx.TRANSPARENT_WINDOW)
         self.AddControl(self.stDummy1)
 
         self.txtXmax = wx.TextCtrl(id=-1, name='txtXmax', parent=self,
-                                   pos=wx.Point(590, 2), size=wx.Size(40, 21),
+                                   pos=(590, 2), size=(40, 21),
                                    style=0, value='0.0')
         self.txtXmax.SetToolTip('Maximum X-axis range')
         self.AddControl(self.txtXmax)
 
         self.spnXmax = wx.SpinButton(id=-1, name='spnXmax', parent=self,
-                                     pos=wx.Point(630, 2), size=wx.Size(15, 21),
+                                     pos=(630, 2), size=(15, 21),
                                      style=wx.SP_VERTICAL)
         self.spnXmax.SetToolTip('Maximum X-axis range')
-        self.spnXmax.Bind(wx.EVT_SPIN_DOWN, self.OnSpnXmaxSpinDown)
-        self.spnXmax.Bind(wx.EVT_SPIN_UP, self.OnSpnXmaxSpinUp)
-        self.spnXmax.Bind(wx.EVT_SPIN, self.OnSpnXmax)
+        self.spnXmax.Bind(wx.EVT_SPIN_DOWN, self.on_spn_xmax_down)
+        self.spnXmax.Bind(wx.EVT_SPIN_UP, self.on_spn_xmax_up)
+        self.spnXmax.Bind(wx.EVT_SPIN, self.on_spn_xmax)
         self.AddControl(self.spnXmax)
 
         self.AddSeparator()
 
         self.stYrange = GenStaticText(self, -1, 'Y-range:',
-                                      pos=wx.Point(647, 5),
+                                      pos=(647, 5),
                                       style=wx.TRANSPARENT_WINDOW)
         self.AddControl(self.stYrange)
 
         self.txtYmin = wx.TextCtrl(id=-1, name='txtYmin', parent=self,
-                                   pos=wx.Point(690, 2), size=wx.Size(40, 21),
+                                   pos=(690, 2), size=(40, 21),
                                    style=0, value='0.0')
         self.txtYmin.SetToolTip('Minimum Y-axis range')
         self.AddControl(self.txtYmin)
 
         self.spnYmin = wx.SpinButton(id=-1, name='spnYmin',
-                                     parent=self, pos=wx.Point(732, 2),
-                                     size=wx.Size(15, 21),
+                                     parent=self, pos=(732, 2),
+                                     size=(15, 21),
                                      style=wx.SP_VERTICAL)
         self.spnYmin.SetToolTip('Minimum Y-axis range')
-        self.spnYmin.Bind(wx.EVT_SPIN_DOWN, self.OnSpnYminSpinDown)
-        self.spnYmin.Bind(wx.EVT_SPIN_UP, self.OnSpnYminSpinUp)
-        self.spnYmin.Bind(wx.EVT_SPIN, self.OnSpnYmin)
+        self.spnYmin.Bind(wx.EVT_SPIN_DOWN, self.on_spn_ymin_down)
+        self.spnYmin.Bind(wx.EVT_SPIN_UP, self.on_spn_ymin_up)
+        self.spnYmin.Bind(wx.EVT_SPIN, self.on_spn_ymin)
         self.AddControl(self.spnYmin)
 
-        self.stDummy2 = GenStaticText(self, -1, ' : ', pos=wx.Point(749, 5),
+        self.stDummy2 = GenStaticText(self, -1, ' : ', pos=(749, 5),
                                       style=wx.TRANSPARENT_WINDOW)
         self.AddControl(self.stDummy2)
 
         self.txtYmax = wx.TextCtrl(id=-1, name='txtYmax', parent=self,
-                                   pos=wx.Point(760, 2), size=wx.Size(40, 21),
+                                   pos=(760, 2), size=(40, 21),
                                    style=0, value='0.0')
         self.txtYmax.SetToolTip('Maximum Y-axis range')
         self.AddControl(self.txtYmax)
 
         self.spnYmax = wx.SpinButton(id=-1, name='spnYmax',
-                                     parent=self, pos=wx.Point(800, 2),
-                                     size=wx.Size(15, 21),
+                                     parent=self, pos=(800, 2),
+                                     size=(15, 21),
                                      style=wx.SP_VERTICAL)
         self.spnYmax.SetToolTip('Maximum Y-axis range')
-        self.spnYmax.Bind(wx.EVT_SPIN_DOWN, self.OnSpnYmaxSpinDown)
-        self.spnYmax.Bind(wx.EVT_SPIN_UP, self.OnSpnYmaxSpinUp)
-        self.spnYmax.Bind(wx.EVT_SPIN, self.OnSpnYmax)
+        self.spnYmax.Bind(wx.EVT_SPIN_DOWN, self.on_spn_ymax_down)
+        self.spnYmax.Bind(wx.EVT_SPIN_UP, self.on_spn_ymax_up)
+        self.spnYmax.Bind(wx.EVT_SPIN, self.on_spn_ymax)
         self.AddControl(self.spnYmax)
 
         self.AddSeparator()
 
-        bmp = wx.Bitmap(os.path.join('bmp', 'conf_int.bmp'), wx.BITMAP_TYPE_BMP)
+        bmp = wx.Bitmap(opjoin('bmp', 'conf_int.bmp'), wx.BITMAP_TYPE_BMP)
         self.tbConf = BmpToggleBtn(bitmap=bmp, id=-1, name='tbConf',
-                                   parent=self, pos=wx.Point(817, 2),
-                                   size=wx.Size(21, 21))
+                                   parent=self, pos=(817, 2), size=(21, 21))
         self.tbConf.SetValue(False)
         self.tbConf.SetToolTip('')
         self.tbConf.Enable(False)
         self.AddControl(self.tbConf)
-        self.tbConf.Bind(wx.EVT_BUTTON, self.OnTbConfButton)
+        self.tbConf.Bind(wx.EVT_BUTTON, self.on_tb_conf)
 
-        bmp = wx.Bitmap(os.path.join('bmp', 'plot_text.bmp'),wx.BITMAP_TYPE_BMP)
+        bmp = wx.Bitmap(opjoin('bmp', 'plot_text.bmp'), wx.BITMAP_TYPE_BMP)
         self.tbPoints = BmpToggleBtn(bitmap=bmp, id=-1, name='tbPoints',
-                                     parent=self, pos=wx.Point(839, 2),
-                                     size=wx.Size(21, 21))
+                                     parent=self, pos=(839, 2), size=(21, 21))
         self.tbPoints.SetValue(True)
         self.tbPoints.SetToolTip('Plot using text labels')
         self.tbPoints.Enable(True)
         self.tbPoints.Bind(wx.EVT_BUTTON, self.OnTbPointsButton)
         self.AddControl(self.tbPoints)
 
-        bmp = wx.Bitmap(os.path.join('bmp', 'plot_symbol.bmp'), wx.BITMAP_TYPE_BMP)
+        bmp = wx.Bitmap(opjoin('bmp', 'plot_symbol.bmp'), wx.BITMAP_TYPE_BMP)
         self.tbSymbols = BmpToggleBtn(bitmap=bmp, id=-1, name='tbSymbols',
-                                      parent=self, pos=wx.Point(861, 2),
-                                      size=wx.Size(21, 21))
+                                      parent=self, pos=(861, 2), size=(21, 21))
         self.tbSymbols.SetValue(False)
         self.tbSymbols.SetToolTip('Plot using colored symbols')
         self.tbSymbols.Enable(True)
-        self.tbSymbols.Bind(wx.EVT_BUTTON, self.OnTbSymbolsButton)
-        self.tbSymbols.Bind(wx.EVT_RIGHT_DOWN, self.OnTbSymbolsRightClick)
+        self.tbSymbols.Bind(wx.EVT_BUTTON, self.on_tb_symbols)
+        self.tbSymbols.Bind(wx.EVT_RIGHT_DOWN, self.on_tb_symbols_rclick)
         self.AddControl(self.tbSymbols)
 
-        bmp = wx.Bitmap(os.path.join('bmp', 'conf_0.bmp'), wx.BITMAP_TYPE_BMP)
-        self.tbLoadLabels = wx.BitmapButton(bitmap=bmp, id=-1, name='tbLoadLabels',
-                                            parent=self, pos=wx.Point(883, 2),
-                                            size=wx.Size(20, 21))
+        bmp = wx.Bitmap(opjoin('bmp', 'conf_0.bmp'), wx.BITMAP_TYPE_BMP)
+        self.tbLoadLabels = wx.BitmapButton(bitmap=bmp, id=-1,
+                                            name='tbLoadLabels', parent=self,
+                                            pos=(883, 2), size=(20, 21))
         self.tbLoadLabels.SetToolTip('')
         self.tbLoadLabels.Enable(False)
-        self.tbLoadLabels.Bind(wx.EVT_BUTTON, self.OnTbLoadLabelsButton)
+        self.tbLoadLabels.Bind(wx.EVT_BUTTON, self.on_tb_load_labels)
         self.AddControl(self.tbLoadLabels)
-
-        self.tbLoadLabStd1 = wx.BitmapButton(
-            bitmap=wx.Bitmap(os.path.join('bmp', 'conf_1.bmp'),
-                             wx.BITMAP_TYPE_BMP),
-            id=-1, name='tbLoadLabStd1', parent=self,
-            pos=wx.Point(905, 2), size=wx.Size(20, 21))
+        
+        bmp = wx.Bitmap(opjoin('bmp', 'conf_1.bmp'), wx.BITMAP_TYPE_BMP)
+        self.tbLoadLabStd1 = wx.BitmapButton(bitmap=bmp, id=-1, 
+                                             name='tbLoadLabStd1', parent=self,
+                                             pos=(905, 2), size=(20, 21))
         self.tbLoadLabStd1.SetToolTip('')
         self.tbLoadLabStd1.Enable(False)
-        self.tbLoadLabStd1.Bind(wx.EVT_BUTTON, self.OnTbLoadLabStd1Button)
+        self.tbLoadLabStd1.Bind(wx.EVT_BUTTON, self.on_tb_load_lab_std1)
         self.AddControl(self.tbLoadLabStd1)
 
-        bmp = wx.Bitmap(os.path.join('bmp', 'conf_2.bmp'), wx.BITMAP_TYPE_BMP)
-        self.tbLoadLabStd2 = wx.BitmapButton(bitmap=bmp, id=-1, name='tbLoadLabStd2',
-                                             parent=self, pos=wx.Point(927, 2),
-                                             size=wx.Size(20, 21))
+        bmp = wx.Bitmap(opjoin('bmp', 'conf_2.bmp'), wx.BITMAP_TYPE_BMP)
+        self.tbLoadLabStd2 = wx.BitmapButton(bitmap=bmp, id=-1, 
+                                             name='tbLoadLabStd2', parent=self, 
+                                             pos=(927, 2), size=(20, 21))
         self.tbLoadLabStd2.SetToolTip('')
         self.tbLoadLabStd2.Enable(False)
-        self.tbLoadLabStd2.Bind(wx.EVT_BUTTON, self.OnTbLoadLabStd2Button)
+        self.tbLoadLabStd2.Bind(wx.EVT_BUTTON, self.on_tb_load_lab_std2)
         self.AddControl(self.tbLoadLabStd2)
 
-        self.tbLoadSymStd2 = wx.BitmapButton(
-            bitmap=wx.Bitmap(os.path.join('bmp', 'conf_2_sym.bmp'),
-                             wx.BITMAP_TYPE_BMP),
-            id=-1, name='tbLoadSymStd2', parent=self,
-            pos=wx.Point(949, 2), size=wx.Size(20, 21))
+        bmp = wx.Bitmap(opjoin('bmp', 'conf_2_sym.bmp'), wx.BITMAP_TYPE_BMP)
+        self.tbLoadSymStd2 = wx.BitmapButton(bitmap=bmp, id=-1,
+                                             name='tbLoadSymStd2', parent=self,
+                                             pos=(949, 2), size=(20, 21))
         self.tbLoadSymStd2.SetToolTip('')
         self.tbLoadSymStd2.Enable(False)
-        self.tbLoadSymStd2.Bind(wx.EVT_BUTTON, self.OnTbLoadSymStd2Button)
+        self.tbLoadSymStd2.Bind(wx.EVT_BUTTON, self.on_tb_load_sym_std2)
         self.tbLoadSymStd2.Bind(wx.EVT_RIGHT_DOWN,
-                                self.OnTbLoadSymStd2RightClick)
+                                self.on_tb_load_sym_std2_rclick)
         self.AddControl(self.tbLoadSymStd2)
 
         self.AddSeparator()
 
-        self.tbXlog = wx.BitmapButton(
-            bitmap=wx.Bitmap(os.path.join('bmp', 'xlog.bmp'),
-                             wx.BITMAP_TYPE_BMP),
-            id=-1, name='tbXlog', parent=self, pos=wx.Point(971, 2),
-            size=wx.Size(20, 21))
+        bmp = wx.Bitmap(opjoin('bmp', 'xlog.bmp'), wx.BITMAP_TYPE_BMP)
+        self.tbXlog = wx.BitmapButton(bitmap=bmp, id=-1, name='tbXlog',
+                                      parent=self, pos=(971, 2), size=(20, 21))
         self.tbXlog.SetToolTip('')
-        self.tbXlog.Bind(wx.EVT_BUTTON, self.OnTbXLogButton)
+        self.tbXlog.Bind(wx.EVT_BUTTON, self.on_tb_xlog)
         self.AddControl(self.tbXlog)
 
-        self.tbYlog = wx.BitmapButton(
-            bitmap=wx.Bitmap(os.path.join('bmp', 'ylog.bmp'),
-                             wx.BITMAP_TYPE_BMP),
-            id=-1, name='tbYlog', parent=self, pos=wx.Point(993, 2),
-            size=wx.Size(20, 21))
+        bmp = wx.Bitmap(opjoin('bmp', 'ylog.bmp'), wx.BITMAP_TYPE_BMP)
+        self.tbYlog = wx.BitmapButton(bitmap=bmp, id=-1, name='tbYlog',
+                                      parent=self, pos=(993, 2), size=(20, 21))
         self.tbYlog.SetToolTip('')
-        self.tbYlog.Bind(wx.EVT_BUTTON, self.OnTbYLogButton)
+        self.tbYlog.Bind(wx.EVT_BUTTON, self.on_tb_ylog)
         self.AddControl(self.tbYlog)
 
-        self.tbScinote = wx.BitmapButton(
-            bitmap=wx.Bitmap(os.path.join('bmp', 'scinote.bmp'),
-                             wx.BITMAP_TYPE_BMP),
-            id=-1, name='tbScinote', parent=self, pos=wx.Point(1015, 2),
-            size=wx.Size(20, 21))
+        bmp = wx.Bitmap(opjoin('bmp', 'scinote.bmp'), wx.BITMAP_TYPE_BMP)
+        self.tbScinote = wx.BitmapButton(bitmap=bmp, id=-1, name='tbScinote',
+                                         parent=self, pos=(1015, 2),
+                                         size=(20, 21))
         self.tbScinote.SetToolTip('')
-        self.tbScinote.Bind(wx.EVT_BUTTON, self.OnTbScinoteButton)
+        self.tbScinote.Bind(wx.EVT_BUTTON, self.on_tb_scinote)
         self.AddControl(self.tbScinote)
 
         self.SymPopUpWin = SymColSelectTool(self)
 
         self.loadIdx = 0
 
-    def GetLoadPlotIdx(self):
+    def get_load_plot_idx(self):
         return self.loadIdx
 
-    def OnTbSymbolsRightClick(self, event):
+    def on_tb_symbols_rclick(self, event):
         # symbol/colour options for scores plots
         self.tbSymbols.SetValue(True)
-        self.doPlot()
+        self.do_plot()
         btn = event.GetEventObject()
         pos = btn.ClientToScreen((0, 0))
         sz = btn.GetSize()
-        self.SymPopUpWin.SetPosition(wx.Point(pos[0] - 200, pos[1] + sz[1]))
+        self.SymPopUpWin.SetPosition((pos[0] - 200, pos[1] + sz[1]))
 
         # show plot options
         self.SymPopUpWin.ShowModal()
 
-    def OnTbLoadLabelsButton(self, event):
-        # plot loadings
-        self.doPlot(loadType=0)
+    def on_tb_load_labels(self, _):
+        """plot loadings"""
+        self.do_plot(loadType=0)
         self.loadIdx = 0
 
-    def OnTxtPlot(self, event):
+    def on_txt_plot(self, _):
         self.graph.setTitle(self.txtPlot.GetValue())
         self.graph.setXLabel(self.txtXlabel.GetValue())
         self.graph.setYLabel(self.txtYlabel.GetValue())
         self.canvas.Redraw()
 
-    def OnTxtXlabel(self, event):
+    def on_txt_xlabel(self, _):
         self.graph.setTitle(self.txtPlot.GetValue())
         self.graph.setXLabel(self.txtXlabel.GetValue())
         self.graph.setYLabel(self.txtYlabel.GetValue())
         self.canvas.Redraw()
 
-    def OnTxtYlabel(self, event):
+    def on_txt_ylabel(self, _):
         self.graph.setTitle(self.txtPlot.GetValue())
         self.graph.setXLabel(self.txtXlabel.GetValue())
         self.graph.setYLabel(self.txtYlabel.GetValue())
         self.canvas.Redraw()
 
-    def OnTbLoadLabStd1Button(self, event):
+    def on_tb_load_lab_std1(self, _):
         # plot loadings
-        self.doPlot(loadType=1)
+        self.do_plot(loadType=1)
         self.loadIdx = 1
 
-    def OnTbLoadLabStd2Button(self, event):
+    def on_tb_load_lab_std2(self, _):
         # plot loadings
-        self.doPlot(loadType=2)
+        self.do_plot(loadType=2)
         self.loadIdx = 2
 
-    def OnTbLoadSymStd2Button(self, event):
+    def on_tb_load_sym_std2(self, _):
         # plot loadings
-        self.doPlot(loadType=3)
+        self.do_plot(loadType=3)
         self.loadIdx = 3
 
-    def OnTbLoadSymStd2RightClick(self, event):
+    def on_tb_load_sym_std2_rclick(self, event):
         # invoke loadings plot sym/col selector
-        self.doPlot(loadType=3)
+        self.do_plot(loadType=3)
         self.loadIdx = 3
         btn = event.GetEventObject()
         pos = btn.ClientToScreen((0, 0))
         sz = btn.GetSize()
-        self.SymPopUpWin.SetPosition(wx.Point(pos[0] - 200, pos[1] + sz[1]))
+        self.SymPopUpWin.SetPosition((pos[0] - 200, pos[1] + sz[1]))
 
         # show plot options
         self.SymPopUpWin.ShowModal()
 
-    def OnTbConfButton(self, event):
+    def on_tb_conf(self, _):
         if (self.tbPoints.GetValue() is False) & \
                 (self.tbConf.GetValue() is False) & \
                 (self.tbSymbols.GetValue() is False) is False:
             # plot scores
-            self.doPlot()
+            self.do_plot()
 
-    def OnTbPointsButton(self, event):
+    def OnTbPointsButton(self, _):
         if (self.tbPoints.GetValue() is False) & \
                 (self.tbConf.GetValue() is False) & \
                 (self.tbSymbols.GetValue() is False) is False:
             # plot scores
-            self.doPlot()
+            self.do_plot()
 
-    def OnTbSymbolsButton(self, event):
+    def on_tb_symbols(self, _):
         if (self.tbPoints.GetValue() is False) & \
                 (self.tbConf.GetValue() is False) & \
                 (self.tbSymbols.GetValue() is False) is False:
             # plot scores
-            self.doPlot()
+            self.do_plot()
 
-    def OnTbXLogButton(self, event):
+    def on_tb_xlog(self, _):
         if self.canvas.getLogScale()[0]:
             self.canvas.set_log_scale((False, self.canvas.getLogScale()[1]))
         else:
             self.canvas.set_log_scale((True, self.canvas.getLogScale()[1]))
         self.canvas.Redraw()
 
-    def OnTbYLogButton(self, event):
+    def on_tb_ylog(self, _):
         if self.canvas.getLogScale()[1]:
             self.canvas.set_log_scale((self.canvas.getLogScale()[0], False))
         else:
             self.canvas.set_log_scale((self.canvas.getLogScale()[0], True))
         self.canvas.Redraw()
 
-    def OnTbScinoteButton(self, event):
+    def on_tb_scinote(self, _):
         if self.canvas.GetUseScientificNotation() is False:
             self.canvas.SetUseScientificNotation(True)
         else:
             self.canvas.SetUseScientificNotation(False)
         self.canvas.Redraw()
 
-    def doPlot(self, loadType=0, symcolours=[], symsymbols=[]):
+    def do_plot(self, loadType=0, symcolours=[], symsymbols=[]):
+        """"""
         if self.canvas.GetName() in ['plcDFAscores']:
             if self.canvas.prnt.titleBar.data['dfscores'] is not None:
                 plot_scores(self.canvas,
                             self.canvas.prnt.titleBar.data['dfscores'],
                             cl=self.canvas.prnt.titleBar.data['class'][:, 0],
                             labels=self.canvas.prnt.titleBar.data['label'],
-                            validation=self.canvas.prnt.titleBar.data[
-                               'validation'],
+                            validation=self.canvas.prnt.titleBar.data['validation'],
                             col1=self.canvas.prnt.titleBar.spnDfaScore1.GetValue() - 1,
                             col2=self.canvas.prnt.titleBar.spnDfaScore2.GetValue() - 1,
                             title=self.graph.title, xLabel=self.graph.xLabel,
@@ -467,8 +459,7 @@ class PlotToolBar(wx.ToolBar):
                             self.canvas.prnt.titleBar.data['pcscores'],
                             cl=self.canvas.prnt.titleBar.data['class'][:, 0],
                             labels=self.canvas.prnt.titleBar.data['label'],
-                            validation=self.canvas.prnt.titleBar.data[
-                               'validation'],
+                            validation=self.canvas.prnt.titleBar.data['validation'],
                             col1=self.canvas.prnt.titleBar.spnNumPcs1.GetValue() - 1,
                             col2=self.canvas.prnt.titleBar.spnNumPcs2.GetValue() - 1,
                             title=self.graph.title, xLabel=self.graph.xLabel,
@@ -478,57 +469,39 @@ class PlotToolBar(wx.ToolBar):
                             usesym=symsymbols)
 
         elif len(self.canvas.GetName().split('plcPredPls')) > 1:
-            self.canvas = PlotPlsModel(self.canvas, model='full',
-                                       tbar=self.canvas.prnt.prnt.prnt.prnt.tbMain,
-                                       cL=self.canvas.prnt.prnt.titleBar.data[
-                                           'class'],
-                                       scores=
-                                       self.canvas.prnt.prnt.titleBar.data[
-                                           'plst'],
-                                       label=
-                                       self.canvas.prnt.prnt.titleBar.data[
-                                           'label'],
-                                       predictions=
-                                       self.canvas.prnt.prnt.titleBar.data[
-                                           'plspred'],
-                                       validation=
-                                       self.canvas.prnt.prnt.titleBar.data[
-                                           'validation'],
-                                       RMSEPT=
-                                       self.canvas.prnt.prnt.titleBar.data[
-                                           'RMSEPT'],
-                                       factors=
-                                       self.canvas.prnt.prnt.titleBar.data[
-                                           'plsfactors'],
-                                       dtype=self.canvas.prnt.prnt.titleBar.data[
-                                           'plstype'],
-                                       col1=self.canvas.prnt.prnt.titleBar.spnPLSfactor1.GetValue() - 1,
-                                       col2=self.canvas.prnt.prnt.titleBar.spnPLSfactor2.GetValue() - 1,
-                                       symbols=self.tbSymbols.GetValue(),
-                                       usetxt=self.tbPoints.GetValue(),
-                                       usecol=symcolours, usesym=symsymbols,
-                                       errplot=self.tbSymbols.GetValue(),
-                                       plScL=
-                                       self.canvas.prnt.prnt.titleBar.data[
-                                           'pls_class'])
+            self.canvas = plot_pls_model(
+                self.canvas, model='full',
+                tbar=self.canvas.prnt.prnt.prnt.prnt.tbMain,
+                cL=self.canvas.prnt.prnt.titleBar.data['class'],
+                scores=self.canvas.prnt.prnt.titleBar.data['plst'],
+                label=self.canvas.prnt.prnt.titleBar.data['label'],
+                predictions=self.canvas.prnt.prnt.titleBar.data['plspred'],
+                validation=self.canvas.prnt.prnt.titleBar.data['validation'],
+                RMSEPT=self.canvas.prnt.prnt.titleBar.data['RMSEPT'],
+                factors=self.canvas.prnt.prnt.titleBar.data['plsfactors'],
+                dtype=self.canvas.prnt.prnt.titleBar.data['plstype'],
+                col1=self.canvas.prnt.prnt.titleBar.spnPLSfactor1.GetValue() - 1,
+                col2=self.canvas.prnt.prnt.titleBar.spnPLSfactor2.GetValue() - 1,
+                symbols=self.tbSymbols.GetValue(),
+                usetxt=self.tbPoints.GetValue(),
+                usecol=symcolours, usesym=symsymbols,
+                errplot=self.tbSymbols.GetValue(),
+                plScL=self.canvas.prnt.prnt.titleBar.data['pls_class'])
 
         elif self.canvas.GetName() in ['plcGaFeatPlot']:
-            plot_scores(self.canvas,
-                        self.canvas.prnt.prnt.splitPrnt.titleBar.data[
-                           'gavarcoords'],
-                        cl=self.canvas.prnt.prnt.splitPrnt.titleBar.data[
-                              'class'][:, 0],
-                        labels=self.canvas.prnt.prnt.splitPrnt.titleBar.data[
-                           'label'],
-                        validation=self.canvas.prnt.prnt.splitPrnt.titleBar.data[
-                           'validation'],
-                        col1=0, col2=1, title=self.graph.title,
-                        xLabel=self.graph.xLabel,
-                        yLabel=self.graph.yLabel, xval=True,
-                        text=self.tbPoints.GetValue(),
-                        pconf=False, symb=self.tbSymbols.GetValue(),
-                        usecol=symcolours,
-                        usesym=symsymbols)
+            plot_scores(
+                self.canvas,
+                self.canvas.prnt.prnt.splitPrnt.titleBar.data['gavarcoords'],
+                cl=self.canvas.prnt.prnt.splitPrnt.titleBar.data['class'][:, 0],
+                labels=self.canvas.prnt.prnt.splitPrnt.titleBar.data['label'],
+                validation=self.canvas.prnt.prnt.splitPrnt.titleBar.data['validation'],
+                col1=0, col2=1, title=self.graph.title,
+                xLabel=self.graph.xLabel,
+                yLabel=self.graph.yLabel, xval=True,
+                text=self.tbPoints.GetValue(),
+                pconf=False, symb=self.tbSymbols.GetValue(),
+                usecol=symcolours,
+                usesym=symsymbols)
 
         elif len(self.canvas.GetName().split('plcGaModelPlot')) > 1:
 
@@ -552,7 +525,7 @@ class PlotToolBar(wx.ToolBar):
                         usecol=symcolours,
                         usesym=symsymbols)
             else:
-                self.canvas = PlotPlsModel(
+                self.canvas = plot_pls_model(
                     self.canvas, model='ga',
                     tbar=self.splitPrnt.prnt.prnt.tbMain,
                     cL=self.splitPrnt.titleBar.data['class'],
@@ -572,39 +545,39 @@ class PlotToolBar(wx.ToolBar):
 
         elif self.canvas.GetName() in ['plcPcaLoadsV']:
             if self.canvas.prnt.titleBar.data['pcloads'] is not None:
-                plotLoads(self.canvas, np.transpose(
+                plot_loads(self.canvas, np.transpose(
                     self.canvas.prnt.titleBar.data['pcloads']),
-                          xaxis=self.canvas.prnt.titleBar.data['indlabels'],
-                          col1=self.canvas.prnt.titleBar.spnNumPcs1.GetValue() - 1,
-                          col2=self.canvas.prnt.titleBar.spnNumPcs2.GetValue() - 1,
-                          title=self.graph.title, xLabel=self.graph.xLabel,
-                          yLabel=self.graph.yLabel, dtype=loadType,
-                          usecol=symcolours,
-                          usesym=symsymbols)
+                           xaxis=self.canvas.prnt.titleBar.data['indlabels'],
+                           col1=self.canvas.prnt.titleBar.spnNumPcs1.GetValue() - 1,
+                           col2=self.canvas.prnt.titleBar.spnNumPcs2.GetValue() - 1,
+                           title=self.graph.title, xLabel=self.graph.xLabel,
+                           yLabel=self.graph.yLabel, dtype=loadType,
+                           usecol=symcolours,
+                           usesym=symsymbols)
 
         elif self.canvas.GetName() in ['plcPLSloading']:
             if self.canvas.prnt.titleBar.data['plsloads'] is not None:
-                plotLoads(self.canvas,
-                          self.canvas.prnt.titleBar.data['plsloads'],
-                          xaxis=self.canvas.prnt.titleBar.data['indlabels'],
-                          col1=self.canvas.prnt.titleBar.spnPLSfactor1.GetValue() - 1,
-                          col2=self.canvas.prnt.titleBar.spnPLSfactor2.GetValue() - 1,
-                          title=self.graph.title, xLabel=self.graph.xLabel,
-                          yLabel=self.graph.yLabel, dtype=loadType,
-                          usecol=symcolours,
-                          usesym=symsymbols)
+                plot_loads(self.canvas,
+                           self.canvas.prnt.titleBar.data['plsloads'],
+                           xaxis=self.canvas.prnt.titleBar.data['indlabels'],
+                           col1=self.canvas.prnt.titleBar.spnPLSfactor1.GetValue() - 1,
+                           col2=self.canvas.prnt.titleBar.spnPLSfactor2.GetValue() - 1,
+                           title=self.graph.title, xLabel=self.graph.xLabel,
+                           yLabel=self.graph.yLabel, dtype=loadType,
+                           usecol=symcolours,
+                           usesym=symsymbols)
 
         elif self.canvas.GetName() in ['plcDfaLoadsV']:
             if self.canvas.prnt.titleBar.data['dfloads'] is not None:
-                plotLoads(self.canvas,
-                          self.canvas.prnt.titleBar.data['dfloads'],
-                          xaxis=self.canvas.prnt.titleBar.data['indlabels'],
-                          col1=self.canvas.prnt.titleBar.spnDfaScore1.GetValue() - 1,
-                          col2=self.canvas.prnt.titleBar.spnDfaScore2.GetValue() - 1,
-                          title=self.graph.title, xLabel=self.graph.xLabel,
-                          yLabel=self.graph.yLabel, dtype=loadType,
-                          usecol=symcolours,
-                          usesym=symsymbols)
+                plot_loads(self.canvas,
+                           self.canvas.prnt.titleBar.data['dfloads'],
+                           xaxis=self.canvas.prnt.titleBar.data['indlabels'],
+                           col1=self.canvas.prnt.titleBar.spnDfaScore1.GetValue() - 1,
+                           col2=self.canvas.prnt.titleBar.spnDfaScore2.GetValue() - 1,
+                           title=self.graph.title, xLabel=self.graph.xLabel,
+                           yLabel=self.graph.yLabel, dtype=loadType,
+                           usecol=symcolours,
+                           usesym=symsymbols)
 
         elif self.canvas.GetName() in ['plcGaSpecLoad']:
             if self.splitPrnt.dtype in ['DFA']:
@@ -613,13 +586,13 @@ class PlotToolBar(wx.ToolBar):
                     labels.append(
                         self.splitPrnt.titleBar.data['indlabels'][int(each)])
 
-                plotLoads(self.canvas,
-                          self.splitPrnt.titleBar.data['gadfadfaloads'],
-                          xaxis=labels, title=self.graph.title,
-                          xLabel=self.graph.xLabel,
-                          yLabel=self.graph.yLabel, dtype=loadType,
-                          usecol=symcolours,
-                          usesym=symsymbols)
+                plot_loads(self.canvas,
+                           self.splitPrnt.titleBar.data['gadfadfaloads'],
+                           xaxis=labels, title=self.graph.title,
+                           xLabel=self.graph.xLabel,
+                           yLabel=self.graph.yLabel, dtype=loadType,
+                           usecol=symcolours,
+                           usesym=symsymbols)
 
         elif self.canvas.GetName() == 'plcGaSpecLoad':
             if self.canvas.prnt.prnt.splitPrnt.dtype == 'PLS':
@@ -628,14 +601,14 @@ class PlotToolBar(wx.ToolBar):
                     labels.append(
                         self.splitPrnt.titleBar.data['indlabels'][int(each)])
 
-                plotLoads(self.canvas,
-                          self.canvas.prnt.prnt.splitPrnt.titleBar.data[
+                plot_loads(self.canvas,
+                           self.canvas.prnt.prnt.splitPrnt.titleBar.data[
                               'gaplsplsloads'],
-                          xaxis=labels, title=self.graph.title,
-                          xLabel=self.graph.xLabel,
-                          yLabel=self.graph.yLabel, dtype=loadType,
-                          usecol=symcolours,
-                          usesym=symsymbols)
+                           xaxis=labels, title=self.graph.title,
+                           xLabel=self.graph.xLabel,
+                           yLabel=self.graph.yLabel, dtype=loadType,
+                           usecol=symcolours,
+                           usesym=symsymbols)
 
     def OnTxtTitle(self, _):
         self.graph.setTitle(self.txtTitle.GetValue())
@@ -662,11 +635,11 @@ class PlotToolBar(wx.ToolBar):
         self.canvas.Redraw()
         self.Close()
 
-    def OnSpnAxesFont(self, _):
+    def on_spn_axes_font(self, _):
         self.canvas.fontSizeAxis = self.spnAxesFont.GetValue()
         self.canvas.Redraw()
 
-    def OnSpnTitleFont(self, _):
+    def on_spn_title_font(self, _):
         self.canvas.fontSizeTitle = self.spn_title.GetValue()
         self.canvas.Redraw()
 
@@ -682,64 +655,212 @@ class PlotToolBar(wx.ToolBar):
                                      np.array([ymin, ymax])]
         self.canvas.Redraw()
 
-    def OnSpnXmin(self, _):
+    def on_spn_xmin(self, _):
         self.resizeAxes()
 
-    def OnSpnXmax(self, _):
+    def on_spn_xmax(self, _):
         self.resizeAxes()
 
-    def OnSpnYmin(self, _):
+    def on_spn_ymin(self, _):
         self.resizeAxes()
 
-    def OnSpnYmax(self, _):
+    def on_spn_ymax(self, _):
         self.resizeAxes()
 
-    def OnSpnXminSpinUp(self, _):
+    def on_spn_xmin_up(self, _):
         curr = float(self.txtXmin.GetValue())
         curr = curr + self.Increment
         self.txtXmin.SetValue('%.3f' % curr)
 
-    def OnSpnXminSpinDown(self, _):
+    def on_spn_xmin_down(self, _):
         curr = float(self.txtXmin.GetValue())
         curr = curr - self.Increment
         self.txtXmin.SetValue('%.3f' % curr)
 
-    def OnSpnXmaxSpinUp(self, _):
+    def on_spn_xmax_up(self, _):
         curr = float(self.txtXmax.GetValue())
         curr = curr + self.Increment
         self.txtXmax.SetValue('%.3f' % curr)
 
-    def OnSpnXmaxSpinDown(self, _):
+    def on_spn_xmax_down(self, _):
         curr = float(self.txtXmax.GetValue())
         curr = curr - self.Increment
         self.txtXmax.SetValue('%.3f' % curr)
 
-    def OnSpnYmaxSpinUp(self, _):
+    def on_spn_ymax_up(self, _):
         curr = float(self.txtYmax.GetValue())
         curr = curr + self.Increment
         self.txtYmax.SetValue('%.3f' % curr)
 
-    def OnSpnYmaxSpinDown(self, _):
+    def on_spn_ymax_down(self, _):
         curr = float(self.txtYmax.GetValue())
         curr = curr - self.Increment
         self.txtYmax.SetValue('%.3f' % curr)
 
-    def OnSpnYminSpinUp(self, _):
+    def on_spn_ymin_up(self, _):
         curr = float(self.txtYmin.GetValue())
         curr = curr + self.Increment
         self.txtYmin.SetValue('%.3f' % curr)
 
-    def OnSpnYminSpinDown(self, _):
+    def on_spn_ymin_down(self, _):
         curr = float(self.txtYmin.GetValue())
         curr = curr - self.Increment
         self.txtYmin.SetValue('%.3f' % curr)
 
 
 class PyChemMain(wx.Frame):
+    """"""
     _custom_classes = {'wx.Panel': ['expSetup', 'plotSpectra', 'Pca', 'Cluster',
                                     'Dfa', 'Plsr', 'Ga', 'Univariate']}
+    def __init__(self, parent):
+        """"""
+        wx.Frame.__init__(self, id=wxID_PCM, name='PyChemMain',
+                          parent=parent, pos=(0, 0), size=(1024, 738),
+                          style=wx.DEFAULT_FRAME_STYLE,
+                          title='PyChem 3.0.5g Beta')
+        self.data = None
+        self.tbar = None
+        self.parent = parent
+        self._init_utils()
+        self._init_ctrls()
+        # set defaults
+        self.reset()
 
-    def _init_coll_mnuTools_Items(self, parent):
+    def _init_utils(self):
+        """"""
+        self.mnuMain = wx.MenuBar()
+        self.mnuFile = wx.Menu(title='')
+        self.mnuTools = wx.Menu(title='')
+        self.mnuHelp = wx.Menu(title='')
+        self.gridMenu = wx.Menu(title='')
+        self.indRowMenu = wx.Menu(title='')
+
+        self._init_coll_mnuMain_Menus(self.mnuMain)
+        self._init_coll_mnu_file(self.mnuFile)
+        self._init_coll_mnu_tools(self.mnuTools)
+        self._init_coll_mnu_help(self.mnuHelp)
+        self._init_grid_menu(self.gridMenu)
+        self._init_grid_row_menu(self.indRowMenu)
+
+    def _init_ctrls(self):
+        """"""
+        self.SetClientSize((1016, 704))
+        self.SetToolTip('')
+        self.SetHelpText('')
+        self.Center(wx.BOTH)
+
+        icon = wx.Icon(opjoin('ico', 'pychem.ico'), wx.BITMAP_TYPE_ICO)
+        self.SetIcon(icon)
+
+        self.SetMinSize((200, 400))
+        self.SetMenuBar(self.mnuMain)
+        self.Bind(wx.EVT_SIZE, self.OnMainFrameSize)
+
+        self.nbMain = fnb.FlatNotebook(id=wxID_PCMNBMAIN, name='nbMain',
+                                       parent=self, pos=(0, 0),
+                                       size=(1016, 730),
+                                       style=fnb.FNB_NODRAG | fnb.FNB_NO_X_BUTTON)
+        self.nbMain.SetToolTip('')
+        self.nbMain.SetMinSize((200, 400))
+        self.nbMain.Bind(fnb.EVT_FLATNOTEBOOK_PAGE_CHANGING,
+                         self.on_nb_main_nbook_page_changing,
+                         id=wxID_PCMNBMAIN)
+        self.nbMain.parent = self
+
+        self.sbMain = wx.StatusBar(id=wxID_PCMSBMAIN, name='sbMain',
+                                   parent=self, style=0)
+        self.sbMain.SetToolTip('')
+        self._init_coll_stb_main_fields(self.sbMain)
+        self.SetStatusBar(self.sbMain)
+
+        self.tbMain = PlotToolBar(self)
+        self.tbMain.Enable(False)
+        self.tbMain.Bind(wx.EVT_SIZE, self.on_tb_main_size)
+        self.SetToolBar(self.tbMain)
+        self.tbMain.Realize()
+
+        self.plExpset = exp_setup.ExpSetup(id=wxID_PCMPLEXPSET,
+                                           name='plExpset',
+                                           parent=self.nbMain,
+                                           pos=(0, 0), size=(1008, 635),
+                                           style=wx.TAB_TRAVERSAL)
+        self.plExpset.getFrame(self)
+        self.plExpset.SetToolTip('')
+
+        self.plPreproc = plot_spectra.plotSpectra(id=wxID_PCMPLPREPROC,
+                                                  name='plPreproc',
+                                                  parent=self.nbMain,
+                                                  pos=(0, 0), size=(1008, 635),
+                                                  style=wx.TAB_TRAVERSAL)
+        self.plPreproc.SetToolTip('')
+
+        self.plPca = pca.Pca(id_=wxID_PCMPLPCA, name='plPca',
+                             parent=self.nbMain, pos=(0, 0), size=(1008, 635),
+                             style=wx.TAB_TRAVERSAL)
+        self.plPca.SetToolTip('')
+
+        self.plCluster = cluster.Cluster(id_=wxID_PCMPLCLUSTER,
+                                         name='plCluster', parent=self.nbMain,
+                                         pos=(0, 0), size=(1008, 635),
+                                         style=wx.TAB_TRAVERSAL)
+        self.plCluster.SetToolTip('')
+        self.plCluster.parent = self
+
+        self.plDfa = dfa.Dfa(id_=wxID_PCMPLDFA, name='plDfa',
+                             parent=self.nbMain, pos=(0, 0), size=(1008, 635),
+                             style=wx.TAB_TRAVERSAL)
+        self.plDfa.SetToolTip('')
+
+        self.plPls = plsr.Plsr(id_=wxID_PCMPLPLS, name='plPls',
+                               parent=self.nbMain, pos=(0, 0), size=(1008, 635),
+                               style=wx.TAB_TRAVERSAL)
+        self.plPls.SetToolTip('')
+        self.plPls.parent = self
+
+        self.plGadfa = ga.Ga(id_=wxID_PCMPLGADFA, name='plGadfa',
+                             parent=self.nbMain, pos=(0, 0), size=(1008, 635),
+                             style=wx.TAB_TRAVERSAL, dtype='DFA')
+        self.plGadfa.SetToolTip('')
+        self.plGadfa.parent = self
+
+        self.plGapls = ga.Ga(id_=wxID_PCMPLGAPLSC, name='plGaplsc',
+                             parent=self.nbMain, pos=(0, 0), size=(1008, 635),
+                             style=wx.TAB_TRAVERSAL, dtype='PLS')
+        self.plGapls.SetToolTip('')
+        self.plGapls.parent = self
+
+        self.plUnivariate = univariate.Univariate(
+            id_=wxID_PCMPLUNIVARIATE,
+            name='plUnivariate', parent=self.nbMain, pos=(0, 0),
+            size=(1008, 635), style=wx.TAB_TRAVERSAL)
+        self.plUnivariate.SetToolTip('')
+        self.plUnivariate.parent = self
+
+        self._init_coll_nb_main_pages(self.nbMain)
+
+    def _init_coll_nb_main_pages(self, parent):
+        # generated method, don't edit
+
+        parent.AddPage(imageId=-1, page=self.plExpset, select=True,
+                       text='Experiment Setup')
+        parent.AddPage(imageId=-1, page=self.plPreproc, select=False,
+                       text='Spectral Pre-processing')
+        parent.AddPage(imageId=-1, page=self.plUnivariate, select=False,
+                       text='Univariate Tests')
+        parent.AddPage(imageId=-1, page=self.plPca, select=False,
+                       text='Principal Component Analysis')
+        parent.AddPage(imageId=-1, page=self.plCluster, select=False,
+                       text='Cluster Analysis')
+        parent.AddPage(imageId=-1, page=self.plDfa, select=False,
+                       text='Discriminant Function Analysis')
+        parent.AddPage(imageId=-1, page=self.plPls, select=False,
+                       text='Partial Least Squares Regression')
+        parent.AddPage(imageId=-1, page=self.plGadfa, select=False,
+                       text='GA - Discriminant Function Analysis')
+        parent.AddPage(imageId=-1, page=self.plGapls, select=False,
+                       text='GA - PLSR Calibration')
+
+    def _init_coll_mnu_tools(self, parent):
         # generated method, don't edit
 
         parent.Append(helpString='', id=wxID_PCMMNUTOOLSEXPSET,
@@ -765,26 +886,26 @@ class PyChemMain(wx.Frame):
         parent.Append(helpString='', id=wxID_PCMMNUTOOLSMNUGAPLSC,
                       kind=wx.ITEM_NORMAL,
                       item='GA-Partial Least Squares Calibration')
-        self.Bind(wx.EVT_MENU, self.OnMnuToolsExpsetMenu,
+        self.Bind(wx.EVT_MENU, self.on_mnu_tools_expset,
                   id=wxID_PCMMNUTOOLSEXPSET)
-        self.Bind(wx.EVT_MENU, self.OnMnuToolsPreprocMenu,
+        self.Bind(wx.EVT_MENU, self.on_mnu_tools_preproc,
                   id=wxID_PCMMNUTOOLSPREPROC)
-        self.Bind(wx.EVT_MENU, self.OnMnuToolsMnuunivariateMenu,
+        self.Bind(wx.EVT_MENU, self.on_mnu_tools_mnu_univariate,
                   id=wxID_PCMPLUNIVARIATE)
-        self.Bind(wx.EVT_MENU, self.OnMnuToolsMnupcaMenu,
+        self.Bind(wx.EVT_MENU, self.on_mnu_tools_mnu_pca,
                   id=wxID_PCMMNUTOOLSMNUPCA)
-        self.Bind(wx.EVT_MENU, self.OnMnuToolsMnuclusterMenu,
+        self.Bind(wx.EVT_MENU, self.on_mnu_tools_mnu_cluster,
                   id=wxID_PCMMNUTOOLSMNUCLUSTER)
-        self.Bind(wx.EVT_MENU, self.OnMnuToolsMnuplsrMenu,
+        self.Bind(wx.EVT_MENU, self.on_mnu_tools_mnu_plsr,
                   id=wxID_PCMMNUTOOLSMNUPLSR)
-        self.Bind(wx.EVT_MENU, self.OnMnuToolsMnudfaMenu,
+        self.Bind(wx.EVT_MENU, self.on_mnu_tools_mnu_dfa,
                   id=wxID_PCMMNUTOOLSMNUDFA)
-        self.Bind(wx.EVT_MENU, self.OnMnuToolsMnugadfaMenu,
+        self.Bind(wx.EVT_MENU, self.on_mnu_tools_mnu_gadfa,
                   id=wxID_PCMMNUTOOLSMNUGADFA)
-        self.Bind(wx.EVT_MENU, self.OnMnuToolsMnugaplscMenu,
+        self.Bind(wx.EVT_MENU, self.on_mnu_tools_mnu_gaplsc,
                   id=wxID_PCMMNUTOOLSMNUGAPLSC)
 
-    def _init_coll_mnuFile_Items(self, parent):
+    def _init_coll_mnu_file(self, parent):
         # generated method, don't edit
 
         parent.Append(helpString='', id=wxID_PCMMNUFILELOADEXP,
@@ -799,17 +920,17 @@ class PyChemMain(wx.Frame):
                       kind=wx.ITEM_NORMAL, item='Import')
         parent.Append(helpString='', id=wxID_PCMMNUFILEAPPEXIT,
                       kind=wx.ITEM_NORMAL, item='Exit')
-        self.Bind(wx.EVT_MENU, self.OnMnuFileLoadexpMenu,
+        self.Bind(wx.EVT_MENU, self.on_mnu_file_loadexp,
                   id=wxID_PCMMNUFILELOADEXP)
-        self.Bind(wx.EVT_MENU, self.OnMnuFileLoadwsMenu,
+        self.Bind(wx.EVT_MENU, self.on_mnu_file_loadws,
                   id=wxID_PCMMNUFILELOADWS)
-        self.Bind(wx.EVT_MENU, self.OnMnuFileSaveexpMenu,
+        self.Bind(wx.EVT_MENU, self.on_mnu_file_saveexp,
                   id=wxID_PCMMNUFILESAVEEXP)
         self.Bind(wx.EVT_MENU, self.OnMnuFileSavewsMenu,
                   id=wxID_PCMMNUFILESAVEWS)
         self.Bind(wx.EVT_MENU, self.OnMnuFileFileimportMenu,
                   id=wxID_PCMMNUFILEFILEIMPORT)
-        self.Bind(wx.EVT_MENU, self.OnMnuFileAppexitMenu,
+        self.Bind(wx.EVT_MENU, self.on_mnu_file_app_exit,
                   id=wxID_PCMMNUFILEAPPEXIT)
 
     def _init_coll_mnuMain_Menus(self, parent):
@@ -819,19 +940,20 @@ class PyChemMain(wx.Frame):
         parent.Append(menu=self.mnuTools, title='Tools')
         parent.Append(menu=self.mnuHelp, title='Help')
 
-    def _init_coll_mnuHelp_Items(self, parent):
+    def _init_coll_mnu_help(self, parent):
         # generated method, don't edit
 
         parent.Append(helpString='', id=wxID_PCMMNUHELPCONTENTS,
                       kind=wx.ITEM_NORMAL, item='Contents')
         parent.Append(helpString='', id=wxID_PCMMNUABOUTCONTENTS,
                       kind=wx.ITEM_NORMAL, item='About')
-        self.Bind(wx.EVT_MENU, self.OnMnuHelpContentsMenu,
+        self.Bind(wx.EVT_MENU, self.on_mnu_help_contents,
                   id=wxID_PCMMNUHELPCONTENTS)
-        self.Bind(wx.EVT_MENU, self.OnMnuAboutContentsMenu,
+        self.Bind(wx.EVT_MENU, self.on_mnu_about,
                   id=wxID_PCMMNUABOUTCONTENTS)
 
-    def _init_coll_stbMain_Fields(self, parent):
+    # noinspection PyMethodMayBeStatic
+    def _init_coll_stb_main_fields(self, parent):
         # generated method, don't edit
         parent.SetFieldsCount(5)
 
@@ -843,29 +965,7 @@ class PyChemMain(wx.Frame):
 
         parent.SetStatusWidths([-2, -2, -2, -2, -5])
 
-    def _init_coll_nbMain_Pages(self, parent):
-        # generated method, don't edit
-
-        parent.AddPage(imageId=-1, page=self.plExpset, select=True,
-                       text='Experiment Setup')
-        parent.AddPage(imageId=-1, page=self.plPreproc, select=False,
-                       text='Spectral Pre-processing')
-        parent.AddPage(imageId=-1, page=self.plUnivariate, select=False,
-                       text='Univariate Tests')
-        parent.AddPage(imageId=-1, page=self.plPca, select=False,
-                       text='Principal Component Analysis')
-        parent.AddPage(imageId=-1, page=self.plCluster, select=False,
-                       text='Cluster Analysis')
-        parent.AddPage(imageId=-1, page=self.plDfa, select=False,
-                       text='Discriminant Function Analysis')
-        parent.AddPage(imageId=-1, page=self.plPls, select=False,
-                       text='Partial Least Squares Regression')
-        parent.AddPage(imageId=-1, page=self.plGadfa, select=False,
-                       text='GA - Discriminant Function Analysis')
-        parent.AddPage(imageId=-1, page=self.plGapls, select=False,
-                       text='GA - PLSR Calibration')
-
-    def _init_grid_menu_Items(self, parent):
+    def _init_grid_menu(self, parent):
         # generated method, don't edit
 
         parent.Append(helpString='', id=MNUGRIDCOPY, kind=wx.ITEM_NORMAL,
@@ -878,156 +978,17 @@ class PyChemMain(wx.Frame):
                       item='Delete column')
         parent.Append(helpString='', id=MNUGRIDRESETSORT, kind=wx.ITEM_NORMAL,
                       item='reset row sort')
-        self.Bind(wx.EVT_MENU, self.OnMnuGridCopy,
-                  id=MNUGRIDCOPY)
-        self.Bind(wx.EVT_MENU, self.OnMnuGridPaste,
-                  id=MNUGRIDPASTE)
-        self.Bind(wx.EVT_MENU, self.OnMnuGridRenameColumn,
-                  id=MNUGRIDRENAMECOL)
-        self.Bind(wx.EVT_MENU, self.OnMnuGridDeleteColumn,
-                  id=MNUGRIDDELETECOL)
-        self.Bind(wx.EVT_MENU, self.OnMnuGridResetSort,
-                  id=MNUGRIDRESETSORT)
 
-    def _init_grid_row_menu_Items(self, parent):
+        self.Bind(wx.EVT_MENU, self.on_mnu_grid_copy, id=MNUGRIDCOPY)
+        self.Bind(wx.EVT_MENU, self.on_mnu_grid_paste, id=MNUGRIDPASTE)
+        self.Bind(wx.EVT_MENU, self.on_mnu_grid_rename_column, id=MNUGRIDRENAMECOL)
+        self.Bind(wx.EVT_MENU, self.on_mnu_grid_delete_column, id=MNUGRIDDELETECOL)
+        self.Bind(wx.EVT_MENU, self.OnMnuGridResetSort, id=MNUGRIDRESETSORT)
+
+    def _init_grid_row_menu(self, parent):
         parent.Append(helpString='', id=MNUGRIDROWDEL, kind=wx.ITEM_NORMAL,
                       item='Delete User Defined Variable')
-        self.Bind(wx.EVT_MENU, self.OnMnuGridRowDel, id=MNUGRIDROWDEL)
-
-    def _init_utils(self):
-        # generated method, don't edit
-        self.mnuMain = wx.MenuBar()
-
-        self.mnuFile = wx.Menu(title='')
-
-        self.mnuTools = wx.Menu(title='')
-
-        self.mnuHelp = wx.Menu(title='')
-
-        self.gridMenu = wx.Menu(title='')
-
-        self.indRowMenu = wx.Menu(title='')
-
-        self._init_coll_mnuMain_Menus(self.mnuMain)
-        self._init_coll_mnuFile_Items(self.mnuFile)
-        self._init_coll_mnuTools_Items(self.mnuTools)
-        self._init_coll_mnuHelp_Items(self.mnuHelp)
-        self._init_grid_menu_Items(self.gridMenu)
-        self._init_grid_row_menu_Items(self.indRowMenu)
-
-    def _init_ctrls(self, prnt):
-        # generated method, don't edit
-        wx.Frame.__init__(self, id=wxID_PCM, name='PyChemMain',
-                          parent=prnt, pos=wx.Point(0, 0),
-                          size=wx.Size(1024, 738),
-                          style=wx.DEFAULT_FRAME_STYLE,
-                          title='PyChem 3.0.5g Beta')
-        self._init_utils()
-        self.SetClientSize(wx.Size(1016, 704))
-        self.SetToolTip('')
-        self.SetHelpText('')
-        self.Center(wx.BOTH)
-        self.SetIcon(
-            wx.Icon(os.path.join('ico', 'pychem.ico'), wx.BITMAP_TYPE_ICO))
-        self.SetMinSize(wx.Size(200, 400))
-        self.SetMenuBar(self.mnuMain)
-        self.Bind(wx.EVT_SIZE, self.OnMainFrameSize)
-
-        self.nbMain = fnb.FlatNotebook(id=wxID_PCMNBMAIN, name='nbMain',
-                                       parent=self, pos=wx.Point(0, 0),
-                                       size=wx.Size(1016, 730),
-                                       style=fnb.FNB_NODRAG | fnb.FNB_NO_X_BUTTON)
-        self.nbMain.SetToolTip('')
-        self.nbMain.SetMinSize(wx.Size(200, 400))
-        self.nbMain.Bind(fnb.EVT_FLATNOTEBOOK_PAGE_CHANGING,
-                         self.OnNbMainNotebookPageChanging,
-                         id=wxID_PCMNBMAIN)
-        self.nbMain.parent = self
-
-        self.sbMain = wx.StatusBar(id=wxID_PCMSBMAIN, name='sbMain',
-                                   parent=self, style=0)
-        self.sbMain.SetToolTip('')
-        self._init_coll_stbMain_Fields(self.sbMain)
-        self.SetStatusBar(self.sbMain)
-
-        self.tbMain = PlotToolBar(self)
-        self.tbMain.Enable(False)
-        self.tbMain.Bind(wx.EVT_SIZE, self.OnTbMainSize)
-        self.SetToolBar(self.tbMain)
-        self.tbMain.Realize()
-
-        self.plExpset = exp_setup.ExpSetup(id=wxID_PCMPLEXPSET,
-                                           name='plExpset',
-                                           parent=self.nbMain,
-                                           pos=wx.Point(0, 0),
-                                           size=wx.Size(1008, 635),
-                                           style=wx.TAB_TRAVERSAL)
-        self.plExpset.getFrame(self)
-        self.plExpset.SetToolTip('')
-
-        self.plPreproc = plotSpectra.plotSpectra(id=wxID_PCMPLPREPROC,
-                                                 name='plPreproc',
-                                                 parent=self.nbMain,
-                                                 pos=wx.Point(0, 0),
-                                                 size=wx.Size(1008, 635),
-                                                 style=wx.TAB_TRAVERSAL)
-        self.plPreproc.SetToolTip('')
-
-        self.plPca = Pca.Pca(id=wxID_PCMPLPCA, name='plPca',
-                             parent=self.nbMain, pos=wx.Point(0, 0),
-                             size=wx.Size(1008, 635),
-                             style=wx.TAB_TRAVERSAL)
-        self.plPca.SetToolTip('')
-
-        self.plCluster = cluster.Cluster(id_=wxID_PCMPLCLUSTER,
-                                         name='plCluster',
-                                         parent=self.nbMain, pos=wx.Point(0, 0),
-                                         size=wx.Size(1008, 635),
-                                         style=wx.TAB_TRAVERSAL)
-        self.plCluster.SetToolTip('')
-        self.plCluster.parent = self
-
-        self.plDfa = dfa.Dfa(id_=wxID_PCMPLDFA, name='plDfa',
-                             parent=self.nbMain, pos=wx.Point(0, 0),
-                             size=wx.Size(1008, 635),
-                             style=wx.TAB_TRAVERSAL)
-        self.plDfa.SetToolTip('')
-
-        self.plPls = Plsr.Plsr(id_=wxID_PCMPLPLS, name='plPls',
-                               parent=self.nbMain, pos=wx.Point(0, 0),
-                               size=wx.Size(1008, 635),
-                               style=wx.TAB_TRAVERSAL)
-        self.plPls.SetToolTip('')
-        self.plPls.parent = self
-
-        self.plGadfa = ga.Ga(id_=wxID_PCMPLGADFA, name='plGadfa',
-                             parent=self.nbMain, pos=wx.Point(0, 0),
-                             size=wx.Size(1008, 635),
-                             style=wx.TAB_TRAVERSAL, dtype='DFA')
-        self.plGadfa.SetToolTip('')
-        self.plGadfa.parent = self
-
-        self.plGapls = ga.Ga(id_=wxID_PCMPLGAPLSC, name='plGaplsc',
-                             parent=self.nbMain, pos=wx.Point(0, 0),
-                             size=wx.Size(1008, 635),
-                             style=wx.TAB_TRAVERSAL, dtype='PLS')
-        self.plGapls.SetToolTip('')
-        self.plGapls.parent = self
-
-        self.plUnivariate = Univariate.Univariate(
-            id=wxID_PCMPLUNIVARIATE,
-            name='plUnivariate', parent=self.nbMain, pos=wx.Point(0, 0),
-            size=wx.Size(1008, 635), style=wx.TAB_TRAVERSAL)
-        self.plUnivariate.SetToolTip('')
-        self.plUnivariate.parent = self
-
-        self._init_coll_nbMain_Pages(self.nbMain)
-
-    def __init__(self, parent):
-        self._init_ctrls(parent)
-
-        # set defaults
-        self.Reset()
+        self.Bind(wx.EVT_MENU, self.on_mnu_grid_row_del, id=MNUGRIDROWDEL)
 
     def OnMainFrameSize(self, event):
         event.Skip()
@@ -1035,14 +996,15 @@ class PyChemMain(wx.Frame):
     # self.Layout()
     # self.plUnivariate.Refresh()
 
-    def OnTbMainSize(self, event):
+    def on_tb_main_size(self, _):
         self.tbMain.Refresh()
 
-    def OnMnuHelpContentsMenu(self, event):
+    # noinspection PyMethodMayBeStatic
+    def on_mnu_help_contents(self, _):
         from wx.tools import helpviewer
-        helpviewer.main(['', os.path.join('docs', 'PAChelp.hhp')])
+        helpviewer.main(['', opjoin('docs', 'PAChelp.hhp')])
 
-    def OnMnuAboutContentsMenu(self, event):
+    def on_mnu_about(self, _):
         from wx.lib.wordwrap import wordwrap
         info = AboutDialogInfo()
         info.Name = "PyChem"
@@ -1064,18 +1026,18 @@ class PyChemMain(wx.Frame):
         # Then we call wx.AboutBox giving it that info object
         AboutBox(info)
 
-    def OnMnuFileLoadexpMenu(self, event):
+    def on_mnu_file_loadexp(self, _):
         loadFile = wx.FileSelector("Load PyChem Experiment", "", "",
                                    "", "XML files (*.xml)|*.xml")
-        dlg = wxWorkspaceDialog(self, loadFile)
+        dlg = WorkspaceDialog(self, loadFile)
         try:
-            tree = dlg.getTree()
+            tree = dlg.get_tree()
             if tree is not None:
                 dlg.ShowModal()
-                workSpace = dlg.getWorkspace()
+                workSpace = dlg.get_workspace()
                 if workSpace != 0:
-                    self.Reset()
-                    self.xmlLoad(tree, workSpace)
+                    self.reset()
+                    self.xml_load(tree, workSpace)
                     self.data['exppath'] = loadFile
                     mb = self.GetMenuBar()
                     mb.Enable(wxID_PCMMNUFILESAVEEXP, True)
@@ -1084,22 +1046,22 @@ class PyChemMain(wx.Frame):
         finally:
             dlg.Destroy()
 
-    def OnMnuFileLoadwsMenu(self, event):
-        dlg = wxWorkspaceDialog(self, self.data['exppath'])
+    def on_mnu_file_loadws(self, _):
+        dlg = WorkspaceDialog(self, self.data['exppath'])
         if self.data['exppath'] is not None:
             try:
                 dlg.ShowModal()
-                workSpace = dlg.getWorkspace()
+                workSpace = dlg.get_workspace()
                 if workSpace != 0:
-                    self.Reset(1)
-                    tree = dlg.getTree()
-                    self.xmlLoad(tree, workSpace, 'ws')
+                    self.reset(1)
+                    tree = dlg.get_tree()
+                    self.xml_load(tree, workSpace, 'ws')
             finally:
                 dlg.Destroy()
         else:
             dlg.Destroy()
 
-    def OnMnuFileSaveexpMenu(self, _):
+    def on_mnu_file_saveexp(self, _):
         dlg = wx.FileDialog(self, "Choose a file", ".", "",
                             "XML files (*.xml)|*.xml", wx.FD_SAVE)
 
@@ -1114,21 +1076,22 @@ class PyChemMain(wx.Frame):
                     texTdlg = wx.TextEntryDialog(self, msg,
                                                  'Save Workspace as...',
                                                  'Default')
+                    ws_name = ''
                     try:
                         if texTdlg.ShowModal() == wx.ID_OK:
-                            wsName = texTdlg.GetValue()
+                            ws_name = texTdlg.GetValue()
                     finally:
                         texTdlg.Destroy()
 
-                    self.xmlSave(self.data['exppath'], wsName, 'new')
+                    self.xml_save(self.data['exppath'], ws_name, 'new')
                     # activate workspace save menu option
                     mb = self.GetMenuBar()
                     mb.Enable(wxID_PCMMNUFILESAVEEXP, True)
                     mb.Enable(wxID_PCMMNUFILESAVEWS, True)
                     mb.Enable(wxID_PCMMNUFILELOADWS, True)
                     # show workspace dialog so that default can be edited
-                    dlgws = wxWorkspaceDialog(self, self.data['exppath'],
-                                              dtype='Save')
+                    dlgws = WorkspaceDialog(self, self.data['exppath'],
+                                            dtype='Save')
                     try:
                         dlgws.ShowModal()
                     finally:
@@ -1138,7 +1101,7 @@ class PyChemMain(wx.Frame):
         else:
             dlg.Destroy()
 
-    def OnMnuFileSavewsMenu(self, event):
+    def OnMnuFileSavewsMenu(self, _):
         if self.data['exppath'] is not None:
             wsName = ''
             # text entry dialog
@@ -1154,15 +1117,15 @@ class PyChemMain(wx.Frame):
             # workspace dialog for editing
             if wsName != '':
                 # save workspace to xml file
-                self.xmlSave(self.data['exppath'], wsName.replace(' ', '_'),
-                             dtype=self.data['exppath'])
+                self.xml_save(self.data['exppath'], wsName.replace(' ', '_'),
+                              dtype=self.data['exppath'])
 
                 # show workspace dialog
-                dlg = wxWorkspaceDialog(self, self.data['exppath'],
-                                        dtype='Save')
+                dlg = WorkspaceDialog(self, self.data['exppath'],
+                                      dtype='Save')
                 try:
                     dlg.ShowModal()
-                    dlg.appendWorkspace(wsName)
+                    dlg.append_workspace(wsName)
                 finally:
                     dlg.Destroy()
             else:
@@ -1173,34 +1136,34 @@ class PyChemMain(wx.Frame):
                 finally:
                     dlg.Destroy()
 
-    def OnMnuFileFileimportMenu(self, event):
-        dlg = wxImportDialog(self)
+    def OnMnuFileFileimportMenu(self, _):
+        dlg = ImportDialog(self)
         try:
             dlg.ShowModal()
-            if dlg.isOK() == 1:
+            if dlg.is_ok() == 1:
                 # Apply default settings
-                self.Reset()
+                self.reset()
 
                 # Load arrays
                 wx.BeginBusyCursor()
 
                 # test for commas in file indicating csv filetype
-                infile = open(dlg.getFile())
+                infile = open(dlg.get_file())
                 lineFromFile = infile.readline()
                 infile.close()
 
                 # if comma present, assume csv file and add delimiter to loadtxt function
                 if ',' in lineFromFile:
-                    if dlg.Transpose() == 0:
-                        self.data['raw'] = loadtxt(dlg.getFile(), delimiter=',')
+                    if dlg.transpose() == 0:
+                        self.data['raw'] = loadtxt(dlg.get_file(), delimiter=',')
                     else:
-                        self.data['raw'] = sp.transpose(
-                            loadtxt(dlg.getFile(), delimiter=','))
+                        self.data['raw'] = np.transpose(
+                            loadtxt(dlg.get_file(), delimiter=','))
                 else:
-                    if dlg.Transpose() == 0:
-                        self.data['raw'] = loadtxt(dlg.getFile())
+                    if dlg.transpose() == 0:
+                        self.data['raw'] = loadtxt(dlg.get_file())
                     else:
-                        self.data['raw'] = sp.transpose(loadtxt(dlg.getFile()))
+                        self.data['raw'] = np.transpose(loadtxt(dlg.get_file()))
 
                 # create additional arrays of experimental data
                 self.data['rawtrunc'] = self.data['raw']
@@ -1214,7 +1177,7 @@ class PyChemMain(wx.Frame):
                                       self.data['raw'].shape[1], 0, 3)
 
                 # activate ctrls
-                self.EnableCtrls()
+                self.enable_ctrls()
 
                 # set x-range 1 to n
                 self.plExpset.indTitleBar.stcRangeFrom.SetValue('1')
@@ -1234,17 +1197,19 @@ class PyChemMain(wx.Frame):
                     self.plExpset.grdIndLabels)
 
                 # Display preview of data
-                rows = self.data['raw'].shape[0]
-                cols = self.data['raw'].shape[1]
+                raw = self.data['raw']
+                rows = raw.shape[0]
+                cols = raw.shape[1]
+                data = None
 
                 if (rows > 10) and (cols > 10):
-                    data = self.data['raw'][0:10, 0:10]
+                    data = raw[0:10, 0:10]
                 elif (rows <= 10) and (cols > 10):
-                    data = self.data['raw'][0:rows, 0:10]
+                    data = raw[0:rows, 0:10]
                 elif (rows > 10) and (cols <= 10):
-                    data = self.data['raw'][0:10, 0:cols]
+                    data = raw[0:10, 0:cols]
                 elif (rows <= 10) and (cols <= 10):
-                    data = self.data['raw'][0:rows, 0:cols]
+                    data = raw[0:rows, 0:cols]
 
                 # allow for experiment save on file menu
                 mb = self.GetMenuBar()
@@ -1252,7 +1217,7 @@ class PyChemMain(wx.Frame):
                 mb.Enable(wxID_PCMMNUFILESAVEWS, False)
                 mb.Enable(wxID_PCMMNUFILELOADWS, False)
 
-                dlgConfirm = wxImportConfirmDialog(self, data, rows, cols)
+                dlgConfirm = ImportConfirmDialog(self, data, rows, cols)
                 try:
                     dlgConfirm.ShowModal()
                 finally:
@@ -1260,71 +1225,75 @@ class PyChemMain(wx.Frame):
 
                 wx.EndBusyCursor()
 
-        except Exception as error:
-            raise
+        except Exception:
             wx.EndBusyCursor()
             self.reset()
             dlg.Destroy()
             error_box(self, 'Unable to load array.\nPlease check file format.')
+            raise
 
-    def OnMnuFileAppexitMenu(self, event):
+    def on_mnu_file_app_exit(self, _):
         self.Close()
 
-    def OnMnuToolsExpsetMenu(self, event):
+    def on_mnu_tools_expset(self, _):
         self.nbMain.SetSelection(0)
 
-    def OnMnuToolsPreprocMenu(self, event):
+    def on_mnu_tools_preproc(self, _):
         if self.nbMain.GetSelection() == 0:
-            self.GetExperimentDetails()
+            self.get_experiment_details()
         self.nbMain.SetSelection(1)
 
-    def OnMnuToolsMnupcaMenu(self, event):
+    def on_mnu_tools_mnu_pca(self, _):
         if self.nbMain.GetSelection() == 0:
-            self.GetExperimentDetails()
+            self.get_experiment_details()
         self.nbMain.SetSelection(3)
 
-    def OnMnuToolsMnuclusterMenu(self, event):
+    def on_mnu_tools_mnu_cluster(self, _):
         if self.nbMain.GetSelection() == 0:
-            self.GetExperimentDetails()
+            self.get_experiment_details()
         self.nbMain.SetSelection(4)
 
-    def OnMnuToolsMnuplsrMenu(self, event):
+    def on_mnu_tools_mnu_plsr(self, _):
         if self.nbMain.GetSelection() == 0:
-            self.GetExperimentDetails()
+            self.get_experiment_details()
         self.nbMain.SetSelection(6)
 
-    def OnMnuToolsMnudfaMenu(self, event):
+    def on_mnu_tools_mnu_dfa(self, _):
         if self.nbMain.GetSelection() == 0:
-            self.GetExperimentDetails()
+            self.get_experiment_details()
         self.nbMain.SetSelection(5)
 
-    def OnMnuToolsMnugadfaMenu(self, event):
+    def on_mnu_tools_mnu_gadfa(self, _):
         if self.nbMain.GetSelection() == 0:
-            self.GetExperimentDetails()
+            self.get_experiment_details()
         self.nbMain.SetSelection(7)
 
-    def OnMnuToolsMnugaplscMenu(self, event):
+    def on_mnu_tools_mnu_gaplsc(self, _):
         if self.nbMain.GetSelection() == 0:
-            self.GetExperimentDetails()
+            self.get_experiment_details()
         self.nbMain.SetSelection(8)
 
-    def OnMnuToolsMnuunivariateMenu(self, event):
+    def on_mnu_tools_mnu_univariate(self, _):
         if self.nbMain.GetSelection() == 0:
-            self.GetExperimentDetails()
+            self.get_experiment_details()
         self.nbMain.SetSelection(2)
 
-    def OnMnuGridDeleteColumn(self, event):
+    def on_mnu_grid_delete_column(self, _):
         grid = self.data['gridsel']
         col = grid.GetGridCursorCol()
         this = 0
+        heads = []
         if grid == self.plExpset.grdNames:
             if col != 0:
+                # noinspection PyUnusedLocal
                 count = {'Label': 0, 'Class': 0, 'Validation': 0}
-                heads = []
                 for i in range(1, grid.GetNumberCols()):
-                    exec('count["' + grid.GetCellValue(0, i) + '"] += 1')
+                    cmd = 'count["%s"] += 1' % grid.GetCellValue(0, i)
+                    exec(cmd, locals(), globals())
                     heads.append(grid.GetColLabelValue(i))
-                exec('this = count["' + grid.GetCellValue(0, col) + '"]')
+
+                cmd = 'this = count["%s"]' % grid.GetCellValue(0, col)
+                exec(cmd, locals(), globals())
             if this > 1:
                 #     flag = 1
                 #     #check this col isn't used in a saved workspace
@@ -1368,9 +1337,8 @@ class PyChemMain(wx.Frame):
                     dlg.Destroy()
         else:
             if (grid.GetNumberCols() > 2) & (col > 1) is True:
-                dlg = wx.MessageDialog(self,
-                                       'Are you sure you want to delete the column?',
-                                       'Confirm',
+                msg = 'Are you sure you want to delete the column?'
+                dlg = wx.MessageDialog(self, msg, 'Confirm',
                                        wx.OK | wx.CANCEL | wx.ICON_WARNING)
                 try:
                     if dlg.ShowModal() == wx.ID_OK:
@@ -1385,14 +1353,14 @@ class PyChemMain(wx.Frame):
                 finally:
                     dlg.Destroy()
 
-    def OnMnuGridResetSort(self, event):
+    def OnMnuGridResetSort(self, _):
         # order rows in grid by row number
         grid = self.data['gridsel']
         order = []
         # get index
         for i in range(2, grid.GetNumberRows()):
             order.append(int(grid.GetRowLabelValue(i)))
-        index = sp.argsort(order)
+        index = np.argsort(order)
         # create list of grid contents
         gList = []
         for i in index:
@@ -1406,13 +1374,13 @@ class PyChemMain(wx.Frame):
             for j in range(grid.GetNumberCols()):
                 grid.SetCellValue(i + 2, j, gList[i][j])
 
-    def OnMnuGridRowDel(self, event):
+    def on_mnu_grid_row_del(self, _):
         # delete user defined variable row from grdIndLabels
         GridRowDel(self.data['gridsel'], self.data)
         # update experiment details
-        self.GetExperimentDetails(case=1)
+        self.get_experiment_details(case=1)
 
-    def OnMnuGridRenameColumn(self, event):
+    def on_mnu_grid_rename_column(self, _):
         grid = self.data['gridsel']
         col = grid.GetGridCursorCol()
         dlg = wx.TextEntryDialog(self, '', 'Enter new column heading', '')
@@ -1424,7 +1392,7 @@ class PyChemMain(wx.Frame):
         finally:
             dlg.Destroy()
 
-    def OnMnuGridPaste(self, event):
+    def on_mnu_grid_paste(self, _):
         # Paste cells
         grid = self.data['gridsel']
         wx.TheClipboard.Open()
@@ -1449,7 +1417,7 @@ class PyChemMain(wx.Frame):
                         item = item.split('\t')[j]
                         grid.SetCellValue(X + i, Y + j, item)
 
-    def OnMnuGridCopy(self, event):
+    def on_mnu_grid_copy(self, _):
         grid = self.data['gridsel']
 
         From = grid.GetSelectionBlockTopLeft()
@@ -1478,7 +1446,7 @@ class PyChemMain(wx.Frame):
         wx.TheClipboard.SetData(wx.TextDataObject(Data))
         wx.TheClipboard.Close()
 
-    def Reset(self, case=0):
+    def reset(self, case=0):
         varList = "'split':None,'processlist':[]," + \
                   "'pcscores':None,'pcloads':None,'pcpervar':None," + \
                   "'pceigs':None,'pcadata':None,'niporsvd':None," + \
@@ -1511,13 +1479,16 @@ class PyChemMain(wx.Frame):
             mb.Enable(wxID_PCMMNUFILELOADWS, False)
         else:
             exec(
-                'self.data = {"raw":self.data["raw"],"proc":self.data["raw"],' + \
-                '"exppath":self.data["exppath"],"indlabels":self.data["indlabels"],' + \
-                '"class":self.data["class"],"label":self.data["label"],' + \
-                '"validation":self.data["validation"],"xaxis":self.data["xaxis"],' + \
-                '"sampleidx":self.data["sampleidx"],"variableidx":self.data["variableidx"],' + \
-                '"rawtrunc":self.data["rawtrunc"],"proctrunc":self.data["proctrunc"],' + \
-                varList + '}')
+                'self.data = {"raw":self.data["raw"],"proc":self.data["raw"],' +
+                '"exppath":self.data["exppath"],' +
+                '"indlabels":self.data["indlabels"],' +
+                '"class":self.data["class"],"label":self.data["label"],' +
+                '"validation":self.data["validation"],"xaxis":self.data["xaxis"],' +
+                '"sampleidx":self.data["sampleidx"],' +
+                '"variableidx":self.data["variableidx"],' +
+                '"rawtrunc":self.data["rawtrunc"],' +
+                '"proctrunc":self.data["proctrunc"],' +
+                varList + '}', locals(), globals())
 
         # for returning application to default settings
         self.plPreproc.Reset()
@@ -1548,10 +1519,14 @@ class PyChemMain(wx.Frame):
             self.plExpset.depTitleBar.spcGenMask.GetValue())
         self.plGapls.titleBar.get_exp_grid(self.plExpset.grdNames)
 
-    def xmlSave(self, path, workspace, dtype=None):
-        # dtype is either "new" (in which case workspace = "Default")
-        # or path to saved xml file
+    # noinspection PyUnresolvedReferences
+    def xml_save(self, path, workspace, dtype=None):
+        """
 
+        dtype is either "new" (in which case workspace = "Default")
+        or path to saved xml file
+
+        """
         wx.BeginBusyCursor()
 
         proceed = 1
@@ -1561,53 +1536,48 @@ class PyChemMain(wx.Frame):
             # save raw data
             rawdata = ET.SubElement(root, 'rawdata')
             rawdata.set('key', 'array')
-            # rawdata.text = sp.io.array_import.str_array(self.data['raw'],col_sep='\t')  *** quim
             rawdata.text = np.array2string(self.data['raw'], separator='\t')
             # save grdindlabels content
             indgrid = ET.SubElement(root, 'indgrid')
             # get data
-            g = self.getGrid(self.plExpset.grdIndLabels)
+            grd = self.get_grid(self.plExpset.grdIndLabels)
             # save grid
             indgrid.set("key", "indgrid")
-            indgrid.text = g
+            indgrid.text = grd
             # add workspace subelement
-            Workspaces = ET.SubElement(root, 'Workspaces')
+            workspaces = ET.SubElement(root, 'Workspaces')
             nws = 1
-
-            # print('g: ', g)
-            # print('1597 root: ', ET.tostringlist(root))
 
         else:
             tree = ET.ElementTree(file=dtype)
             root = tree.getroot()
             # delete old raw data and exp setup stuff
-            for each in root.getchildren():
+            for each in root:
                 if each.tag in ['rawdata', 'indgrid']:
                     root.remove(each)
             # save raw data in case any user defined variables created
             rawdata = ET.SubElement(root, 'rawdata')
             rawdata.set('key', 'array')
             rawdata.text = np.array2string(self.data['raw'], separator='\t')
-            # rawdata.text = sp.io.array_import.str_array(self.data['raw'],
-            #                                             col_sep='\t')
+
             # save grdindlabels content
             indgrid = ET.SubElement(root, 'indgrid')
             # get data
-            g = self.getGrid(self.plExpset.grdIndLabels)
+            grd = self.get_grid(self.plExpset.grdIndLabels)
             # save grid
             indgrid.set("key", "indgrid")
-            indgrid.text = g
+            indgrid.text = grd
+
             # get workspaces subelement
-            ch = root.getchildren()
-            for each in ch:
+            workspaces = None
+            for each in root:
                 if each.tag == 'Workspaces':
-                    Workspaces = each
+                    workspaces = each
+
             # check that workspace name is not currently used
-            cWs = Workspaces.getchildren()
-            nws = len(Workspaces.getchildren())
             msg = 'The workspace name provided is currently used\n'\
                   'for this experiment, please try again'
-            for each in cWs:
+            for each in workspaces:
                 if each.tag == workspace:
                     dlg = wx.MessageDialog(self, msg,
                                            'Error!', wx.OK | wx.ICON_ERROR)
@@ -1617,28 +1587,21 @@ class PyChemMain(wx.Frame):
                     finally:
                         dlg.Destroy()
 
-                        # add new workspace
+        # add new workspace
         if proceed == 1:
             try:
-                # workspace = ET.SubElement(Workspaces, workspace)
                 cmd = workspace + ' = ET.SubElement(Workspaces, "' + workspace + '")'
                 exec(cmd, locals(), globals())
-
-                # print('1647 command :', cmd)
-                # print('1648 ws_exec: ', workspace)
-                # print('1650 root: ', ET.tostringlist(root))
 
                 # save experiment setup stuff
                 wxGrids = ['plExpset.grdNames', 'plExpset.grdIndLabels']
                 cmd = 'grid = ET.SubElement(' + workspace + ', "grid")'
                 exec(cmd, locals(), globals())
-                # print('1655 grid: ', grid)
-                # print(grid == grid2)
 
                 for each in wxGrids:
                     name = each.split('.')[-1]
                     # get data
-                    exec('g = self.getGrid(self.' + each + ')')
+                    exec('g = self.get_grid(self.' + each + ')')
                     exec(name + ' = ET.SubElement(grid, "' + each + '")')
                     # save grid
                     exec(name + '.set("key", "grid")')
@@ -1808,22 +1771,22 @@ class PyChemMain(wx.Frame):
 
                     try:
                         # save array elements
-                        cmd = 'isthere = self.data["' + each + '"]'
+                        cmd = 'isthere = self.data["%s"]' % each
                         exec(cmd, locals(), globals())
 
                         if isthere is not None:
                             if each not in ['p_aur']:  # for numeric array
-                                cmd1 = 'item' + each + ' = ET.SubElement(Array, "' + each + '")'
-                                cmd2 = 'arrData = sp.io.array_import.str_array(self.data["' + \
-                                        each + '"],col_sep="\t")'
-                                cmd3 = 'item' + each + '.set("key", "array")'
-                                cmd4 = 'item' + each + '.text = arrData'
+                                cmd1 = 'item%s = ET.SubElement(Array, "%s")' % (each, each)
+                                cmd2 = 'arrData = np.array2string(' \
+                                       'self.data["%s"], col_sep="\t")' % each
+                                cmd3 = 'item%s.set("key", "array")' % each
+                                cmd4 = 'item%s.text = arrData' % each
 
                                 for cmd in [cmd1, cmd2, cmd3, cmd4]:
                                     exec(cmd, locals(), globals())
 
                             else:  # for string array type
-                                cmd = 'target = self.data["' + each + '"]'
+                                cmd = 'target = self.data["%s"]' % each
                                 exec(cmd, locals(), globals())
                                 arrData = ''
                                 for row in target:
@@ -1856,6 +1819,7 @@ class PyChemMain(wx.Frame):
                     doClustering.text = '0'
 
                 # create run plsr flag global variable
+
                 doPlsr = ET.SubElement(Flags, "doPlsr")
                 doPlsr.set("key", "int")
                 if self.data['plsloads'] is not None:
@@ -1880,7 +1844,6 @@ class PyChemMain(wx.Frame):
                 self.mnuMain.Enable(wxID_PCMMNUFILELOADWS, True)
 
             except Exception as error:
-                raise
                 msg = 'Unable to save under current name.\n\nCharacters ' + \
                       'such as "%", "&", "-", "+" can not be used for the workspace name'
                 dlg = wx.MessageDialog(self, msg, 'Error!',
@@ -1889,11 +1852,12 @@ class PyChemMain(wx.Frame):
                     dlg.ShowModal()
                 finally:
                     dlg.Destroy()
+                raise
 
         # end busy cursor
         wx.EndBusyCursor()
 
-    def xmlLoad(self, tree, workspace, dtype='new'):
+    def xml_load(self, tree, workspace, dtype='new'):
         # load pychem experiments from saved xml files
         # if dtype == 'new':
         #   load raw data
@@ -1908,7 +1872,7 @@ class PyChemMain(wx.Frame):
                     newRow.append(float(item))
             rdArray.append(newRow)
 
-        self.data['raw'] = sp.array(rdArray)
+        self.data['raw'] = np.array(rdArray)
         self.data['proc'] = self.data['raw']
 
         # load grdindlabels
@@ -1958,27 +1922,22 @@ class PyChemMain(wx.Frame):
                     c = len(rows[0].split('\t')) - 2
                     # size grid accordingly
                     if item.tag in ['plExpset.grdNames']:
-                        exec(
-                            'exp_setup.ResizeGrids(self.' + item.tag + ', r, c-1, dtype=0)')
-
+                        cmd = 'exp_setup.ResizeGrids(self.%s, r, c-1, dtype=0)' % item.tag
+                        exec(cmd, locals(), globals())
                         # add column labels
                         cl = rows[0].split('\t')
                         for col in range(1, len(cl)):
-                            exec(
-                                'self.' + item.tag + '.SetColLabelValue(' + str(
-                                    col - 1) +  ',"' + cl[col] + '")')
+                            cmd =  'self.%s.SetColLabelValue(%i,"%s")' % (item.tag, col-1, cl[col])
+                            exec(cmd, locals(), globals())
                         for row in range(1, len(rows) - 1):
                             items = rows[row].split('\t')
-                            exec(
-                                'self.' + item.tag + '.SetRowLabelValue(' + str(
-                                    row - 1) + ',"' + items[0] + '")')
+                            cmd = 'self.%s.SetRowLabelValue(%i,"%s")' % (item.tag, row-1, items[0])
+                            exec(cmd, locals(), globals())
                             for ci in range(1, len(items) - 1):
-                                exec(
-                                    'self.' + item.tag + '.SetCellValue(' + str(
-                                        row - 1) + \
-                                    ',' + str(ci - 1) + ',"' + items[ci] + '")')
+                                cmd = 'self.%s.SetCellValue(%i,%i,"%s")' % (item.tag, row-1, ci-1, items[ci])
+                                exec(cmd, locals(), globals())
                         # set read only and grey background
-                        exec('grid = self.' + item.tag)
+                        exec('grid = self.' + item.tag, locals(), globals())
                         for rx in range(1, grid.GetNumberRows()):
                             if len(grid.GetRowLabelValue(rx).split('U')) > 1:
                                 grid.SetReadOnly(rx, 1, 1)
@@ -1995,13 +1954,10 @@ class PyChemMain(wx.Frame):
                             items = rows[row].split('\t')
                             # spectral variable
                             if len(items[0].split('U')) == 1:
-                                self.plExpset.grdIndLabels.SetCellValue(row - 1,
-                                                                        0,
-                                                                        items[
-                                                                            1])
-
+                                self.plExpset.grdIndLabels.SetCellValue(
+                                    row - 1, 0, items[1])
                 # set exp details
-                self.GetExperimentDetails()
+                self.get_experiment_details()
 
             # apply preprocessing steps
             if each.tag == 'ppOptions':
@@ -2045,75 +2001,16 @@ class PyChemMain(wx.Frame):
                                 else:
                                     getRow.append(element)
                             newArray.append(getRow)
-                        exec(
-                            'self.data["' + array.tag + '"] = sp.array(newArray)')
+                        cmd = 'self.data["%s"] = np.array(newArray)' % array.tag
+                        exec(cmd, locals(), globals())
 
-                    except:
+                    except Exception:
+                        cmd = 'self.data["%s"] = None' % array.tag
+                        exec(cmd, locals(), globals())
                         raise
-                        exec('self.data["' + array.tag + '"] = None')
 
                 # reload any plots
-                for array in getArrays:
-                    for i in ['pc', 'dfs', 'gadfa', 'gapls']:
-                        if len(array.tag.split(i)) > 1:
-                            if i == 'pc':
-                                # set spn limits
-                                self.plPca.titleBar.spnNumPcs1.SetRange(1, len(
-                                    self.data['pceigs']))
-                                self.plPca.titleBar.spnNumPcs2.SetRange(1, len(
-                                    self.data['pceigs']))
-                                # check for metadata & setup limits for dfa
-                                if (sum(self.data['class'][:, 0]) != 0) and (
-                                        self.data['class'] is not None):
-                                    self.plDfa.titleBar.spnDfaPcs.SetRange(2,
-                                                                           len(
-                                                                               self.data[
-                                                                                   'pceigs']))
-                                    self.plDfa.titleBar.spnDfaDfs.SetRange(1,
-                                                                           len(sp.unique(
-                                                                               self.data[
-                                                                                   'class'][
-                                                                               :,
-                                                                               0])) - 1)
-                                # plot pca results
-                                self.plPca.titleBar.plot_pca()
-                            elif i == 'dfs':
-                                # set spn limits
-                                self.plDfa.titleBar.spnDfaScore1.SetRange(1,
-                                                                          self.data[
-                                                                              'dfeigs'].shape[
-                                                                              1])
-                                self.plDfa.titleBar.spnDfaScore2.SetRange(1,
-                                                                          self.data[
-                                                                              'dfeigs'].shape[
-                                                                              1])
-                                # plot results
-                                self.plDfa.titleBar.plot_dfa()
-
-                            elif i == 'gadfa':
-                                try:
-                                    self.plGadfa.titleBar.create_ga_results_tree(
-                                        self.plGadfa.optDlg.treGaResults,
-                                        gacurves=self.data['gadfacurves'],
-                                        chroms=self.data['gadfachroms'],
-                                        varfrom=self.plGadfa.optDlg.spnGaVarsFrom.getValue(),
-                                        varto=self.plGadfa.optDlg.spnGaVarsTo.getValue(),
-                                        runs=self.plGadfa.optDlg.spnGaNoRuns.getValue() - 1)
-                                except:
-                                    raise
-                                    continue
-                            elif i == 'gapls':
-                                try:
-                                    self.plGapls.titleBar.create_ga_results_tree(
-                                        self.plGapls.optDlg.treGaResults,
-                                        gacurves=self.data['gaplscurves'],
-                                        chroms=self.data['gaplschroms'],
-                                        varfrom=self.plGapls.optDlg.spnGaVarsFrom.getValue(),
-                                        varto=self.plGapls.optDlg.spnGaVarsTo.getValue(),
-                                        runs=self.plGapls.optDlg.spnGaNoRuns.getValue() - 1)
-                                except:
-                                    raise
-                                    continue
+                self.reload_any_plots(getArrays)
 
             # load flags for re-running cluster
             # analysis, plsr and plotting univariate test output
@@ -2123,15 +2020,15 @@ class PyChemMain(wx.Frame):
                     if (item.tag == 'doClustering') & (
                             item.text == '1') is True:
                         self.plCluster.titleBar.run_cluster()
-                    elif (item.tag == 'doPlsr') & (item.text == '1') is True:
+                    elif (item.tag == 'doPlsr') & (item.text == '1'):
                         self.plPls.titleBar.run_pls()
-                    elif (item.tag == 'doUni') & (item.text != '0') is True:
+                    elif (item.tag == 'doUni') & (item.text != '0'):
                         if self.plUnivariate.titleBar.cbxData.GetSelection() == 0:
-                            x = sp.take(self.data['rawtrunc'],
-                                        [self.plUnivariate.titleBar.cbxVariable.GetSelection()]
-                                        , 1)
+                            x = np.take(self.data['rawtrunc'],
+                                        [self.plUnivariate.titleBar.cbxVariable.GetSelection()],
+                                        1)
                         elif self.plUnivariate.titleBar.cbxData.GetSelection() == 1:
-                            x = sp.take(self.data['proctrunc'],
+                            x = np.take(self.data['proctrunc'],
                                         [self.plUnivariate.titleBar.cbxVariable.GetSelection()]
                                         , 1)
                         if self.plUnivariate.titleBar.cbxTest.GetSelection() < 2:
@@ -2139,30 +2036,80 @@ class PyChemMain(wx.Frame):
                                 self.plUnivariate.titleBar.cbxTest.GetSelection(),
                                 self.plUnivariate.titleBar.cbxData.GetSelection()]
                             self.plUnivariate._init_class_sizers()
-                            self.plUnivariate.titleBar.plot_results(x, float(
-                                item.text),
-                                                                    sp.unique(
-                                                                       sp.array(
-                                                                           self.data[
-                                                                               'label'])),
-                                                                    ['black',
-                                                                    'blue',
-                                                                    'red',
-                                                                    'cyan',
-                                                                    'green'],
-                                                                    psum=True)
+                            self.plUnivariate.titleBar.plot_results(
+                                x, float(item.text),
+                                np.unique(np.array(self.data['label'])),
+                                ['black', 'blue', 'red', 'cyan', 'green'],
+                                psum=True)
                         else:
                             self.data['utest'] = None
                             self.plUnivariate._init_corr_sizers()
                             self.plUnivariate.titleBar.run_univariate()
 
         # unlock ctrls
-        self.EnableCtrls()
+        self.enable_ctrls()
 
     #    #gather data
-    #    self.GetExperimentDetails()
+    #    self.get_experiment_details()
 
-    def getGrid(self, grid):
+    def reload_any_plots(self, getArrays):
+        """"""
+        pca_tb = self.plPca.titleBar
+        dfa_tb = self.plDfa.titleBar
+        gadfa_tb = self.plGadfa.titleBar
+
+        klass = self.data['class']
+
+        for array in getArrays:
+            for i in ['pc', 'dfs', 'gadfa', 'gapls']:
+                if len(array.tag.split(i)) > 1:
+                    pceigs = len(self.data['pceigs'])
+                    dfeigs = self.data['dfeigs'].shape[1]
+                    if i == 'pc':
+                        # set spn limits
+                        pca_tb.spnNumPcs1.SetRange(1, pceigs)
+                        pca_tb.spnNumPcs2.SetRange(1, pceigs)
+                        # check for metadata & setup limits for dfa
+                        if (sum(klass[:, 0]) != 0) and (klass is not None):
+                            dfa_tb.spnDfaPcs.SetRange(2, pceigs)
+                            dfa_tb.spnDfaDfs.SetRange(
+                                1, len(np.unique(klass[:, 0])) - 1)
+                        # plot pca results
+                        pca_tb.plot_pca()
+                    elif i == 'dfs':
+                        # set spn limits
+                        dfa_tb.spnDfaScore1.SetRange(1, dfeigs)
+                        dfa_tb.spnDfaScore2.SetRange(1, dfeigs)
+                        # plot results
+                        dfa_tb.plot_dfa()
+
+                    elif i == 'gadfa':
+                        try:
+                            gadfa_tb.create_ga_results_tree(
+                                self.plGadfa.optDlg.treGaResults,
+                                gacurves=self.data['gadfacurves'],
+                                chroms=self.data['gadfachroms'],
+                                varfrom=self.plGadfa.optDlg.spnGaVarsFrom.getValue(),
+                                varto=self.plGadfa.optDlg.spnGaVarsTo.getValue(),
+                                runs=self.plGadfa.optDlg.spnGaNoRuns.getValue() - 1)
+                        except Exception:
+                            raise
+                            # continue
+                    elif i == 'gapls':
+                        try:
+                            self.plGapls.titleBar.create_ga_results_tree(
+                                self.plGapls.optDlg.treGaResults,
+                                gacurves=self.data['gaplscurves'],
+                                chroms=self.data['gaplschroms'],
+                                varfrom=self.plGapls.optDlg.spnGaVarsFrom.getValue(),
+                                varto=self.plGapls.optDlg.spnGaVarsTo.getValue(),
+                                runs=self.plGapls.optDlg.spnGaNoRuns.getValue() - 1)
+                        except Exception:
+                            raise
+                            # continue
+
+    # noinspection PyMethodMayBeStatic
+    def get_grid(self, grid):
         r = grid.GetNumberRows()
         c = grid.GetNumberCols()
 
@@ -2181,7 +2128,7 @@ class PyChemMain(wx.Frame):
 
         return gridout
 
-    def GetExperimentDetails(self, case=0):
+    def get_experiment_details(self, case=0):
         if self.data['raw'] is not None:
             self.plExpset.grdNames.SetGridCursor(2, 0)
             self.plExpset.grdIndLabels.SetGridCursor(1, 0)
@@ -2194,9 +2141,9 @@ class PyChemMain(wx.Frame):
                     order.append(
                         int(self.plExpset.grdNames.GetRowLabelValue(i)))
                     countActive += 1
-            index = sp.argsort(order)
+            index = np.argsort(order)
             # index for removing samples from analysis
-            self.data['sampleidx'] = sp.sort(sp.array(order) - 1).tolist()
+            self.data['sampleidx'] = np.sort(np.array(order) - 1).tolist()
             # get col headings
             colHeads, self.data['class'], classCols = [], [], 0
             for i in range(1, self.plExpset.grdNames.GetNumberCols()):
@@ -2213,8 +2160,8 @@ class PyChemMain(wx.Frame):
                                 self.plExpset.grdNames.GetCellValue(j, i))
 
                     # reorder by index
-                    # self.data['sampleidx'] = sp.array(self.data['sampleidx'])[index].tolist()
-                    self.data['label'] = sp.array(self.data['label'])[
+                    # self.data['sampleidx'] = np.array(self.data['sampleidx'])[index].tolist()
+                    self.data['label'] = np.array(self.data['label'])[
                         index].tolist()
 
                 # get class vector
@@ -2223,10 +2170,10 @@ class PyChemMain(wx.Frame):
                                                              i) == '1') is True:
 
                     if self.data['class'] == []:
-                        self.data['class'] = sp.zeros((countActive, 1))
+                        self.data['class'] = np.zeros((countActive, 1))
                     else:
-                        self.data['class'] = sp.concatenate((self.data['class'],
-                                                             sp.zeros((
+                        self.data['class'] = np.concatenate((self.data['class'],
+                                                             np.zeros((
                                                                  countActive,
                                                                  1))), 1)
 
@@ -2246,7 +2193,7 @@ class PyChemMain(wx.Frame):
                     self.data['class'] = self.data['class'][index, :]
 
                     # set max dfs that can be calculated
-                    self.plDfa.titleBar.spnDfaDfs.SetRange(1, len(sp.unique(
+                    self.plDfa.titleBar.spnDfaDfs.SetRange(1, len(np.unique(
                         self.data['class'][:, 0])) - 1)
                 #       self.plCluster.titleBar.dlg.spnNumClass.SetValue(max(self.data['class']))
 
@@ -2272,7 +2219,7 @@ class PyChemMain(wx.Frame):
                                     self.data['validation'].append(0)
                             except:
                                 continue
-                    self.data['validation'] = sp.array(self.data['validation'])
+                    self.data['validation'] = np.array(self.data['validation'])
 
                     # reorder by index
                     self.data['validation'] = self.data['validation'][index]
@@ -2304,22 +2251,24 @@ class PyChemMain(wx.Frame):
             self.data['xaxis'] = []
             for each in self.data['variableidx']:
                 self.data['xaxis'].append(self.data['xaxisfull'][each])
-            self.data['xaxis'] = sp.array(self.data['xaxis'])[:, nax]
+            self.data['xaxis'] = np.array(self.data['xaxis'])[:, nax]
             num = 1
             for row in range(len(self.data['xaxis'])):
                 try:
                     val = float(self.data['xaxis'][row, 0])
-                except:
-                    num = 0
+                except Exception:
+                    raise
+                    # num = 0
+
             # xaxis values not numeric therefore define xaxis range
             if num == 0:
-                self.data['xaxisfull'] = sp.arange(1, self.data['raw'].shape[
+                self.data['xaxisfull'] = np.arange(1, self.data['raw'].shape[
                     1] + 1)
-                self.data['xaxis'] = sp.take(self.data['xaxisfull'],
+                self.data['xaxis'] = np.take(self.data['xaxisfull'],
                                              self.data['variableidx'])[:, nax]
 
-            self.data['indlabels'] = sp.take(
-                sp.array(self.data['indlabelsfull']),
+            self.data['indlabels'] = np.take(
+                np.array(self.data['indlabelsfull']),
                 self.data['variableidx']).tolist()
 
             #    #if any udv's have been calculated then possible that data array larger than
@@ -2332,15 +2281,15 @@ class PyChemMain(wx.Frame):
             #        self.plPreproc.titleBar.run_process_steps()
 
             # remove any unwanted samples & variables, always following any preprocessing
-            self.data['rawtrunc'] = sp.take(self.data['raw'],
+            self.data['rawtrunc'] = np.take(self.data['raw'],
                                             self.data['variableidx'], 1)
-            self.data['rawtrunc'] = sp.take(self.data['rawtrunc'],
+            self.data['rawtrunc'] = np.take(self.data['rawtrunc'],
                                             self.data['sampleidx'], 0)
 
             if self.data['proc'] is not None:
-                self.data['proctrunc'] = sp.take(self.data['proc'],
+                self.data['proctrunc'] = np.take(self.data['proc'],
                                                  self.data['variableidx'], 1)
-                self.data['proctrunc'] = sp.take(self.data['proctrunc'],
+                self.data['proctrunc'] = np.take(self.data['proctrunc'],
                                                  self.data['sampleidx'], 0)
 
             # change ga results lists
@@ -2353,7 +2302,7 @@ class PyChemMain(wx.Frame):
                     varto=self.plGapls.optDlg.spnGaVarsTo.GetValue(),
                     runs=self.plGapls.optDlg.spnGaNoRuns.GetValue() - 1)
                 self.plGapls.titleBar.btnExportGa.Enable(1)
-            except:
+            except TypeError:
                 pass
 
             try:
@@ -2365,14 +2314,15 @@ class PyChemMain(wx.Frame):
                     varto=self.plGadfa.optDlg.spnGaVarsTo.GetValue(),
                     runs=self.plGadfa.optDlg.spnGaNoRuns.GetValue() - 1)
                 self.plGadfa.titleBar.btnExportGa.Enable(1)
-            except:
+            except TypeError:
                 pass
 
             try:  # set number of centroids for cluster analysis based on class structure
                 self.plCluster.optDlg.spnNumClass.SetValue(
-                    len(sp.unique(self.data['class'][:, 0])))
-            except:
-                pass
+                    len(np.unique(self.data['class'][:, 0])))
+            except Exception:
+                raise
+                # pass
 
             # check if necessary to do a soft reset
             if case == 0:
@@ -2380,15 +2330,14 @@ class PyChemMain(wx.Frame):
                     if (self.data['indvarlist'] != self.data['variableidx']) | \
                             (self.data['depvarlist'] != self.data[
                                 'sampleidx']) is True:
-                        dlg = wx.MessageDialog(self,
-                                               'Changes have been made to the samples and/or ' + \
-                                               'variables selected for analysis, the system must be reset.  Would you ' + \
-                                               'like to continue without saving your current work?',
-                                               caption='Attention!',
+                        msg = ('Changes have been made to the samples and/or ' +
+                               'variables selected for analysis, the system must be reset.  Would you ' +
+                               'like to continue without saving your current work?')
+                        dlg = wx.MessageDialog(self, msg, caption='Attention!',
                                                style=wx.OK | wx.CANCEL | wx.CENTRE | wx.ICON_QUESTION)
                         if dlg.ShowModal() == wx.ID_OK:
                             # clear all modelling screens
-                            self.Reset(1)
+                            self.reset(1)
                         else:
                             # set checkmarks to original
                             for ri in range(2,
@@ -2425,7 +2374,7 @@ class PyChemMain(wx.Frame):
             # remove egg timer
             wx.EndBusyCursor()
 
-    def EnableCtrls(self):
+    def enable_ctrls(self):
         self.plExpset.grdNames.Enable(1)
         self.plExpset.depTitleBar.btnImportMetaData.Enable(1)
         self.plExpset.depTitleBar.btnAddName.Enable(1)
@@ -2454,77 +2403,22 @@ class PyChemMain(wx.Frame):
 
         self.plUnivariate.titleBar.btnRunTest.Enable(1)
 
-    def OnNbMainNotebookPageChanging(self, event):
+    def on_nb_main_nbook_page_changing(self, _):
         if self.nbMain.GetSelection() == 0:
-            self.GetExperimentDetails()
+            self.get_experiment_details()
 
 
-class wxImportConfirmDialog(wx.Dialog):
-    def _init_importconf_ctrls(self, prnt):
-        # generated method, don't edit
+class ImportConfirmDialog(wx.Dialog):
+    """"""
+    def __init__(self, parent, data, rows, cols):
+        """"""
         wx.Dialog.__init__(self, id=wxID_WXICD,
-                           name='wx.ImportDialog', parent=prnt,
-                           pos=wx.Point(483, 225),
-                           size=wx.Size(313, 319),
+                           name='wx.ImportDialog', parent=parent,
+                           pos=(483, 225), size=(313, 319),
                            style=wx.DEFAULT_DIALOG_STYLE,
                            title='Import Complete')
-        self.SetClientSize(wx.Size(305, 285))
-        self.SetToolTip('')
-        self.Center(wx.BOTH)
 
-        self.swLoadX = SashWindow(id=wxID_WXICDSWLOADX,
-                                  name='swLoadX', parent=self,
-                                  pos=wx.Point(0, 0), size=wx.Size(408, 352),
-                                  style=wx.CLIP_CHILDREN | SW_3D)
-        self.swLoadX.SetToolTip('')
-
-        self.btnOK = wx.Button(id=wxID_WXICDBTNOK, label='OK',
-                               name='btnOK', parent=self.swLoadX,
-                               pos=wx.Point(104, 248),
-                               size=wx.Size(104, 26), style=0)
-        self.btnOK.Bind(wx.EVT_BUTTON, self.OnBtnOKButton,
-                        id=wxID_WXICDBTNOK)
-
-        self.grdSampleData = wx.grid.Grid(
-            id=wxID_WXICDGRDSAMPLEDATA,
-            name='grdSampleData', parent=self.swLoadX, pos=wx.Point(16, 24),
-            size=wx.Size(272, 208), style=wx.DOUBLE_BORDER)
-        self.grdSampleData.SetDefaultColSize(80)
-        self.grdSampleData.SetDefaultRowSize(20)
-        self.grdSampleData.Enable(True)
-        self.grdSampleData.EnableEditing(False)
-        self.grdSampleData.SetToolTip('')
-        self.grdSampleData.SetColLabelSize(20)
-        self.grdSampleData.SetRowLabelSize(20)
-
-        self.staticText1 = wx.StaticText(
-            id=wxID_WXICDSTATICTEXT1,
-            label='Sample Data: ', name='staticText1', parent=self.swLoadX,
-            pos=wx.Point(16, 8), size=wx.Size(67, 13), style=0)
-        self.staticText1.SetToolTip('')
-
-        self.stRows = wx.StaticText(id=wxID_WXICDSTROWS,
-                                    label='0', name='stRows',
-                                    parent=self.swLoadX, pos=wx.Point(88, 8),
-                                    size=wx.Size(32, 13), style=0)
-
-        self.staticText2 = wx.StaticText(
-            id=wxID_WXICDSTATICTEXT2,
-            label='rows by ', name='staticText2', parent=self.swLoadX,
-            pos=wx.Point(128, 8), size=wx.Size(39, 13), style=0)
-
-        self.stCols = wx.StaticText(id=wxID_WXICDSTCOLS,
-                                    label='0', name='stCols',
-                                    parent=self.swLoadX, pos=wx.Point(176, 8),
-                                    size=wx.Size(32, 13), style=0)
-
-        self.staticText4 = wx.StaticText(
-            id=wxID_WXICDSTATICTEXT4,
-            label='columns', name='staticText4', parent=self.swLoadX,
-            pos=wx.Point(216, 8), size=wx.Size(39, 13), style=0)
-
-    def __init__(self, parent, data, rows, cols):
-        self._init_importconf_ctrls(parent)
+        self._init_importconf_ctrls()
 
         # create grid
         self.grdSampleData.CreateGrid(data.shape[0], data.shape[1])
@@ -2538,15 +2432,83 @@ class wxImportConfirmDialog(wx.Dialog):
             for j in range(data.shape[1]):
                 self.grdSampleData.SetCellValue(i, j, str(data[i, j]))
 
-    def OnBtnOKButton(self, event):
+    def _init_importconf_ctrls(self):
+        # generated method, don't edit
+
+        self.SetClientSize((305, 285))
+        self.SetToolTip('')
+        self.Center(wx.BOTH)
+
+        self.swLoadX = SashWindow(id=wxID_WXICDSWLOADX,
+                                  name='swLoadX', parent=self,
+                                  pos=(0, 0), size=(408, 352),
+                                  style=wx.CLIP_CHILDREN | SW_3D)
+        self.swLoadX.SetToolTip('')
+
+        self.btnOK = wx.Button(id=wxID_WXICDBTNOK, label='OK',
+                               name='btnOK', parent=self.swLoadX,
+                               pos=(104, 248),
+                               size=(104, 26), style=0)
+        self.btnOK.Bind(wx.EVT_BUTTON, self.on_btn_ok,
+                        id=wxID_WXICDBTNOK)
+
+        self.grdSampleData = wx.grid.Grid(
+            id=wxID_WXICDGRDSAMPLEDATA,
+            name='grdSampleData', parent=self.swLoadX, pos=(16, 24),
+            size=(272, 208), style=wx.DOUBLE_BORDER)
+        self.grdSampleData.SetDefaultColSize(80)
+        self.grdSampleData.SetDefaultRowSize(20)
+        self.grdSampleData.Enable(True)
+        self.grdSampleData.EnableEditing(False)
+        self.grdSampleData.SetToolTip('')
+        self.grdSampleData.SetColLabelSize(20)
+        self.grdSampleData.SetRowLabelSize(20)
+
+        self.staticText1 = wx.StaticText(
+            id=wxID_WXICDSTATICTEXT1,
+            label='Sample Data: ', name='staticText1', parent=self.swLoadX,
+            pos=(16, 8), size=(67, 13), style=0)
+        self.staticText1.SetToolTip('')
+
+        self.stRows = wx.StaticText(id=wxID_WXICDSTROWS, label='0',
+                                    name='stRows', parent=self.swLoadX,
+                                    pos=(88, 8), size=(32, 13), style=0)
+
+        self.staticText2 = wx.StaticText(
+            id=wxID_WXICDSTATICTEXT2,
+            label='rows by ', name='staticText2', parent=self.swLoadX,
+            pos=(128, 8), size=(39, 13), style=0)
+
+        self.stCols = wx.StaticText(id=wxID_WXICDSTCOLS, label='0',
+                                    name='stCols', parent=self.swLoadX,
+                                    pos=(176, 8), size=(32, 13), style=0)
+
+        self.staticText4 = wx.StaticText(
+            id=wxID_WXICDSTATICTEXT4,
+            label='columns', name='staticText4', parent=self.swLoadX,
+            pos=(216, 8), size=(39, 13), style=0)
+
+    def on_btn_ok(self, _):
         self.Close()
 
 
-class wxImportDialog(wx.Dialog):
-    def _init_coll_gbsImportDialog_Items(self, parent):
+class ImportDialog(wx.Dialog):
+    """"""
+    def __init__(self, parent):
+        """"""
+        wx.Dialog.__init__(self, id=-1, name='wx.ImportDialog',
+                           parent=parent, pos=(496, 269), size=(400, 120),
+                           style=wx.DEFAULT_DIALOG_STYLE,
+                           title='Import X-data File')
+
+        self._init_import_ctrls()
+        self._init_plot_prop_sizers()
+        self.chk_ok = 0
+
+    def _init_coll_gbs_import_dialog(self, parent):
         parent.Add(self.fileBrowse, (0, 0), border=10, flag=wx.EXPAND,
                    span=(1, 4))
-        # parent.AddSpacer(wx.Size(0, 0), (1, 0), border=10, flag=wx.EXPAND, span=(1, 1))
+        # parent.AddSpacer((0, 0), (1, 0), border=10, flag=wx.EXPAND, span=(1, 1))
         parent.Add(self.cbTranspose, (1, 1), border=10, flag=wx.EXPAND,
                    span=(1, 1))
         parent.Add(self.btnCancel, (1, 2), border=10, flag=wx.EXPAND,
@@ -2554,7 +2516,8 @@ class wxImportDialog(wx.Dialog):
         parent.Add(self.btnOK, (1, 3), border=10, flag=wx.EXPAND,
                    span=(1, 1))
 
-    def _init_coll_gbsImportDialog_Growables(self, parent):
+    # noinspection PyMethodMayBeStatic
+    def _init_coll_gbs_import_dialog_grobs(self, parent):
         parent.AddGrowableCol(0)
         parent.AddGrowableCol(1)
         parent.AddGrowableCol(2)
@@ -2565,179 +2528,89 @@ class wxImportDialog(wx.Dialog):
         self.gbsImportDialog.SetCols(4)
         self.gbsImportDialog.SetRows(2)
 
-        self._init_coll_gbsImportDialog_Items(self.gbsImportDialog)
-        self._init_coll_gbsImportDialog_Growables(self.gbsImportDialog)
+        self._init_coll_gbs_import_dialog(self.gbsImportDialog)
+        self._init_coll_gbs_import_dialog_grobs(self.gbsImportDialog)
 
         self.SetSizer(self.gbsImportDialog)
 
-    def _init_import_ctrls(self, prnt):
+    def _init_import_ctrls(self):
         # generated method, don't edit
-        wx.Dialog.__init__(self, id=-1, name='wx.ImportDialog',
-                           parent=prnt, pos=wx.Point(496, 269),
-                           size=wx.Size(400, 120),
-                           style=wx.DEFAULT_DIALOG_STYLE,
-                           title='Import X-data File')
+
         self.SetToolTip('')
         self.Center(wx.BOTH)
 
-        self.btnOK = wx.Button(id=-1, label='OK',
-                               name='btnOK', parent=self, pos=wx.Point(0, 0),
-                               size=wx.Size(85, 21), style=0)
-        self.btnOK.Bind(wx.EVT_BUTTON, self.OnBtnOk)
+        self.btnOK = wx.Button(id=-1, label='OK', name='btnOK', parent=self,
+                               pos=(0, 0), size=(85, 21), style=0)
+        self.btnOK.Bind(wx.EVT_BUTTON, self.on_btn_ok)
 
-        self.btnCancel = wx.Button(id=-1, label='Cancel',
-                                   name='btnCancel', parent=self,
-                                   pos=wx.Point(0, 0),
-                                   size=wx.Size(85, 21), style=0)
-        self.btnCancel.Bind(wx.EVT_BUTTON, self.OnBtnCancel)
+        self.btnCancel = wx.Button(id=-1, label='Cancel', name='btnCancel',
+                                   parent=self, pos=(0, 0), size=(85, 21),
+                                   style=0)
+        self.btnCancel.Bind(wx.EVT_BUTTON, self.on_btn_cancel)
 
-        self.fileBrowse = fbrowsebtn.FileBrowseButton(buttonText='Browse',
-                                                      dialogTitle='Choose a file',
-                                                      fileMask='*.*', id=-1,
-                                                      initialValue='',
-                                                      labelText='', parent=self,
-                                                      pos=wx.Point(48, 40),
-                                                      size=wx.Size(296, 48),
-                                                      startDirectory='.',
-                                                      style=wx.TAB_TRAVERSAL,
-                                                      toolTip='Type filename or click browse to choose file')
+        self.fileBrowse = fbrowsebtn.FileBrowseButton(
+            buttonText='Browse', dialogTitle='Choose a file', fileMask='*.*',
+            id=-1, initialValue='', labelText='', parent=self, pos=(48, 40),
+            size=(296, 48),  startDirectory='.', style=wx.TAB_TRAVERSAL,
+            toolTip='Type filename or click browse to choose file')
 
-        self.cbTranspose = wx.CheckBox(id=-1,
-                                       label='Transpose', name='cbTranspose',
-                                       parent=self,
-                                       pos=wx.Point(160, 128),
-                                       size=wx.Size(73, 23), style=0)
+        self.cbTranspose = wx.CheckBox(id=-1, label='transpose',
+                                       name='cbTranspose', parent=self,
+                                       pos=(160, 128), size=(73, 23), style=0)
         self.cbTranspose.SetValue(False)
         self.cbTranspose.SetToolTip('')
 
-        self.staticLine = wx.StaticLine(id=-1,
-                                        name='staticLine', parent=self,
-                                        pos=wx.Point(400, 5),
-                                        size=wx.Size(1, 2), style=0)
+        self.staticLine = wx.StaticLine(id=-1, name='staticLine', parent=self,
+                                        pos=(400, 5), size=(1, 2), style=0)
 
-        self._init_plot_prop_sizers()
+    def is_ok(self):
+        return self.chk_ok
 
-    def __init__(self, parent):
-        self._init_import_ctrls(parent)
-
-        self.chkOK = 0
-
-    def isOK(self):
-        return self.chkOK
-
-    def getFile(self):
+    def get_file(self):
         return self.fileBrowse.GetValue()
 
-    def Transpose(self):
+    def transpose(self):
         return self.cbTranspose.GetValue()
 
-    def OnBtnCancel(self, event):
-        self.chkOK = 0
+    def on_btn_cancel(self, _):
+        self.chk_ok = 0
         self.Close()
 
-    def OnBtnOk(self, event):
-        self.chkOK = 1
+    def on_btn_ok(self, _):
+        self.chk_ok = 1
         self.Close()
 
 
-class wxWorkspaceDialog(wx.Dialog):
-    def _init_coll_lbSaveWorkspace_Columns(self, parent):
-        # generated method, don't edit
-
-        parent.InsertColumn(col=0, format=wx.LIST_FORMAT_LEFT,
-                            heading='Workspaces', width=260)
-
-    def _init_savews_ctrls(self, prnt):
-        # generated method, don't edit
-        wx.Dialog.__init__(self, id=wxID_WXWSD,
-                           name='wxWorkspaceDialog', parent=prnt,
-                           pos=wx.Point(453, 245),
-                           size=wx.Size(374, 280),
-                           style=wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER | wx.CAPTION | wx.MAXIMIZE_BOX,
-                           title='Save Workspace')
-        self.SetClientSize(wx.Size(366, 246))
-        self.SetToolTip('')
-        self.SetAutoLayout(True)
-        self.Center(wx.BOTH)
-
-        self.btnDelete = wx.Button(id=wxID_WXWSDBTNDELETE,
-                                   label='Delete', name='btnDelete',
-                                   parent=self, pos=wx.Point(16,
-                                                             7),
-                                   size=wx.Size(70, 23), style=0)
-        self.btnDelete.SetToolTip('')
-        self.btnDelete.SetAutoLayout(True)
-        self.btnDelete.Bind(wx.EVT_BUTTON, self.OnBtnDeleteButton,
-                            id=wxID_WXWSDBTNDELETE)
-
-        self.btnCancel = wx.Button(id=wxID_WXWSDBTNCANCEL,
-                                   label='Cancel', name='btnCancel',
-                                   parent=self, pos=wx.Point(16,
-                                                             40),
-                                   size=wx.Size(72, 23), style=0)
-        self.btnCancel.SetToolTip('')
-        self.btnCancel.SetAutoLayout(True)
-        self.btnCancel.Bind(wx.EVT_BUTTON, self.OnBtnCancelButton,
-                            id=wxID_WXWSDBTNCANCEL)
-
-        self.btnEdit = wx.Button(id=wxID_WXWSDBTNEDIT,
-                                 label='Edit', name='btnEdit', parent=self,
-                                 pos=wx.Point(16, 152),
-                                 size=wx.Size(70, 23), style=0)
-        self.btnEdit.SetToolTip('')
-        self.btnEdit.SetAutoLayout(True)
-        self.btnEdit.Show(False)
-        self.btnEdit.Bind(wx.EVT_BUTTON, self.OnBtnEditButton,
-                          id=wxID_WXWSDBTNEDIT)
-
-        self.btnOK = wx.Button(id=wxID_WXWSDBTNOK, label='OK',
-                               name='btnOK', parent=self, pos=wx.Point(16, 71),
-                               size=wx.Size(72,
-                                            23), style=0)
-        self.btnOK.SetToolTip('')
-        self.btnOK.SetAutoLayout(True)
-        self.btnOK.Show(True)
-        self.btnOK.Bind(wx.EVT_BUTTON, self.OnBtnOKButton,
-                        id=wxID_WXWSDBTNOK)
-
-        self.lbSaveWorkspace = wx.ListCtrl(
-            id=wxID_WXWSDLBSAVEWORKSPACE,
-            name='lbSaveWorkspace', parent=self, pos=wx.Point(96, 8),
-            size=wx.Size(264, 232),
-            style=wx.LC_REPORT | wx.LC_SORT_ASCENDING | wx.LC_SINGLE_SEL)
-        self.lbSaveWorkspace.SetConstraints(LayoutAnchors(self.lbSaveWorkspace,
-                                                          True, True, True,
-                                                          True))
-        self.lbSaveWorkspace.SetAutoLayout(True)
-        self.lbSaveWorkspace.SetToolTip('')
-        self._init_coll_lbSaveWorkspace_Columns(self.lbSaveWorkspace)
-        self.lbSaveWorkspace.Bind(wx.EVT_LEFT_DCLICK,
-                                  self.OnLbSaveWorkspaceLeftDclick)
-        self.lbSaveWorkspace.Bind(wx.EVT_LIST_END_LABEL_EDIT,
-                                  self.OnLbSaveWorkspaceListEndLabelEdit,
-                                  id=wxID_WXWSDLBSAVEWORKSPACE)
-        self.lbSaveWorkspace.Bind(wx.EVT_LIST_ITEM_SELECTED,
-                                  self.OnLbSaveWorkspaceListItemSelected,
-                                  id=wxID_WXWSDLBSAVEWORKSPACE)
-
+class WorkspaceDialog(wx.Dialog):
+    """"""
     def __init__(self, parent, filename='', dtype='Load'):
+        """"""
+        wx.Dialog.__init__(self, id=wxID_WXWSD,
+                           name='wxWorkspaceDialog', parent=parent,
+                           pos=(453, 245),
+                           size=(374, 280),
+                           style=wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER |
+                           wx.CAPTION | wx.MAXIMIZE_BOX,
+                           title='Save Workspace')
+
+        self.currentItem = None
+        self.tree = None
+        self.workspace = None
+
         # dtype to be either "load" or "save"
-        self._init_savews_ctrls(parent)
+        self._init_savews_ctrls()
 
         # set some defaults
         self.SetTitle(dtype + ' Workspace')
         self.dtype = dtype
         self.filename = filename
-        self.tree = None
-        self.workSpace = 0
 
         # need to populate listbox
         try:
             # check that it's a pychem file
             if self.filename not in ['']:
                 self.tree = ET.ElementTree(file=self.filename)
-                workspaces = self.tree.getroot().findall("Workspaces")[
-                    0].getchildren()
+                workspaces = self.tree.getroot().findall("Workspaces")[0]
                 self.lbSaveWorkspace.SetColumnWidth(0, 260)
                 for each in workspaces:
                     count = self.lbSaveWorkspace.GetItemCount()
@@ -2748,16 +2621,86 @@ class wxWorkspaceDialog(wx.Dialog):
                 # behaviour for save dialog
                 if dtype == 'Save':
                     self.btnCancel.Enable(0)
-        except:
-            raise
+        except Exception:
             msg = 'Unable to load data - this is not a PyChem Experiment file'
             dlg = wx.MessageDialog(self, msg, 'Error!', wx.OK | wx.ICON_ERROR)
             try:
                 dlg.ShowModal()
             finally:
                 dlg.Destroy()
+            raise
 
-    def OnBtnDeleteButton(self, event):
+    # noinspection PyMethodMayBeStatic
+    def _init_coll_lb_save_workspace(self, parent):
+        """"""
+        parent.InsertColumn(col=0, format=wx.LIST_FORMAT_LEFT,
+                            heading='Workspaces', width=260)
+
+    def _init_savews_ctrls(self):
+        """"""
+        self.SetClientSize((366, 246))
+        self.SetToolTip('')
+        self.SetAutoLayout(True)
+        self.Center(wx.BOTH)
+
+        self.btnDelete = wx.Button(id=wxID_WXWSDBTNDELETE,
+                                   label='Delete', name='btnDelete',
+                                   parent=self, pos=(16, 7),
+                                   size=(70, 23), style=0)
+        self.btnDelete.SetToolTip('')
+        self.btnDelete.SetAutoLayout(True)
+        self.btnDelete.Bind(wx.EVT_BUTTON, self.on_btn_delete,
+                            id=wxID_WXWSDBTNDELETE)
+
+        self.btnCancel = wx.Button(id=wxID_WXWSDBTNCANCEL,
+                                   label='Cancel', name='btnCancel',
+                                   parent=self, pos=(16, 40),
+                                   size=(72, 23), style=0)
+        self.btnCancel.SetToolTip('')
+        self.btnCancel.SetAutoLayout(True)
+        self.btnCancel.Bind(wx.EVT_BUTTON, self.on_btn_cancel,
+                            id=wxID_WXWSDBTNCANCEL)
+
+        self.btnEdit = wx.Button(id=wxID_WXWSDBTNEDIT,
+                                 label='Edit', name='btnEdit', parent=self,
+                                 pos=(16, 152),
+                                 size=(70, 23), style=0)
+        self.btnEdit.SetToolTip('')
+        self.btnEdit.SetAutoLayout(True)
+        self.btnEdit.Show(False)
+        self.btnEdit.Bind(wx.EVT_BUTTON, self.on_btn_edit,
+                          id=wxID_WXWSDBTNEDIT)
+
+        self.btnOK = wx.Button(id=wxID_WXWSDBTNOK, label='OK',
+                               name='btnOK', parent=self, pos=(16, 71),
+                               size=(72, 23), style=0)
+        self.btnOK.SetToolTip('')
+        self.btnOK.SetAutoLayout(True)
+        self.btnOK.Show(True)
+        self.btnOK.Bind(wx.EVT_BUTTON, self.on_btn_ok,
+                        id=wxID_WXWSDBTNOK)
+
+        self.lbSaveWorkspace = wx.ListCtrl(
+            id=wxID_WXWSDLBSAVEWORKSPACE,
+            name='lbSaveWorkspace', parent=self, pos=(96, 8),
+            size=(264, 232),
+            style=wx.LC_REPORT | wx.LC_SORT_ASCENDING | wx.LC_SINGLE_SEL)
+        self.lbSaveWorkspace.SetConstraints(LayoutAnchors(self.lbSaveWorkspace,
+                                                          True, True, True,
+                                                          True))
+        self.lbSaveWorkspace.SetAutoLayout(True)
+        self.lbSaveWorkspace.SetToolTip('')
+        self._init_coll_lb_save_workspace(self.lbSaveWorkspace)
+        self.lbSaveWorkspace.Bind(wx.EVT_LEFT_DCLICK,
+                                  self.on_lb_save_workspace_left_dclick)
+        self.lbSaveWorkspace.Bind(wx.EVT_LIST_END_LABEL_EDIT,
+                                  self.on_lb_save_workspace_end_label_edit,
+                                  id=wxID_WXWSDLBSAVEWORKSPACE)
+        self.lbSaveWorkspace.Bind(wx.EVT_LIST_ITEM_SELECTED,
+                                  self.on_lb_save_workspace_selected,
+                                  id=wxID_WXWSDLBSAVEWORKSPACE)
+
+    def on_btn_delete(self, _):
         if self.lbSaveWorkspace.GetItemCount() > 1:
             # need to delete the workspace in the xml file
             WSnode = self.tree.getroot().findall("Workspaces")[0]
@@ -2771,30 +2714,30 @@ class wxWorkspaceDialog(wx.Dialog):
             # delete listbox entry
             self.lbSaveWorkspace.DeleteItem(self.currentItem)
 
-    def OnBtnCancelButton(self, event):
+    def on_btn_cancel(self, _):
         self.Close()
 
-    def OnBtnEditButton(self, event):
+    # noinspection PyMethodMayBeStatic
+    def on_btn_edit(self, event):
         event.Skip()
 
-    def getWorkspace(self):
-        if (self.filename not in ['']) & (self.workSpace != 0) is True:
-            return self.workSpace.replace(' ', '_')
+    def get_workspace(self):
+        if (self.filename not in ['']) & (self.workspace != 0) is True:
+            return self.workspace.replace(' ', '_')
         else:
             return 0
 
-    def appendWorkspace(self, ws):
+    def append_workspace(self, ws):
         index = self.lbSaveWorkspace.InsertStringItem(sys.maxint, ws)
         self.lbSaveWorkspace.SetStringItem(index, 0, ws)
 
-    def OnBtnOKButton(self, event):
+    def on_btn_ok(self, _):
         if self.dtype == 'Load':
             try:
-                self.workSpace = self.lbSaveWorkspace.GetItemText(
+                self.workspace = self.lbSaveWorkspace.GetItemText(
                     self.currentItem)
                 self.Close()
-            except:
-                raise
+            except Exception:
                 dlg = wx.MessageDialog(self,
                                        'Please select a Workspace to load',
                                        'Error!', wx.OK | wx.ICON_ERROR)
@@ -2802,22 +2745,23 @@ class wxWorkspaceDialog(wx.Dialog):
                     dlg.ShowModal()
                 finally:
                     dlg.Destroy()
+                raise
         else:
             self.Close()
 
-    def OnLbSaveWorkspaceLeftDclick(self, event):
+    def on_lb_save_workspace_left_dclick(self, event):
         # get workspace
         if self.dtype == 'Load':
-            self.workSpace = self.lbSaveWorkspace.GetItemText(self.currentItem)
+            self.workspace = self.lbSaveWorkspace.GetItemText(self.currentItem)
             self.Close()
         else:
             event.Skip()
 
-    def OnLbSaveWorkspaceListEndLabelEdit(self, event):
+    def on_lb_save_workspace_end_label_edit(self, _):
         self.lbSaveWorkspace.SetColumnWidth(0, wx.LIST_AUTOSIZE)
 
-    def OnLbSaveWorkspaceListItemSelected(self, event):
+    def on_lb_save_workspace_selected(self, event):
         self.currentItem = event.GetIndex()
 
-    def getTree(self):
+    def get_tree(self):
         return self.tree

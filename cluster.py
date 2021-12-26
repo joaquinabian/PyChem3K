@@ -28,7 +28,7 @@ from Bio.Cluster import kcluster, treecluster
 from Bio.Cluster import distancematrix, clustercentroids
 from Bio.Cluster import kmedoids
 
-from Pca import MyPlotCanvas
+from pca import MyPlotCanvas
 
 [wxID_CLUSTER, ] = [wx.NewId() for _init_ctrls in range(1)]
 
@@ -96,7 +96,7 @@ class Cluster(wx.Panel):
         
         self.optDlg = SelFun(self.Splitter)
         
-        self.plcCluster = MyPlotCanvas(id=-1, name='plcCluster', parent=self.p1,
+        self.plcCluster = MyPlotCanvas(id_=-1, name='plcCluster', parent=self.p1,
                                        pos=wx.Point(0, 0),
                                        size=wx.Size(200, 200),
                                        style=wx.SUNKEN_BORDER,
@@ -243,10 +243,10 @@ class TitleBar(bp.ButtonPanel):
         event.Skip()
     
     def on_btn_set_params(self, _):
-        if self.parent.Splitter.GetSashPosition() <= 5:
-            self.parent.Splitter.SetSashPosition(250)
+        if self.parent.splitter.GetSashPosition() <= 5:
+            self.parent.splitter.SetSashPosition(250)
         else:
-            self.parent.Splitter.SetSashPosition(1)
+            self.parent.splitter.SetSashPosition(1)
         
     def on_btn_run_cluster(self, _):
         self.run_cluster()

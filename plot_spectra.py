@@ -1,11 +1,11 @@
 # -----------------------------------------------------------------------------
-# Name:        plotSpectra.py
+# Name:        plot_spectra.py
 # Purpose:     
 #
 # Author:      Roger Jarvis
 #
 # Created:     2007/05/22
-# RCS-ID:      $Id: plotSpectra.py, v 1.16 2009/02/26 23:20:33 rmj01 Exp $
+# RCS-ID:      $Id: plot_spectra.py, v 1.16 2009/02/26 23:20:33 rmj01 Exp $
 # Copyright:   (c) 2007
 # Licence:     GNU General Public Licence
 # -----------------------------------------------------------------------------
@@ -28,8 +28,8 @@ import copy
 import mva.process
 import numpy as np
 from numpy import newaxis as nax
-from Pca import MyPlotCanvas
-from Pca import plotLine
+from pca import MyPlotCanvas
+from pca import plotLine
 from commons import error_box
 
 [IDPLOTSPEC, ID_ADDPROCESSMETHOD, ID_PPTYPE, ID_PPMETHOD, ID_VALSLIDE
@@ -278,7 +278,7 @@ class PeakCalculations(wx.Dialog):
             # add new column to raw and proc data
             self.InsertVariable(countpos, area_fit_baseline)
         # update experiment setup
-        self._prnt.prnt.prnt.GetExperimentDetails(case=1)
+        self._prnt.prnt.prnt.get_experiment_details(case=1)
         # destroy dialog
         self.Destroy()
         
@@ -368,9 +368,11 @@ class plotSpectra(wx.Panel):
         
         self.optDlg = selFun(self.Splitter)
         
-        self.plcPlot = MyPlotCanvas(id=IDPLOTSPEC, name='plcPlot',
-                                    parent=self.p1, pos=wx.Point(0, 0), size=wx.Size(200, 200),
-                                    style=wx.SUNKEN_BORDER, toolbar=self.p1.prnt.parent.tbMain)
+        self.plcPlot = MyPlotCanvas(id_=IDPLOTSPEC, name='plcPlot',
+                                    parent=self.p1, pos=wx.Point(0, 0),
+                                    size=wx.Size(200, 200),
+                                    style=wx.SUNKEN_BORDER,
+                                    toolbar=self.p1.prnt.parent.tbMain)
         self.plcPlot.enableZoom
         self.plcPlot.fontSizeTitle = 12
         self.plcPlot.SetToolTip('')
@@ -529,7 +531,7 @@ class TitleBar(bp.ButtonPanel):
         # add details of current plot to toolbar
         self.canvas.populate_toolbar()
         # interactive mode for plotting screen - allows to calculate peak areas etc
-        self.canvas.enableInteractive(True)
+        self.canvas.enable_interactive(True)
     
     def on_btn_plot(self, event):
         # Set enable zoom just in case
@@ -609,7 +611,7 @@ class TitleBar(bp.ButtonPanel):
         #          if string.split(grid.GetCellValue(i, 1), '_')[2] in ['PROC']:
         #             GridRowDel(grid, self.data) # would need to pass row num (i) for this to work
         #             # update experiment setup
-        #             self.parent.parent.parent.GetExperimentDetails(case=1)
+        #             self.parent.parent.parent.get_experiment_details(case=1)
         #    else:
         #         break
         # Run pre-processing
@@ -618,13 +620,13 @@ class TitleBar(bp.ButtonPanel):
             exec(each[1], locals(), globals())
         
         self.data['proc'] = x
-        self.parent.parent.parent.GetExperimentDetails(case=1)
+        self.parent.parent.parent.get_experiment_details(case=1)
     
     def OnBtnSetProcButton(self, event):
-        if self.parent.Splitter.GetSashPosition() <= 5:
-            self.parent.Splitter.SetSashPosition(250)
+        if self.parent.splitter.GetSashPosition() <= 5:
+            self.parent.splitter.SetSashPosition(250)
         else:
-            self.parent.Splitter.SetSashPosition(1)
+            self.parent.splitter.SetSashPosition(1)
     
     def get_data(self, data):
         self.data = data

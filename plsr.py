@@ -1,11 +1,11 @@
 # -----------------------------------------------------------------------------
-# Name:        Plsr.py
+# Name:        plsr.py
 # Purpose:     
 #
 # Author:      Roger Jarvis
 #
 # Created:     2007/05/22
-# RCS-ID:      $Id: Plsr.py, v 1.16 2009/02/26 22:19:47 rmj01 Exp $
+# RCS-ID:      $Id: plsr.py, v 1.16 2009/02/26 22:19:47 rmj01 Exp $
 # Copyright:   (c) 2006
 # Licence:     GNU General Public Licence
 # -----------------------------------------------------------------------------
@@ -23,10 +23,10 @@ from wx.lib.plot import PolyMarker
 from wx.lib.stattext import GenStaticText
 
 import mva.chemometrics as chemtrics
-from Pca import plotLine
-from Pca import plotLoads
-from Pca import MyPlotCanvas
-from Pca import PlotPlsModel
+from pca import plotLine
+from pca import plot_loads
+from pca import MyPlotCanvas
+from pca import plot_pls_model
 from commons import error_box
 
 [wxID_PLSR, wxID_PLSRBTNEXPPLS, wxID_PLSRBTNGOTOGADPLS, wxID_PLSRBTNGOTOGAPLS, 
@@ -43,11 +43,12 @@ class Plsr(wx.Panel):
     # partial least squares regression
     def __init__(self, parent, id_, pos, size, style, name):
         wx.Panel.__init__(self, id=wxID_PLSR, name='Plsr', parent=parent,
-                          pos=wx.Point(84, 70), size=wx.Size(796, 460),
+                          pos=(84, 70), size=(796, 460),
                           style=wx.TAB_TRAVERSAL)
 
         _, _, _, _, _ = id_, pos, size, style, name
-        self._init_ctrls(parent)
+        self.parent = parent
+        self._init_ctrls()
 
     def _init_coll_bxs_pls2(self, parent):
         # generated method, don't edit
@@ -80,7 +81,7 @@ class Plsr(wx.Panel):
         # generated method, don't edit
 
         parent.AddPage(imageId=-1,
-                       page=self.plcPredPls1, select=True, text='')
+                       page=self.plc_pred_pls1, select=True, text='')
     
     def _init_sizers(self):
         # generated method, don't edit
@@ -96,17 +97,16 @@ class Plsr(wx.Panel):
 
         self.SetSizer(self.bxsPls1)
 
-    def _init_ctrls(self, prnt):
+    def _init_ctrls(self):
         # generated method, don't edit
 
-        self.SetClientSize(wx.Size(788, 426))
+        self.SetClientSize((788, 426))
         self.SetAutoLayout(True)
         self.SetToolTip('')
-        self.prnt = prnt
 
         self.nbFullPls = wx.Notebook(id=-1, name='nbFullPls', parent=self,
-                                     pos=wx.Point(176, 274),
-                                     size=wx.Size(310, 272),
+                                     pos=(176, 274),
+                                     size=(310, 272),
                                      style=wx.NB_BOTTOM)
         self.nbFullPls.SetToolTip('')
         self.nbFullPls.SetAutoLayout(True)
@@ -115,19 +115,20 @@ class Plsr(wx.Panel):
         # self.nbFullPls.SetTabSize((40, 15))
               
         self.nbPlsPreds = wx.Notebook(id=-1, name='nbPlsPreds', parent=self,
-                                      pos=wx.Point(176, 274),
-                                      size=wx.Size(310, 272),
+                                      pos=(176, 274),
+                                      size=(310, 272),
                                       style=wx.NB_BOTTOM)
         self.nbPlsPreds.SetToolTip('')
         self.nbPlsPreds.SetAutoLayout(True)
         self.nbPlsPreds.SetConstraints(
             LayoutAnchors(self.nbPlsPreds, True, True, True, True))
         # self.nbPlsPreds.SetTabSize((0, 1))
-        self.nbPlsPreds.prnt = self
+        self.nbPlsPreds.parent = self
         
-        self.plcPLSerror = MyPlotCanvas(id=-1, name='plcPLSerror',
-                                        parent=self.nbFullPls, pos=wx.Point(0, 0), size=wx.Size(302, 246),
-                                        style=0, toolbar=self.prnt.parent.tbMain)
+        self.plcPLSerror = MyPlotCanvas(id_=-1, name='plcPLSerror',
+                                        parent=self.nbFullPls, pos=(0, 0),
+                                        size=(302, 246), style=0,
+                                        toolbar=self.parent.parent.tbMain)
         self.plcPLSerror.fontSizeAxis = 8
         self.plcPLSerror.fontSizeTitle = 10
         self.plcPLSerror.enableZoom = True
@@ -138,11 +139,10 @@ class Plsr(wx.Panel):
         self.plcPLSerror.SetConstraints(
             LayoutAnchors(self.plcPLSerror, True, True, True, True))
               
-        self.plcPlsStats = MyPlotCanvas(id=-1, name='plcPlsStats',
+        self.plcPlsStats = MyPlotCanvas(id_=-1, name='plcPlsStats',
                                         parent=self.nbFullPls,
-                                        pos=wx.Point(176, 0),
-                                        size=wx.Size(310, 272), style=0,
-                                        toolbar=self.prnt.parent.tbMain)
+                                        pos=(176, 0), size=(310, 272), style=0,
+                                        toolbar=self.parent.parent.tbMain)
         self.plcPlsStats.xSpec = 'none'
         self.plcPlsStats.ySpec = 'none'
         self.plcPlsStats.SetAutoLayout(True)
@@ -154,24 +154,23 @@ class Plsr(wx.Panel):
                     wx.FONTWEIGHT_NORMAL, False, 'Courier New'))
         self.plcPlsStats.SetToolTip('')
 
-        self.plcPredPls1 = MyPlotCanvas(id=-1, name='plcPredPls1',
-                                        parent=self.nbPlsPreds,
-                                        pos=wx.Point(176, 0),
-                                        size=wx.Size(310, 272), style=0,
-                                        toolbar=self.prnt.parent.tbMain)
-        self.plcPredPls1.fontSizeTitle = 10
-        self.plcPredPls1.fontSizeAxis = 8
-        self.plcPredPls1.enableZoom = True
-        self.plcPredPls1.SetToolTip('')
-        self.plcPredPls1.enableLegend = True
-        self.plcPredPls1.fontSizeLegend = 8
-        self.plcPredPls1.SetAutoLayout(True)
-        self.plcPredPls1.SetConstraints(
-            LayoutAnchors(self.plcPredPls1, True, True, True, True))
+        self.plc_pred_pls1 = MyPlotCanvas(id_=-1, name='plcPredPls1',
+                                          parent=self.nbPlsPreds, style=0,
+                                          pos=(176, 0), size=(310, 272),
+                                          toolbar=self.parent.parent.tbMain)
+        self.plc_pred_pls1.fontSizeTitle = 10
+        self.plc_pred_pls1.fontSizeAxis = 8
+        self.plc_pred_pls1.enableZoom = True
+        self.plc_pred_pls1.SetToolTip('')
+        self.plc_pred_pls1.enableLegend = True
+        self.plc_pred_pls1.fontSizeLegend = 8
+        self.plc_pred_pls1.SetAutoLayout(True)
+        self.plc_pred_pls1.SetConstraints(
+            LayoutAnchors(self.plc_pred_pls1, True, True, True, True))
         
-        self.plcPlsHetero = MyPlotCanvas(id=-1, name='plcPlsHetero',
-                                         parent=self, pos=wx.Point(488, 274), size=wx.Size(310, 272),
-                                         style=0, toolbar=self.prnt.parent.tbMain)
+        self.plcPlsHetero = MyPlotCanvas(id_=-1, name='plcPlsHetero',
+                                         parent=self, pos=(488, 274), size=(310, 272),
+                                         style=0, toolbar=self.parent.parent.tbMain)
         self.plcPlsHetero.fontSizeAxis = 8
         self.plcPlsHetero.fontSizeTitle = 10
         self.plcPlsHetero.enableZoom = True
@@ -182,10 +181,10 @@ class Plsr(wx.Panel):
         self.plcPlsHetero.SetConstraints(
             LayoutAnchors(self.plcPlsHetero, True, True, True, True))
         
-        self.plcPLSloading = MyPlotCanvas(id=-1, name='plcPLSloading',
-                                          parent=self, pos=wx.Point(0, 24),
-                                          size=wx.Size(330, 292), style=0,
-                                          toolbar=self.prnt.parent.tbMain)
+        self.plcPLSloading = MyPlotCanvas(id_=-1, name='plcPLSloading',
+                                          parent=self, pos=(0, 24),
+                                          size=(330, 292), style=0,
+                                          toolbar=self.parent.parent.tbMain)
         self.plcPLSloading.fontSizeTitle = 10
         self.plcPLSloading.fontSizeAxis = 8
         self.plcPLSloading.enableZoom = True
@@ -214,15 +213,15 @@ class Plsr(wx.Panel):
         self.titleBar.spnPLSfactor2.SetValue(2)
         
         # delete multiple scores plots
-        self.plcPredPls1.prnt.SetSelection(0)
-        self.plcPredPls1.prnt.SetPageText(0, '')
+        self.plc_pred_pls1.parent.SetSelection(0)
+        self.plc_pred_pls1.parent.SetPageText(0, '')
         # self.plcPredPls1.prnt.SetTabSize((0, 1))
-        for page in range(self.plcPredPls1.prnt.GetPageCount()-1, 0, -1):
-            self.plcPredPls1.prnt.DeletePage(page)
+        for page in range(self.plc_pred_pls1.parent.GetPageCount() - 1, 0, -1):
+            self.plc_pred_pls1.parent.DeletePage(page)
         
         objects = {
             'plcPLSerror': ['RMS Error', 'Latent Variable', 'RMS Error'],
-            'plcPredPls1': ['PLS Predictions', 'Actual', 'Predicted'],
+            'plc_pred_pls1': ['PLS Predictions', 'Actual', 'Predicted'],
             'plcPlsHetero': ['Residuals vs. Predicted Values', 'Predicted', 'Residuals'],
             'plcPLSloading': ['PLS Loading', 'w*c[1]', 'w*c[2]']}
 
@@ -257,27 +256,27 @@ class TitleBar(bp.ButtonPanel):
         """"""
         self.cbxData = wx.Choice(choices=['Raw spectra', 'Processed spectra'],
                                  id=-1, name='cbxData', parent=self,
-                                 pos=wx.Point(118, 21),
-                                 size=wx.Size(90, 23), style=0)
+                                 pos=(118, 21),
+                                 size=(90, 23), style=0)
         self.cbxData.SetSelection(0)
         
         self.cbxType = wx.Choice(choices=['PLSR', 'PLS-DA'], id=-1,
                                  name='cbxType', parent=self,
-                                 pos=wx.Point(75, 21),
-                                 size=wx.Size(50, 23), style=0)
+                                 pos=(75, 21),
+                                 size=(50, 23), style=0)
         self.cbxType.SetSelection(0)
 
         choices = ['Correlation matrix', 'Covariance matrix']
         self.cbxPreprocType = wx.Choice(choices=choices, id=-1,
                                         name='cbxPreprocType', parent=self,
-                                        pos=wx.Point(118, 23),
-                                        size=wx.Size(110, 23), style=0)
+                                        pos=(118, 23),
+                                        size=(110, 23), style=0)
         self.cbxPreprocType.SetSelection(0)
                                 
         self.spnPLSmaxfac = wx.SpinCtrl(id=-1, initial=2, max=100, min=1,
                                         name='spnPLSmaxfac', parent=self,
-                                        pos=wx.Point(54, 72),
-                                        size=wx.Size(54, 23),
+                                        pos=(54, 72),
+                                        size=(54, 23),
                                         style=wx.SP_ARROW_KEYS)
         self.spnPLSmaxfac.SetValue(1)
         self.spnPLSmaxfac.SetToolTip('')
@@ -291,8 +290,8 @@ class TitleBar(bp.ButtonPanel):
         
         self.spnPLSfactor1 = wx.SpinCtrl(id=-1, initial=1, max=100, min=1,
                                          name='spnPLSfactor1', parent=self,
-                                         pos=wx.Point(228, 4),
-                                         size=wx.Size(46, 23),
+                                         pos=(228, 4),
+                                         size=(46, 23),
                                          style=wx.SP_ARROW_KEYS)
         self.spnPLSfactor1.SetToolTip('')
         self.spnPLSfactor1.Enable(0)
@@ -301,8 +300,8 @@ class TitleBar(bp.ButtonPanel):
         
         self.spnPLSfactor2 = wx.SpinCtrl(id=-1, initial=2, max=100, min=1,
                                          name='spnPLSfactor2', parent=self,
-                                         pos=wx.Point(228, 4),
-                                         size=wx.Size(46, 23),
+                                         pos=(228, 4),
+                                         size=(46, 23),
                                          style=wx.SP_ARROW_KEYS)
         self.spnPLSfactor2.SetToolTip('')
         self.spnPLSfactor2.Enable(0)
@@ -440,7 +439,7 @@ class TitleBar(bp.ButtonPanel):
             pls_output = chemtrics.pls(xdata, self.data['pls_class'],
                                        self.data['validation'],
                                        self.spnPLSmaxfac.GetValue(),
-                                       stb=self.parent.prnt.parent.sbMain,
+                                       stb=self.parent.parent.sbMain,
                                        typex=self.cbxPreprocType.GetSelection())
             
             self.data['plsloads'] = pls_output['W']
@@ -518,17 +517,18 @@ class TitleBar(bp.ButtonPanel):
             self.spnPLSfactor2.SetValue(2)
             
             # plot pls model
-            self.parent.plcPredPls1 = PlotPlsModel(
-                self.parent.plcPredPls1,
-                model='full', tbar=self.parent.prnt.prnt.tbMain,
+            # self.parent.parent.
+            self.parent.plc_pred_pls1 = plot_pls_model(
+                self.parent.plc_pred_pls1,
+                model='full', tbar=self.parent.parent.tbMain,
                 cL=klass, scores=self.data['plst'],
                 predictions=self.data['plspred'],
                 validation=self.data['validation'],
                 RMSEPT=self.data['RMSEPT'], factors=self.data['plsfactors'],
                 type=self.data['plstype'], col1=0, col2=1,
                 label=self.data['label'],
-                symbols=self.parent.prnt.prnt.tbMain.tbSymbols.GetValue(),
-                usetxt=self.parent.prnt.prnt.tbMain.tbPoints.GetValue(),
+                symbols=self.parent.parent.tbMain.tbSymbols.GetValue(),
+                usetxt=self.parent.parent.tbMain.tbPoints.GetValue(),
                 usecol=[], usesym=[], errplot=False,
                 plScL=self.data['pls_class'])
             
@@ -550,7 +550,7 @@ class TitleBar(bp.ButtonPanel):
             # allow results export
             self.btnExpPls.Enable(1)
                         
-        except Exception as error:
+        except AttributeError as error:
             error_box(self, '%s' % str(error))
             raise
 
@@ -662,15 +662,15 @@ class TitleBar(bp.ButtonPanel):
     def plot_pls_loads(self):
         # Plot loadings
         if self.spnPLSfactor1.GetValue() != self.spnPLSfactor2.GetValue():
-            plotLoads(self.parent.plcPLSloading, self.data['plsloads'],
-                      xaxis=self.data['indlabels'],
-                      col1=self.spnPLSfactor1.GetValue()-1,
-                      col2=self.spnPLSfactor2.GetValue()-1,
-                      title='PLS Loadings',
-                      xLabel='w*c[%i]' % self.spnPLSfactor1.GetValue(),
-                      yLabel='w*c[%i]' % self.spnPLSfactor2.GetValue(),
-                      type=self.parent.prnt.prnt.tbMain.GetLoadPlotIdx(),
-                      usecol=[], usesym=[])
+            plot_loads(self.parent.plcPLSloading, self.data['plsloads'],
+                       xaxis=self.data['indlabels'],
+                       col1=self.spnPLSfactor1.GetValue()-1,
+                       col2=self.spnPLSfactor2.GetValue()-1,
+                       title='PLS Loadings',
+                       xLabel='w*c[%i]' % self.spnPLSfactor1.GetValue(),
+                       yLabel='w*c[%i]' % self.spnPLSfactor2.GetValue(),
+                       type=self.parent.prnt.prnt.tbMain.get_load_plot_idx(),
+                       usecol=[], usesym=[])
         else:
             idx = self.spnPLSfactor1.GetValue()-1
             plotLine(self.parent.plcPLSloading,
@@ -680,20 +680,22 @@ class TitleBar(bp.ButtonPanel):
                      yLabel='w*c[' + str(idx+1) + ']', wdth=1, ledge=[])
         
     def plot_pls_scores(self):
-        # Plot scores for pls-da
+        """Plot scores for pls-da.
+
+        """
         if self.data['plstype'] == 1:
             tb_main = self.parent.prnt.parent.tbMain
-            self.parent.plcPredPls1 = \
-                PlotPlsModel(self.parent.plcPredPls1, model='full',
-                             tbar=tb_main,
-                             cL=self.data['class'], scores=self.data['plst'],
-                             predictions=None,
-                             label=self.data['label'],
-                             validation=self.data['validation'],
-                             RMSEPT=None, factors=None, type=1,
-                             col1=self.spnPLSfactor1.GetValue()-1,
-                             col2=self.spnPLSfactor2.GetValue()-1,
-                             symbols=tb_main.tbSymbols.GetValue(),
-                             usetxt=tb_main.tbPoints.GetValue(),
-                             usecol=[], usesym=[], plScL=self.data['pls_class'])
+            self.parent.plc_pred_pls1 = \
+                plot_pls_model(self.parent.plc_pred_pls1, model='full',
+                               tbar=tb_main,
+                               cL=self.data['class'], scores=self.data['plst'],
+                               predictions=None,
+                               label=self.data['label'],
+                               validation=self.data['validation'],
+                               RMSEPT=None, factors=None, type=1,
+                               col1=self.spnPLSfactor1.GetValue()-1,
+                               col2=self.spnPLSfactor2.GetValue()-1,
+                               symbols=tb_main.tbSymbols.GetValue(),
+                               usetxt=tb_main.tbPoints.GetValue(),
+                               usecol=[], usesym=[], plScL=self.data['pls_class'])
                 

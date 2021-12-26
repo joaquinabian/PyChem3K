@@ -27,11 +27,11 @@ from commons import error_box
 from mva import chemometrics as chemtrics
 # noinspection PyProtectedMember
 from mva.chemometrics import _index
-from Pca import plotLine
-from Pca import plot_scores
-from Pca import plotLoads
-from Pca import set_btn_state
-from Pca import MyPlotCanvas
+from pca import plotLine
+from pca import plot_scores
+from pca import plot_loads
+from pca import set_btn_state
+from pca import MyPlotCanvas
 
 [wxID_DFA, wxID_DFABTNEXPDFA, wxID_DFABTNGOGADFA, wxID_DFABTNGOPCA,
  wxID_DFAbtnRunDfa, wxID_DFACBDFAXVAL, wxID_DFAPLCDFAEIGS,
@@ -56,7 +56,7 @@ class Dfa(wx.Panel):
     def __init__(self, parent, id_, pos, size, style, name):
         """"""
         wx.Panel.__init__(self, id=wxID_DFA, name='Dfa', parent=parent,
-                          pos=wx.Point(47, 118), size=wx.Size(796, 460),
+                          pos=(47, 118), size=(796, 460),
                           style=wx.TAB_TRAVERSAL)
 
         _, _, _, _, _ = id_, pos, size, style, name
@@ -100,13 +100,14 @@ class Dfa(wx.Panel):
     def _init_ctrls(self):
         # generated method, don't edit
 
-        self.SetClientSize(wx.Size(788, 426))
+        self.SetClientSize((788, 426))
         self.SetToolTip('')
         self.SetAutoLayout(True)
 
-        self.plcDFAscores = MyPlotCanvas(
-            id=-1, name='plcDFAscores', parent=self, pos=wx.Point(0, 24),
-            size=wx.Size(24, 20), style=0, toolbar=self.parent.parent.tbMain)
+        self.plcDFAscores = MyPlotCanvas(id_=-1, name='plcDFAscores',
+                                         parent=self, pos=(0, 24),
+                                         size=(24, 20), style=0,
+                                         toolbar=self.parent.parent.tbMain)
         self.plcDFAscores.fontSizeTitle = 10
         self.plcDFAscores.fontSizeAxis = 8
         self.plcDFAscores.enableZoom = True
@@ -117,9 +118,9 @@ class Dfa(wx.Panel):
             LayoutAnchors(self.plcDFAscores, True, True, True, True))
         self.plcDFAscores.fontSizeLegend = 8
 
-        self.plcDfaLoadsV = MyPlotCanvas(id=-1, name='plcDfaLoadsV',
-                                         parent=self, pos=wx.Point(-5, 24),
-                                         size=wx.Size(24, 20), style=0,
+        self.plcDfaLoadsV = MyPlotCanvas(id_=-1, name='plcDfaLoadsV',
+                                         parent=self, pos=(-5, 24),
+                                         size=(24, 20), style=0,
                                          toolbar=self.parent.parent.tbMain)
         self.plcDfaLoadsV.fontSizeAxis = 8
         self.plcDfaLoadsV.fontSizeTitle = 10
@@ -131,9 +132,9 @@ class Dfa(wx.Panel):
             LayoutAnchors(self.plcDfaLoadsV, True, True, True, True))
         self.plcDfaLoadsV.fontSizeLegend = 8
 
-        self.plcDFAeigs = MyPlotCanvas(
-            id=-1, name='plcDFAeigs', parent=self, pos=wx.Point(483, 214),
-            size=wx.Size(305, 212), style=0, toolbar=self.parent.parent.tbMain)
+        self.plcDFAeigs = MyPlotCanvas(id_=-1, name='plcDFAeigs', parent=self,
+                                       pos=(483, 214), size=(305, 212), style=0,
+                                       toolbar=self.parent.parent.tbMain)
         self.plcDFAeigs.fontSizeAxis = 8
         self.plcDFAeigs.fontSizeTitle = 10
         self.plcDFAeigs.enableZoom = True
@@ -143,9 +144,10 @@ class Dfa(wx.Panel):
                                                      True, False, True))
         self.plcDFAeigs.fontSizeLegend = 8
 
-        self.plcDfaCluster = MyPlotCanvas(
-            id=-1, name='plcDfaCluster', parent=self, pos=wx.Point(176, 214),
-            size=wx.Size(305, 212), style=0, toolbar=self.parent.parent.tbMain)
+        self.plcDfaCluster = MyPlotCanvas(id_=-1, name='plcDfaCluster',
+                                          parent=self, pos=(176, 214),
+                                          size=(305, 212), style=0,
+                                          toolbar=self.parent.parent.tbMain)
         self.plcDfaCluster.fontSizeAxis = 8
         self.plcDfaCluster.fontSizeTitle = 10
         self.plcDfaCluster.enableZoom = True
@@ -209,46 +211,44 @@ class TitleBar(bp.ButtonPanel):
         """"""
         chcs = ['PC Scores', 'PLS Scores', 'Raw spectra', 'Processed spectra']
         self.cbxData = wx.Choice(choices=chcs, id=-1, name='cbxData',
-                                 parent=self, pos=wx.Point(118, 21),
-                                 size=wx.Size(100, 23), style=0)
+                                 parent=self, pos=(118, 21),
+                                 size=(100, 23), style=0)
 
         self.cbxData.SetSelection(0)
         self.Bind(wx.EVT_CHOICE, self.on_cbx_data, id=self.cbxData.GetId())
 
-        self.btnRunDfa = bp.ButtonInfo(self, -1,
-                                       wx.Bitmap(os.path.join('bmp', 'run.png'),
-                                                 wx.BITMAP_TYPE_PNG),
-                                       kind=wx.ITEM_NORMAL, shortHelp='Run DFA',
+        bmp = wx.Bitmap(os.path.join('bmp', 'run.png'), wx.BITMAP_TYPE_PNG)
+        self.btnRunDfa = bp.ButtonInfo(self, -1, bmp, kind=wx.ITEM_NORMAL,
+                                       shortHelp='Run DFA',
                                        longHelp='Run Discriminant Function Analysis')
         self.btnRunDfa.Enable(False)
         self.Bind(wx.EVT_BUTTON, self.on_run_dfa, id=self.btnRunDfa.GetId())
 
         self.spnDfaPcs = wx.SpinCtrl(id=-1, initial=1, max=100, min=3,
                                      name='spnDfaPcs', parent=self,
-                                     pos=wx.Point(104, 104),
-                                     size=wx.Size(46, 23),
+                                     pos=(104, 104),
+                                     size=(46, 23),
                                      style=wx.SP_ARROW_KEYS)
         self.spnDfaPcs.SetValue(3)
         self.spnDfaPcs.SetToolTip('')
 
         self.spnDfaDfs = wx.SpinCtrl(id=-1, initial=1, max=100, min=2,
                                      name='spnDfaDfs', parent=self,
-                                     pos=wx.Point(57, 168),
-                                     size=wx.Size(46, 23),
+                                     pos=(57, 168),
+                                     size=(46, 23),
                                      style=wx.SP_ARROW_KEYS)
         self.spnDfaDfs.SetValue(2)
         self.spnDfaDfs.SetToolTip('')
 
         self.cbDfaXval = wx.CheckBox(id=-1, label='',
                                      name='cbDfaXval', parent=self,
-                                     pos=wx.Point(16, 216),
-                                     size=wx.Size(14, 13), style=0)
+                                     pos=(16, 216),
+                                     size=(14, 13), style=0)
         self.cbDfaXval.SetValue(False)
         self.cbDfaXval.SetToolTip('')
 
-        self.btnExpDfa = bp.ButtonInfo(self, -1, wx.Bitmap(
-            os.path.join('bmp', 'export.png'), wx.BITMAP_TYPE_PNG),
-                                       kind=wx.ITEM_NORMAL,
+        bmp = wx.Bitmap(os.path.join('bmp', 'export.png'), wx.BITMAP_TYPE_PNG)
+        self.btnExpDfa = bp.ButtonInfo(self, -1, bmp, kind=wx.ITEM_NORMAL,
                                        shortHelp='Export DFA Results',
                                        longHelp='Export DFA Results')
         self.btnExpDfa.Enable(False)
@@ -256,8 +256,8 @@ class TitleBar(bp.ButtonPanel):
 
         self.spnDfaScore1 = wx.SpinCtrl(id=-1, initial=1, max=100, min=1,
                                         name='spnDfaScore1', parent=self,
-                                        pos=wx.Point(199,
-                                                     4), size=wx.Size(46, 23),
+                                        pos=(199,
+                                                     4), size=(46, 23),
                                         style=wx.SP_ARROW_KEYS)
         self.spnDfaScore1.SetToolTip('')
         self.spnDfaScore1.Enable(0)
@@ -266,8 +266,8 @@ class TitleBar(bp.ButtonPanel):
 
         self.spnDfaScore2 = wx.SpinCtrl(id=-1, initial=1, max=100, min=1,
                                         name='spnDfaScore2', parent=self,
-                                        pos=wx.Point(287,
-                                                     4), size=wx.Size(46, 23),
+                                        pos=(287,
+                                                     4), size=(46, 23),
                                         style=wx.SP_ARROW_KEYS)
         self.spnDfaScore2.SetToolTip('')
         self.spnDfaScore2.Enable(0)
@@ -301,9 +301,12 @@ class TitleBar(bp.ButtonPanel):
 
     # noinspection PyPep8Naming
     def SetProperties(self):
+        """Sets the colours for the two demos.
 
-        # Sets the colours for the two demos: called only if the user didn't
-        # modify the colours and sizes using the Settings Panel
+        Called only if the user didn't modify the colours and sizes
+        using the Settings Panel
+
+        """
         bpArt = self.GetBPArt()
 
         # set the color the text is drawn with
@@ -321,6 +324,7 @@ class TitleBar(bp.ButtonPanel):
 
     def get_data(self, data):
         self.data = data
+        print('in DFA ln 325, data: ', data)
 
     def on_cbx_data(self, _):
         if self.cbxData.GetSelection() == 0:
@@ -439,7 +443,7 @@ class TitleBar(bp.ButtonPanel):
             # plot dfa results
             self.plot_dfa()
 
-        except Exception as error:
+        except TypeError as error:
             error_box(self, '%s' % str(error))
             raise
 
@@ -473,7 +477,7 @@ class TitleBar(bp.ButtonPanel):
         self.plot_dfa()
         set_btn_state(self.spnDfaScore1.GetValue(),
                       self.spnDfaScore2.GetValue(),
-                      self.parent.prnt.prnt.tbMain)
+                      self.parent.parent.prnt.tbMain)
 
     def plot_dfa(self):
         # plot scores
@@ -500,14 +504,14 @@ class TitleBar(bp.ButtonPanel):
             label = 'DFA Loadings'
 
         if self.spnDfaScore1.GetValue() != self.spnDfaScore2.GetValue():
-            plotLoads(self.parent.plcDfaLoadsV, self.data['dfloads'],
-                      xaxis=self.data['indlabels'],
-                      col1=self.spnDfaScore1.GetValue() - 1,
-                      col2=self.spnDfaScore2.GetValue() - 1, title=label,
-                      xLabel='w[' + str(self.spnDfaScore1.GetValue()) + ']',
-                      yLabel='w[' + str(self.spnDfaScore2.GetValue()) + ']',
-                      type=tb_main.GetLoadPlotIdx(),
-                      usecol=[], usesym=[])
+            plot_loads(self.parent.plcDfaLoadsV, self.data['dfloads'],
+                       xaxis=self.data['indlabels'],
+                       col1=self.spnDfaScore1.GetValue() - 1,
+                       col2=self.spnDfaScore2.GetValue() - 1, title=label,
+                       xLabel='w[' + str(self.spnDfaScore1.GetValue()) + ']',
+                       yLabel='w[' + str(self.spnDfaScore2.GetValue()) + ']',
+                       type=tb_main.get_load_plot_idx(),
+                       usecol=[], usesym=[])
 
         else:
             idx = self.spnDfaScore1.GetValue() - 1
