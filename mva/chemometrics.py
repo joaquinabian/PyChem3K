@@ -109,11 +109,15 @@ def _slice(x, index, axis=0):
     if axis == 0:
         aslice = np.reshape(x[:, int(index[0])], (x.shape[0], 1))
         for n in range(1, len(index), 1):
-            aslice = np.concatenate((aslice, np.reshape(x[:, int(index[n])], (x.shape[0], 1))), 1)
+            aslice = np.concatenate((aslice,
+                                     np.reshape(x[:, int(index[n])],
+                                                (x.shape[0], 1))), 1)
     else:
         aslice = np.reshape(x[int(index[0]), :], (1, x.shape[1]))
         for n in range(1, len(index), 1):
-            aslice = np.concatenate((aslice, np.reshape(x[int(index[n]), :], (1, x.shape[1]))), 0)
+            aslice = np.concatenate((aslice,
+                                     np.reshape(x[int(index[n]), :],
+                                                (1, x.shape[1]))), 0)
     return aslice
     
 def _split(xdata, ydata, mask, labels=None):
@@ -153,19 +157,22 @@ def _bw(X, group):
     Bo, Wo = None, None
     mx = np.mean(X, 0)[nax, :]
     tgrp = np.unique(group)
-    for x in range(len(tgrp)):
-        idx = _index(group, tgrp[x])
-        L = len(idx)
+    first = True
+    for value in tgrp:
+        idx = _index(group, value)
+        len_idx = len(idx)
         meani = np.mean(np.take(X, idx, 0), 0)
-        meani = np.resize(meani, (len(idx), X.shape[1]))
+        meani = np.resize(meani, (len_idx, X.shape[1]))
         A = np.mean(np.take(X, idx, 0), 0) - mx
         C = np.take(X, idx, 0) - meani
-        if x > 1:
-            Bo = Bo + L * np.dot(np.transpose(A), A)
-            Wo = Wo + np.dot(np.transpose(C), C)
-        elif x == 1:
-            Bo = L * np.dot(np.transpose(A), A)
+
+        if first:
+            Bo = len_idx * np.dot(np.transpose(A), A)
             Wo = np.dot(np.transpose(C), C)
+            first = False
+        else:
+            Bo = Bo + len_idx * np.dot(np.transpose(A), A)
+            Wo = Wo + np.dot(np.transpose(C), C)
     
     B = (1 / (len(tgrp) - 1)) * Bo
     W = (1 / (X.shape[0] - len(tgrp))) * Wo
@@ -395,7 +402,7 @@ def cva(X, group, nodfs, pcloads=None):
     
     Ref. Krzanowski
 
-    Manly, B.F.J. Multivariate Statistical Methods: A Primer,
+    Mainly, B.F.J. Multivariate Statistical Methods: A Primer,
     2nd Ed, Chapman & Hall: New York, 1986 
 
     >>> import numpy as np
@@ -412,20 +419,19 @@ def cva(X, group, nodfs, pcloads=None):
     >>> group = np.array([[1], [1], [1], [1], [2], [2], [2], [3], [3], [3]])
     >>> B, W = _bw(X, group)
     >>> B
-    array([[ 0.12756749, -0.10061061, 0.00366132, -0.00615551, 0.05378535],
-           [-0.10061061, 0.09289765, 0.00469185, 0.03883801, -0.05465494],
-           [ 0.00366132, 0.00469185, 0.0043456 , 0.01883603, -0.00530158],
-           [-0.00615551, 0.03883801, 0.01883603, 0.08554211, -0.0332867 ],
-           [ 0.05378535, -0.05465494, -0.00530158, -0.0332867 , 0.03372716]])
+    array([[ 0.12756749, -0.10061061,  0.00366132, -0.00615551,  0.05378535],
+           [-0.10061061,  0.09289765,  0.00469185,  0.03883801, -0.05465494],
+           [ 0.00366132,  0.00469185,  0.0043456 ,  0.01883603, -0.00530158],
+           [-0.00615551,  0.03883801,  0.01883603,  0.08554211, -0.0332867 ],
+           [ 0.05378535, -0.05465494, -0.00530158, -0.0332867 ,  0.03372716]])
     >>> W
-    array([[ 0.049357  , 0.00105553, -0.00808075, 0.04037998, -0.02013773],
-           [ 0.00105553, 0.03555862, -0.00982256, 0.00761902, 0.02439148],
-           [-0.00808075, -0.00982256, 0.03519157, 0.01447587, 0.03438791],
-           [ 0.04037998, 0.00761902, 0.01447587, 0.10132225, -0.01048251],
-           [-0.02013773, 0.02439148, 0.03438791, -0.01048251, 0.1417496 ]])
+    array([[ 0.049357  ,  0.00105553, -0.00808075,  0.04037998, -0.02013773],
+           [ 0.00105553,  0.03555862, -0.00982256,  0.00761902,  0.02439148],
+           [-0.00808075, -0.00982256,  0.03519157,  0.01447587,  0.03438791],
+           [ 0.04037998,  0.00761902,  0.01447587,  0.10132225, -0.01048251],
+           [-0.02013773,  0.02439148,  0.03438791, -0.01048251,  0.1417496 ]])
     >>> 
     >>> U, As_out, Ls_out, _ = cva(X, group, 5)
-    >>> 
     >>> U
     array([[-4.17688874, -4.00309392, -3.30364313, -4.17357019, 0.09912727],
            [-3.84164699, -4.48421541, -2.42156782, -4.9040549 , 3.20454647],
@@ -454,10 +460,14 @@ def cva(X, group, nodfs, pcloads=None):
     # At the moment
     # A'*W*A = K so substituting Cholesky decomposition
     # A'*W*A = T'*T ; so, inv(T')*A'*W*A*inv(T) = I
-    # & [inv(T)]'*A'*W*A*inv(T) = I thus, [A*inv(T)]'*W*[A*inv(T)] = I
-    # thus Aout = A*inv(T)
+    # & [inv(T)]'*A'*W*A*inv(T) = I
+    # thus, [A*inv(T)]'*W*[A*inv(T)] = I
+    # thus, Aout = A*inv(T)
     K = np.dot(np.transpose(A), np.dot(W, A))
-    T = sp.linalg.cholesky(K)
+
+    print('cholesky ', K)
+
+    T = np.linalg.cholesky(K)
     Aout = np.dot(A, sp.linalg.inv(T))
     
     # Sort eigenvectors w.r.t eigenvalues
@@ -468,7 +478,7 @@ def cva(X, group, nodfs, pcloads=None):
     As_out = np.take(Aout, order[0:nodfs].tolist(), 1)
     Ls_out = Ls[0:nodfs][nax, :]
     
-    # Create Scores (canonical variates) is the matrix of scores ###
+    # Create Scores (canonical variates) is the matrix of scores
     U = np.dot(X, As_out)
     
     # convert pc-dfa loadings back to original variables if necessary
