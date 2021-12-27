@@ -231,7 +231,7 @@ class Univariate(wx.Panel):
         self.plcBoxplot.xSpec = 'min'
         
         for each in objects:
-            exec('self.' + each + '.draw(wx.lib.plot.PlotGraphics([curve], ' +
+            exec('self.' + each + '.Draw(wx.lib.plot.PlotGraphics([curve], ' +
                  'objects["' + each + '"][0], ' +
                  'objects["' + each + '"][1], ' +
                  'objects["' + each + '"][2]))'

@@ -1042,7 +1042,7 @@ class SymColSelectTool(wx.Dialog):
             exec('symlist.append(self.' + each + '.symname)')
         # plot loadings
         self.parent.do_plot(loadType=3, symcolours=collist, symsymbols=symlist)
-        self.parent.loadIdx = 3
+        self.parent.load_idx = 3
     
     def on_btn_symbol(self, evt):
         # symbol select dialog
@@ -1494,7 +1494,7 @@ class Pca(wx.Panel):
                          style=wx.PENSTYLE_TRANSPARENT)
         
         for each in objects.keys():
-            exec('self.' + each + '.draw(PlotGraphics([curve], ' +
+            exec('self.' + each + '.Draw(PlotGraphics([curve], ' +
                  'objects["' + each + '"][0], ' + 'objects["' + each +
                  '"][1], ' + 'objects["' + each + '"][2]))')
 

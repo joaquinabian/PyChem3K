@@ -230,7 +230,7 @@ class Plsr(wx.Panel):
                          colour='white', width=1, style=wx.PENSTYLE_TRANSPARENT)
         
         for each in objects.keys():
-            exec('self.' + each + '.draw(PlotGraphics([curve], ' +
+            exec('self.' + each + '.Draw(PlotGraphics([curve], ' +
                  'objects["' + each + '"][0], ' +
                  'objects["' + each + '"][1], ' +
                  'objects["' + each + '"][2]))')

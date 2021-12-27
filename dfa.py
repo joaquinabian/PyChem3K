@@ -186,9 +186,9 @@ class Dfa(wx.Panel):
                          width=1, style=wx.PENSTYLE_TRANSPARENT)
 
         for each in objects.keys():
-            cmd = ('self.%s.draw(PlotGraphics([curve], '
+            cmd = ('self.%s.Draw(PlotGraphics([curve], '
                    'objects["%s"][0], objects["%s"][1], objects["%s"][2]))')
-            exec(cmd % (each, each, each, each))
+            exec(cmd % (each, each, each, each), locals(), globals())
 
 
 class TitleBar(bp.ButtonPanel):

@@ -53,14 +53,15 @@ def create(parent):
  wxID_PCMPLGADFA, wxID_PCMPLGADPLS, wxID_PCMPLGAPLSC, wxID_PCMPLPCA,
  wxID_PCMPLPLS, wxID_PCMPLPREPROC, wxID_PCMSBMAIN, wxID_PCMPLUNIVARIATE
  ] = [wx.NewId() for _init_ctrls in range(13)]
-
-[wxID_PCMMNUFILEAPPEXIT, wxID_PCMMNUFILEFILEIMPORT, wxID_PCMMNUFILELOADEXP, 
- wxID_PCMMNUFILELOADWS, wxID_PCMMNUFILESAVEEXP, wxID_PCMMNUFILESAVEWS,
+# PYCHEM_MAIN_MNUFILE (MFILE)
+[wxID_MFILEAPPEXIT, wxID_MFILEFILEIMPORT, wxID_MFILELOADEXP, 
+ wxID_MFILELOADWS, wxID_MFILESAVEEXP, wxID_MFILESAVEWS,
  ] = [wx.NewId() for _init_coll_mnuFile_Items in range(6)]
 
-[wxID_PCMMNUTOOLSEXPSET, wxID_PCMMNUTOOLSMNUCLUSTER, wxID_PCMMNUTOOLSMNUDFA, 
- wxID_PCMMNUTOOLSMNUGADFA, wxID_PCMMNUTOOLSMNUGAPLSC, wxID_PCMMNUTOOLSMNUPCA,
- wxID_PCMMNUTOOLSMNUPLSR, wxID_PCMMNUTOOLSPREPROC,
+# PYCHEM_MAIN_MNUTOOLS (MTOOLS)
+[wxID_MTOOLSEXPSET, wxID_MTOOLSMNUCLUSTER, wxID_MTOOLSMNUDFA, 
+ wxID_MTOOLSMNUGADFA, wxID_MTOOLSMNUGAPLSC, wxID_MTOOLSMNUPCA,
+ wxID_MTOOLSMNUPLSR, wxID_MTOOLSPREPROC,
  ] = [wx.NewId() for _init_coll_mnuTools_Items in range(8)]
 
 [wxID_PCMMNUHELPCONTENTS, wxID_PCMMNUABOUTCONTENTS,
@@ -95,6 +96,7 @@ class PlotToolBar(wx.ToolBar):
 
         self.splitPrnt = None
         self.canvas = None
+
         self.stTitle = GenStaticText(self, -1, 'Title:', pos=(2, 5),
                                      style=wx.TRANSPARENT_WINDOW)
         self.AddControl(self.stTitle)
@@ -108,8 +110,7 @@ class PlotToolBar(wx.ToolBar):
 
         self.spn_title = wx.SpinCtrl(id=-1, initial=12, max=76, min=5,
                                      name='spnTitleFont', parent=self,
-                                     pos=(148, 2),
-                                     size=(50, 21),
+                                     pos=(148, 2), size=(50, 21),
                                      style=wx.SP_ARROW_KEYS)
         self.spn_title.SetToolTip('Title Font Size')
         self.spn_title.Bind(wx.EVT_SPIN, self.on_spn_title_font)
@@ -117,8 +118,7 @@ class PlotToolBar(wx.ToolBar):
 
         self.AddSeparator()
 
-        self.stXlabel = GenStaticText(self, -1, 'X-label:',
-                                      pos=(202, 5),
+        self.stXlabel = GenStaticText(self, -1, 'X-label:', pos=(202, 5),
                                       style=wx.TRANSPARENT_WINDOW)
         self.AddControl(self.stXlabel)
 
@@ -129,8 +129,7 @@ class PlotToolBar(wx.ToolBar):
         self.txtXlabel.Bind(wx.EVT_TEXT_ENTER, self.on_txt_xlabel)
         self.AddControl(self.txtXlabel)
 
-        self.stYlabel = GenStaticText(self, -1, 'Y-label:',
-                                      pos=(314, 5),
+        self.stYlabel = GenStaticText(self, -1, 'Y-label:', pos=(314, 5),
                                       style=wx.TRANSPARENT_WINDOW)
         self.AddControl(self.stYlabel)
 
@@ -143,8 +142,7 @@ class PlotToolBar(wx.ToolBar):
 
         self.spnAxesFont = wx.SpinCtrl(id=-1, initial=12, max=76, min=5,
                                        name='spnTitleFont', parent=self,
-                                       pos=(424, 2),
-                                       size=(50, 21),
+                                       pos=(424, 2), size=(50, 21),
                                        style=wx.SP_ARROW_KEYS)
         self.spnAxesFont.SetToolTip('Axes Font Size')
         self.spnAxesFont.Bind(wx.EVT_SPIN, self.on_spn_axes_font)
@@ -152,8 +150,7 @@ class PlotToolBar(wx.ToolBar):
 
         self.AddSeparator()
 
-        self.stXrange = GenStaticText(self, -1, 'X-range:',
-                                      pos=(480, 5),
+        self.stXrange = GenStaticText(self, -1, 'X-range:', pos=(480, 5),
                                       style=wx.TRANSPARENT_WINDOW)
         self.AddControl(self.stXrange)
 
@@ -193,8 +190,7 @@ class PlotToolBar(wx.ToolBar):
 
         self.AddSeparator()
 
-        self.stYrange = GenStaticText(self, -1, 'Y-range:',
-                                      pos=(647, 5),
+        self.stYrange = GenStaticText(self, -1, 'Y-range:', pos=(647, 5),
                                       style=wx.TRANSPARENT_WINDOW)
         self.AddControl(self.stYrange)
 
@@ -204,9 +200,8 @@ class PlotToolBar(wx.ToolBar):
         self.txtYmin.SetToolTip('Minimum Y-axis range')
         self.AddControl(self.txtYmin)
 
-        self.spnYmin = wx.SpinButton(id=-1, name='spnYmin',
-                                     parent=self, pos=(732, 2),
-                                     size=(15, 21),
+        self.spnYmin = wx.SpinButton(id=-1, name='spnYmin', parent=self,
+                                     pos=(732, 2), size=(15, 21),
                                      style=wx.SP_VERTICAL)
         self.spnYmin.SetToolTip('Minimum Y-axis range')
         self.spnYmin.Bind(wx.EVT_SPIN_DOWN, self.on_spn_ymin_down)
@@ -327,10 +322,10 @@ class PlotToolBar(wx.ToolBar):
 
         self.SymPopUpWin = SymColSelectTool(self)
 
-        self.loadIdx = 0
+        self.load_idx = 0
 
     def get_load_plot_idx(self):
-        return self.loadIdx
+        return self.load_idx
 
     def on_tb_symbols_rclick(self, event):
         # symbol/colour options for scores plots
@@ -347,7 +342,7 @@ class PlotToolBar(wx.ToolBar):
     def on_tb_load_labels(self, _):
         """plot loadings"""
         self.do_plot(loadType=0)
-        self.loadIdx = 0
+        self.load_idx = 0
 
     def on_txt_plot(self, _):
         self.graph.set_title(self.txtPlot.GetValue())
@@ -370,22 +365,22 @@ class PlotToolBar(wx.ToolBar):
     def on_tb_load_lab_std1(self, _):
         # plot loadings
         self.do_plot(loadType=1)
-        self.loadIdx = 1
+        self.load_idx = 1
 
     def on_tb_load_lab_std2(self, _):
         # plot loadings
         self.do_plot(loadType=2)
-        self.loadIdx = 2
+        self.load_idx = 2
 
     def on_tb_load_sym_std2(self, _):
         # plot loadings
         self.do_plot(loadType=3)
-        self.loadIdx = 3
+        self.load_idx = 3
 
     def on_tb_load_sym_std2_rclick(self, event):
         # invoke loadings plot sym/col selector
         self.do_plot(loadType=3)
-        self.loadIdx = 3
+        self.load_idx = 3
         btn = event.GetEventObject()
         pos = btn.ClientToScreen((0, 0))
         sz = btn.GetSize()
@@ -729,7 +724,7 @@ class PyChemMain(wx.Frame):
         wx.Frame.__init__(self, id=wxID_PCM, name='PyChemMain',
                           parent=parent, pos=(0, 0), size=(1024, 738),
                           style=wx.DEFAULT_FRAME_STYLE,
-                          title='PyChem 3.0.5g Beta')
+                          title='PyChem3k 0.1')
         self.data = None
         self.tbar = None
         self.parent = parent
@@ -875,76 +870,76 @@ class PyChemMain(wx.Frame):
     def _init_coll_mnu_tools(self, parent):
         # generated method, don't edit
 
-        parent.Append(helpString='', id=wxID_PCMMNUTOOLSEXPSET,
+        parent.Append(helpString='', id=wxID_MTOOLSEXPSET,
                       kind=wx.ITEM_NORMAL, item='Experiment Setup')
-        parent.Append(helpString='', id=wxID_PCMMNUTOOLSPREPROC,
+        parent.Append(helpString='', id=wxID_MTOOLSPREPROC,
                       kind=wx.ITEM_NORMAL, item='Spectral Pre-processing')
         parent.Append(helpString='', id=wxID_PCMPLUNIVARIATE,
                       kind=wx.ITEM_NORMAL, item='Univariate Tests')
-        parent.Append(helpString='', id=wxID_PCMMNUTOOLSMNUPCA,
+        parent.Append(helpString='', id=wxID_MTOOLSMNUPCA,
                       kind=wx.ITEM_NORMAL,
                       item='Principal Component Analysis (PCA)')
-        parent.Append(helpString='', id=wxID_PCMMNUTOOLSMNUCLUSTER,
+        parent.Append(helpString='', id=wxID_MTOOLSMNUCLUSTER,
                       kind=wx.ITEM_NORMAL, item='Cluster Analysis')
-        parent.Append(helpString='', id=wxID_PCMMNUTOOLSMNUDFA,
+        parent.Append(helpString='', id=wxID_MTOOLSMNUDFA,
                       kind=wx.ITEM_NORMAL,
                       item='Discriminant Function Analysis (DFA)')
-        parent.Append(helpString='', id=wxID_PCMMNUTOOLSMNUPLSR,
+        parent.Append(helpString='', id=wxID_MTOOLSMNUPLSR,
                       kind=wx.ITEM_NORMAL,
                       item='Partial Least Squares Regression (PLSR)')
-        parent.Append(helpString='', id=wxID_PCMMNUTOOLSMNUGADFA,
+        parent.Append(helpString='', id=wxID_MTOOLSMNUGADFA,
                       kind=wx.ITEM_NORMAL,
                       item='GA-Discriminant Function Analysis')
-        parent.Append(helpString='', id=wxID_PCMMNUTOOLSMNUGAPLSC,
+        parent.Append(helpString='', id=wxID_MTOOLSMNUGAPLSC,
                       kind=wx.ITEM_NORMAL,
                       item='GA-Partial Least Squares Calibration')
 
         self.Bind(wx.EVT_MENU, self.on_mnu_tools_expset,
-                  id=wxID_PCMMNUTOOLSEXPSET)
+                  id=wxID_MTOOLSEXPSET)
         self.Bind(wx.EVT_MENU, self.on_mnu_tools_preproc,
-                  id=wxID_PCMMNUTOOLSPREPROC)
+                  id=wxID_MTOOLSPREPROC)
         self.Bind(wx.EVT_MENU, self.on_mnu_tools_mnu_univariate,
                   id=wxID_PCMPLUNIVARIATE)
         self.Bind(wx.EVT_MENU, self.on_mnu_tools_mnu_pca,
-                  id=wxID_PCMMNUTOOLSMNUPCA)
+                  id=wxID_MTOOLSMNUPCA)
         self.Bind(wx.EVT_MENU, self.on_mnu_tools_mnu_cluster,
-                  id=wxID_PCMMNUTOOLSMNUCLUSTER)
+                  id=wxID_MTOOLSMNUCLUSTER)
         self.Bind(wx.EVT_MENU, self.on_mnu_tools_mnu_plsr,
-                  id=wxID_PCMMNUTOOLSMNUPLSR)
+                  id=wxID_MTOOLSMNUPLSR)
         self.Bind(wx.EVT_MENU, self.on_mnu_tools_mnu_dfa,
-                  id=wxID_PCMMNUTOOLSMNUDFA)
+                  id=wxID_MTOOLSMNUDFA)
         self.Bind(wx.EVT_MENU, self.on_mnu_tools_mnu_gadfa,
-                  id=wxID_PCMMNUTOOLSMNUGADFA)
+                  id=wxID_MTOOLSMNUGADFA)
         self.Bind(wx.EVT_MENU, self.on_mnu_tools_mnu_gaplsc,
-                  id=wxID_PCMMNUTOOLSMNUGAPLSC)
+                  id=wxID_MTOOLSMNUGAPLSC)
 
     def _init_coll_mnu_file(self, parent):
         # generated method, don't edit
 
-        parent.Append(helpString='', id=wxID_PCMMNUFILELOADEXP,
+        parent.Append(helpString='', id=wxID_MFILELOADEXP,
                       kind=wx.ITEM_NORMAL, item='Load Experiment')
-        parent.Append(helpString='', id=wxID_PCMMNUFILELOADWS,
+        parent.Append(helpString='', id=wxID_MFILELOADWS,
                       kind=wx.ITEM_NORMAL, item='Load Workspace')
-        parent.Append(helpString='', id=wxID_PCMMNUFILESAVEEXP,
+        parent.Append(helpString='', id=wxID_MFILESAVEEXP,
                       kind=wx.ITEM_NORMAL, item='Save Experiment As..')
-        parent.Append(helpString='', id=wxID_PCMMNUFILESAVEWS,
+        parent.Append(helpString='', id=wxID_MFILESAVEWS,
                       kind=wx.ITEM_NORMAL, item='Save Workspace As...')
-        parent.Append(helpString='', id=wxID_PCMMNUFILEFILEIMPORT,
+        parent.Append(helpString='', id=wxID_MFILEFILEIMPORT,
                       kind=wx.ITEM_NORMAL, item='Import')
-        parent.Append(helpString='', id=wxID_PCMMNUFILEAPPEXIT,
+        parent.Append(helpString='', id=wxID_MFILEAPPEXIT,
                       kind=wx.ITEM_NORMAL, item='Exit')
         self.Bind(wx.EVT_MENU, self.on_mnu_file_loadexp,
-                  id=wxID_PCMMNUFILELOADEXP)
+                  id=wxID_MFILELOADEXP)
         self.Bind(wx.EVT_MENU, self.on_mnu_file_loadws,
-                  id=wxID_PCMMNUFILELOADWS)
+                  id=wxID_MFILELOADWS)
         self.Bind(wx.EVT_MENU, self.on_mnu_file_saveexp,
-                  id=wxID_PCMMNUFILESAVEEXP)
+                  id=wxID_MFILESAVEEXP)
         self.Bind(wx.EVT_MENU, self.on_mnu_file_savews,
-                  id=wxID_PCMMNUFILESAVEWS)
+                  id=wxID_MFILESAVEWS)
         self.Bind(wx.EVT_MENU, self.on_mnu_file_fileimport,
-                  id=wxID_PCMMNUFILEFILEIMPORT)
+                  id=wxID_MFILEFILEIMPORT)
         self.Bind(wx.EVT_MENU, self.on_mnu_file_app_exit,
-                  id=wxID_PCMMNUFILEAPPEXIT)
+                  id=wxID_MFILEAPPEXIT)
 
     def _init_coll_mnu_main(self, parent):
         """"""
@@ -1052,9 +1047,9 @@ class PyChemMain(wx.Frame):
                     self.xml_load(tree, workSpace)
                     self.data['exppath'] = loadFile
                     mb = self.GetMenuBar()
-                    mb.Enable(wxID_PCMMNUFILESAVEEXP, True)
-                    mb.Enable(wxID_PCMMNUFILESAVEWS, True)
-                    mb.Enable(wxID_PCMMNUFILELOADWS, True)
+                    mb.Enable(wxID_MFILESAVEEXP, True)
+                    mb.Enable(wxID_MFILESAVEWS, True)
+                    mb.Enable(wxID_MFILELOADWS, True)
         finally:
             dlg.Destroy()
 
@@ -1098,9 +1093,9 @@ class PyChemMain(wx.Frame):
                     self.xml_save(self.data['exppath'], ws_name, 'new')
                     # activate workspace save menu option
                     mb = self.GetMenuBar()
-                    mb.Enable(wxID_PCMMNUFILESAVEEXP, True)
-                    mb.Enable(wxID_PCMMNUFILESAVEWS, True)
-                    mb.Enable(wxID_PCMMNUFILELOADWS, True)
+                    mb.Enable(wxID_MFILESAVEEXP, True)
+                    mb.Enable(wxID_MFILESAVEWS, True)
+                    mb.Enable(wxID_MFILELOADWS, True)
                     # show workspace dialog so that default can be edited
                     dlgws = WorkspaceDialog(self, self.data['exppath'],
                                             dtype='Save')
@@ -1226,9 +1221,9 @@ class PyChemMain(wx.Frame):
 
                 # allow for experiment save on file menu
                 mb = self.GetMenuBar()
-                mb.Enable(wxID_PCMMNUFILESAVEEXP, True)
-                mb.Enable(wxID_PCMMNUFILESAVEWS, False)
-                mb.Enable(wxID_PCMMNUFILELOADWS, False)
+                mb.Enable(wxID_MFILESAVEEXP, True)
+                mb.Enable(wxID_MFILESAVEWS, False)
+                mb.Enable(wxID_MFILELOADWS, False)
 
                 dlgConfirm = ImportConfirmDialog(self, data, rows, cols)
                 try:
@@ -1492,9 +1487,9 @@ class PyChemMain(wx.Frame):
 
             # disable options on file menu
             mb = self.GetMenuBar()
-            mb.Enable(wxID_PCMMNUFILESAVEEXP, False)
-            mb.Enable(wxID_PCMMNUFILESAVEWS, False)
-            mb.Enable(wxID_PCMMNUFILELOADWS, False)
+            mb.Enable(wxID_MFILESAVEEXP, False)
+            mb.Enable(wxID_MFILESAVEWS, False)
+            mb.Enable(wxID_MFILELOADWS, False)
         else:
             exec(
                 'self.data = {"raw":self.data["raw"],"proc":self.data["raw"],' +
@@ -1858,8 +1853,8 @@ class PyChemMain(wx.Frame):
                 tree.write(path)
 
                 # enable menu options
-                self.mnuMain.Enable(wxID_PCMMNUFILESAVEWS, True)
-                self.mnuMain.Enable(wxID_PCMMNUFILELOADWS, True)
+                self.mnuMain.Enable(wxID_MFILESAVEWS, True)
+                self.mnuMain.Enable(wxID_MFILELOADWS, True)
 
             except Exception as error:
                 msg = 'Unable to save under current name.\n\nCharacters ' + \
