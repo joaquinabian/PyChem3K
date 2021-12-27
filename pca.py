@@ -28,6 +28,7 @@ from wx.lib.plot.polyobjects import PolyLine, PlotGraphics
 # from wx.lib.plot.polyobjects import PolyMarker
 
 import mva.chemometrics as chemtrics
+# noinspection PyProtectedMember
 from mva.chemometrics import _index
 from plot import PolyEllipse
 from commons import error_box
@@ -125,6 +126,7 @@ def create_sym_col_select(canvas, output):
              str(nwin) + ', 0, border=0, flag=wx.EXPAND)')
     
     # set sizer and resize
+    # noinspection PyUnresolvedReferences
     canvas.tbMain.SymPopUpWin.SetSizer(canvas.tbMain.SymPopUpWin.grsSelect)
     resize = wx.Size(canvas.tbMain.SymPopUpWin.GetSize()[0], count * 35)
     canvas.tbMain.SymPopUpWin.SetSize(resize)
@@ -186,11 +188,13 @@ def box_plot(canvas, x, labels, **_attr):
         count += 1
          
     canvas.xSpec = 'auto'
-    # canvas.Draw(PlotGraphics(objects, _attr['title'], _attr['xLabel'],
+    # canvas.draw(PlotGraphics(objects, _attr['title'], _attr['xLabel'],
     #                               _attr['yLabel'], xTickLabels=uG))
-    canvas.Draw(PlotGraphics(objects, _attr['title'], _attr['xLabel'],
+    canvas.draw(PlotGraphics(objects, _attr['title'], _attr['xLabel'],
                              _attr['yLabel']))
-                
+
+
+# noinspection PyTypeChecker
 def plot_error_bar(canvas, **_attr):
     """Errorbar plot
             Defaults:                                               
@@ -212,12 +216,13 @@ def plot_error_bar(canvas, **_attr):
 
     # user defined
     if _attr['usesym']:
+        # noinspection PyUnusedLocal
         symbols = _attr['usesym']
     if _attr['usecol']:
         colours = _attr['usecol']
     
     objects = []
-    if _attr['lsfit'] is True:
+    if _attr['lsfit']:
         # show linear fit
         objects.append(PolyLine(np.array([[_attr['x'].min(), _attr['x'].min()],
                                 [_attr['x'].max(), _attr['x'].max()]]),
@@ -269,7 +274,7 @@ def plot_error_bar(canvas, **_attr):
     xAx = (atx.min() - (.05 * atx.max()), atx.max() + (.05 * atx.max()))
     yAx = (aty.min() - (.05 * aty.max()), aty.max() + (.05 * aty.max()))
    
-    canvas.Draw(PlotGraphics(objects, _attr['title'], _attr['xLabel'],
+    canvas.draw(PlotGraphics(objects, _attr['title'], _attr['xLabel'],
                              _attr['yLabel']), xAx, yAx)
     
 # noinspection PyUnresolvedReferences
@@ -293,15 +298,18 @@ def plot_pls_model(canvas, model='full', tbar=None, **_attr):
                 'col2'       = 1        - col for yaxis
     """
     typex = _attr['type']
+    cL = None
+    pRed = None
+    canvPref = None
 
     if model in ['full']:
         canvPref = 'plcPredPls'
         prnt = canvas.parent.parent
-        nBook = canvas.parent
     elif model == 'ga':
         canvPref = 'plcGaModelPlot'
         prnt = canvas.parent.parent.prnt.splitPrnt
-        nBook = canvas.parent
+
+    nBook = canvas.parent
 
     # Parece que Notebook no tiene 'SetTabSize' en phoenyx
     # if _attr['predictions'].shape[1] > 1:
@@ -334,12 +342,12 @@ def plot_pls_model(canvas, model='full', tbar=None, **_attr):
              "name='" + canvPref + sc1 + "', parent=nBook, " +
              "pos=wx.Point(0, 0), size=wx.Size(302, 246), " +
              "style=0, toolbar=tbar)")
-        exec("prnt." + canvPref + sc1 + ".fontSizeAxis = 8")
-        exec("prnt." + canvPref + sc1 + ".fontSizeTitle = 10")
-        exec("prnt." + canvPref + sc1 + ".enableZoom = True")
+        exec("prnt." + canvPref + sc1 + ".font_size_axis = 8")
+        exec("prnt." + canvPref + sc1 + ".font_size_title = 10")
+        exec("prnt." + canvPref + sc1 + ".enable_zoom = True")
         exec("prnt." + canvPref + sc1 + ".SetToolTip('')")
-        exec("prnt." + canvPref + sc1 + ".enableLegend = True")
-        exec("prnt." + canvPref + sc1 + ".fontSizeLegend = 8")
+        exec("prnt." + canvPref + sc1 + ".enable_legend = True")
+        exec("prnt." + canvPref + sc1 + ".font_size_legend = 8")
         exec("prnt." + canvPref + sc1 + ".SetAutoLayout(True)")
         exec("prnt." + canvPref + sc1 +
              ".SetConstraints(LayoutAnchors(prnt." + canvPref + sc1 +
@@ -418,7 +426,8 @@ def plot_pls_model(canvas, model='full', tbar=None, **_attr):
                                        colour='blue',
                                        marker='triangle', size=1.5,
                                        fillstyle=wx.BRUSHSTYLE_TRANSPARENT)
-                
+
+                # noinspection PyTypeChecker
                 LinearObj = PolyLine(np.array([[cL.min(), cL.min()],
                                               [cL.max(), cL.max()]]),
                                      legend='Linear fit', colour='cyan',
@@ -434,17 +443,17 @@ def plot_pls_model(canvas, model='full', tbar=None, **_attr):
                 xAx = (cL.min() - (0.05 * cL.max()), cL.max() + (0.05 * cL.max()))
                 
                 ys = np.concatenate((TrnPnts, ValPnts), 0)
-                
+                # noinspection PyArgumentList
                 yAx = (ys.min() - (0.05 * ys.max()), ys.max() + (0.05 * ys.max()))
             
-                ncanv.Draw(PlsModel, xAx, yAx)
+                ncanv.draw(PlsModel, xAx, yAx)
 
     nBook.SetSelection(0)
     exec("canvas = prnt." + canvPref + str(1))
     
     return canvas
               
-def plotLine(plotCanvas, plotArr, **_attr):
+def plot_line(plotCanvas, plotArr, **_attr):
     """Line plot
         **_attr - key word _attributes
             Defaults:
@@ -457,10 +466,9 @@ def plotLine(plotCanvas, plotArr, **_attr):
                 'ledge'= [],       - Figure legend labels
                 'wdth'= 1,         - Line width
     """
-    
-    colourList = [wx.Colour('blue'), wx.Colour('red'),
-                  wx.Colour('green'), wx.Colour('light_grey'),
-                  wx.Colour('cyan'), wx.Colour('black')]
+
+    colourList = ['blue', 'red', 'green', 'light_grey', 'cyan', 'black']
+    NewplotLine = None
     
     if _attr['type'] == 'single':
         pA = plotArr[_attr['rownum'], 0:len(_attr['xaxis'])][:, nax]
@@ -492,8 +500,7 @@ def plotLine(plotCanvas, plotArr, **_attr):
         NewplotLine = PlotGraphics(Line, _attr['tit'],
                                    _attr['xLabel'], _attr['yLabel'])
     
-    plotCanvas.Draw(NewplotLine)    # , xAxis=(_attr['xaxis'].min(),
-                                    # _attr['xaxis'].max()))
+    plotCanvas.draw(NewplotLine)    # , xAxis=(_attr['xaxis'].min(), _attr['xaxis'].max()))
         
 def plot_stem(plotCanvas, plotArr, **_attr):
     """Stem plot
@@ -511,7 +518,7 @@ def plot_stem(plotCanvas, plotArr, **_attr):
         newCoords = np.array([[plotArr[i, 0], 0], [plotArr[i, 0], plotArr[i, 1]]])
         plotStem.append(PolyLine(newCoords, colour='black',
                                  width=_attr['wdth'], style=wx.PENSTYLE_SOLID))
-    
+    # noinspection PyTypeChecker
     plotStem.append(PolyLine(
         np.array([[plotArr[0, 0] - (.1 * plotArr[0, 0]), 0],
                   [plotArr[len(plotArr) - 1, 0] + (.1 * plotArr[0, 0]), 0]]),
@@ -521,7 +528,7 @@ def plot_stem(plotCanvas, plotArr, **_attr):
     plotStem = PlotGraphics(plotStem, _attr['tit'],
                             _attr['xLabel'], _attr['yLabel'])
     
-    plotCanvas.Draw(plotStem)
+    plotCanvas.draw(plotStem)
 
 def plot_symbols(plotCanvas, coords, **_attr):
     """Symbol plot
@@ -546,8 +553,7 @@ def plot_symbols(plotCanvas, coords, **_attr):
     desCl = np.unique(_attr['text'])
     eCount = 0
     if not _attr['usecol']:
-        colours = [wx.Colour('blue'), wx.Colour('red'), wx.Colour('green'),
-                   wx.Colour('cyan'), wx.Colour('black')]
+        colours = ['blue', 'red', 'green', 'cyan', 'black']
     else:
         colours = _attr['usecol']
     
@@ -630,7 +636,7 @@ def plot_symbols(plotCanvas, coords, **_attr):
                                 xLabel=_attr['xL'], yLabel=_attr['yL'])
     
     if plotCanvas is not None:
-        plotCanvas.Draw(draw_plotSym)
+        plotCanvas.draw(draw_plotSym)
     
     return plotSym, output
 
@@ -697,14 +703,14 @@ def plot_text(plotCanvas, coords, **_attr):
             else:
                 msk = np.array(_attr['mask'])
                 txt = np.array(_attr['text'])
-                for each in range(3):
-                    msk_lst = msk[txt == each].tolist()
-                    msk_idx = _index(msk_lst, each)
+                for each2 in range(3):
+                    msk_lst = msk[txt == each2].tolist()
+                    msk_idx = _index(msk_lst, each2)
                     plotText.append(
                         PolyMarker(np.take(pointSub, msk_idx, 0),
                                    marker='text',
                                    legend=np.take(lbls, msk_idx.tolist(),
-                                   colour=colours[each])))
+                                   colour=colours[each2])))
                 
     if (coords.shape[1] > 1) & (_attr['col1'] != _attr['col2']):
         draw_plot_text = PlotGraphics(plotText, _attr['tit'],
@@ -714,7 +720,7 @@ def plot_text(plotCanvas, coords, **_attr):
                                       xLabel='', yLabel=_attr['yL'])
     print('plotText ', plotText)
     if plotCanvas is not None:
-        plotCanvas.Draw(draw_plot_text)
+        plotCanvas.draw(draw_plot_text)
     
     return plotText
 
@@ -732,7 +738,8 @@ def plot_loads(canvas, loads, **_attr):
                 'usecol'= [],   - List of colours for symbol plot
                 'usesym'= [],   - List of symbols for plotting
     """
-    
+    i = 0
+
     # for model loadings plots
     plot = []
     
@@ -795,6 +802,7 @@ def plot_loads(canvas, loads, **_attr):
                 getOutliers = np.take(select, outIdx, 0)
                 
                 # identify regions
+                # noinspection PyUnusedLocal
                 newxvar = np.take(_attr['xaxis'], outIdx)
                 regions = [outIdx[0]]
                 for i in range(len(outIdx) - 1 ):
@@ -846,7 +854,7 @@ def plot_loads(canvas, loads, **_attr):
                                     style=wx.PENSTYLE_SOLID))
         
         # draw it
-        canvas.Draw(PlotGraphics(plot, _attr['title'], _attr['xLabel'],
+        canvas.draw(PlotGraphics(plot, _attr['title'], _attr['xLabel'],
                                  _attr['yLabel']))
         
         
@@ -962,7 +970,7 @@ def plot_scores(canvas, scores, **_attr):
                 for each in centPlot:
                     plot.append(each)
         
-        canvas.Draw(PlotGraphics(plot, _attr['title'],
+        canvas.draw(PlotGraphics(plot, _attr['title'],
                                  _attr['xLabel'], _attr['yLabel']))
         
     else:
@@ -975,9 +983,11 @@ def plot_scores(canvas, scores, **_attr):
                                  tit=_attr['title'], xL='Arbitrary',
                                  yL=_attr['yLabel'], usemask=_attr['xval'])
             # each are PolyMarkers
+
             for each in textPlot:
                 print('each legend', each.getLegend())
                 print('each tp labels attributes:', each.attributes['labels'])
+                # noinspection PyProtectedMember
                 print('each tp labels _attributes:', each._attributes['labels'])
                 # print('each tp labels _attr:', each._attr['labels'])
                 plot.append(each)
@@ -999,25 +1009,28 @@ def plot_scores(canvas, scores, **_attr):
                                         
             for each in sym_plot:
                 print('each sp labels attributes:', each, each.attributes['labels'])
+                # noinspection PyProtectedMember
                 print('each sp labels _attributes:', each._attributes['labels'])
                 plot.append(each)
         
         if _attr['text'] or _attr['symb']:
             graphic = PlotGraphics(plot, _attr['title'], '', _attr['yLabel'])
             print('legen names: ', graphic.getLegendNames())
-            canvas.Draw(graphic)
+            canvas.draw(graphic)
     
               
 class SymColSelectTool(wx.Dialog):
     def __init__(self, parent):
         wx.Dialog.__init__(self, parent=parent, style=0)
+
+        self.parent = parent
         self.SetSize(wx.Size(300, 0))
         self.SetAutoLayout(True)
-        self.parent = parent
-        
+
     def on_btn_close(self, _):
         self.Show(False)
-    
+
+    # noinspection PyUnresolvedReferences
     def on_btn_apply(self, _):
         # get list of new colours
         collist = []
@@ -1152,9 +1165,15 @@ class MyPlotCanvas(wlpc.PlotCanvas):
 
         wlpc.PlotCanvas._interEnabled = False
         wlpc.PlotCanvas._justDragged = False
+        self._interEnabled = False
 
         self.xSpec = 'min'
         self.ySpec = 'min'
+
+        self.minXrange = 0
+        self.maxXrange = 0
+        self.minYrange = 0
+        self.maxYrange = 0
 
         self.Bind(wx.EVT_RIGHT_DOWN, self.OnMouseRightDown)
         self.Bind(wx.EVT_LEFT_DOWN, self.OnMouseLeftDown)
@@ -1228,6 +1247,7 @@ class MyPlotCanvas(wlpc.PlotCanvas):
         getPoints = self.last_draw[0].objects
         coords = []
         for each in getPoints:
+            # noinspection PyProtectedMember
             coords.extend(each._points.tolist())
         
         data = np.array2string(coords, separator='\t')
@@ -1317,7 +1337,7 @@ class MyPlotCanvas(wlpc.PlotCanvas):
             
         if len(self.GetName().split('plcGaModelPlot')) > 1:
             # ga-dfa score plots
-            if self.prnt.prnt.prnt.splitPrnt.dtype in ['DFA']:
+            if self.parent.prnt.prnt.splitPrnt.dtype in ['DFA']:
                 self.tbMain.tbConf.Enable(True)
                 self.tbMain.tbPoints.Enable(True)
                 self.tbMain.tbSymbols.Enable(True)
@@ -1339,14 +1359,14 @@ class MyPlotCanvas(wlpc.PlotCanvas):
             self.tbMain.tbLoadLabStd2.Enable(False)
             self.tbMain.tbLoadSymStd2.Enable(False)
 
-    def enableDrag(self, value):
+    def enable_drag(self, value):
         """Set True to enable drag."""
         if value not in [True, False]:
             raise TypeError("Value should be True or False")
         if value:
             if self.GetEnableZoom():
                 self.enableZoom = False
-            if self.GetEnableInteractive():
+            if self.get_enable_interactive():
                 self.enable_interactive(False)
             self.SetCursor(self.HandCursor)
         else:
@@ -1361,13 +1381,13 @@ class MyPlotCanvas(wlpc.PlotCanvas):
             if self.GetEnableZoom():
                 self.enableZoom = False
             if self.GetEnableDrag():
-                self.enableDrag(False)
+                self.enable_drag(False)
             self.SetCursor(wx.Cursor(wx.CURSOR_PENCIL))
         else:
             self.SetCursor(wx.CROSS_CURSOR)
         self._interEnabled = value
 
-    def GetEnableInteractive(self):
+    def get_enable_interactive(self):
         return self._interEnabled
         
 
@@ -1457,7 +1477,7 @@ class Pca(wx.Panel):
         
         self.SetSizer(self.bxsPca1)
 
-    def Reset(self):
+    def reset(self):
         self.titleBar.spnNumPcs1.Enable(0)
         self.titleBar.spnNumPcs2.Enable(0)
         self.titleBar.spnNumPcs1.SetValue(1)
@@ -1469,11 +1489,12 @@ class Pca(wx.Panel):
                    'plcPCAscore': ['PCA Scores', 't[1]', 't[2]'],
                    'plcPcaLoadsV': ['PCA Loading', 'w[1]', 'w[2]']}
 
+        # noinspection PyUnusedLocal, PyTypeChecker
         curve = PolyLine([[0, 0], [1, 1]], colour='white', width=1,
                          style=wx.PENSTYLE_TRANSPARENT)
         
         for each in objects.keys():
-            exec('self.' + each + '.Draw(PlotGraphics([curve], ' +
+            exec('self.' + each + '.draw(PlotGraphics([curve], ' +
                  'objects["' + each + '"][0], ' + 'objects["' + each +
                  '"][1], ' + 'objects["' + each + '"][2]))')
 
@@ -1488,6 +1509,7 @@ class TitleBar(bp.ButtonPanel):
 
         _, _, _, _ = id_, text, style, alignment
 
+        self.data = None
         self.parent = parent
         self._init_btnpanel_ctrls()
         self.create_buttons()
@@ -1627,7 +1649,7 @@ class TitleBar(bp.ButtonPanel):
             dlg.Destroy()
         
     def on_cbx_pca_type(self, _):
-        if self.cbxPcaType.GetValue() == 1:
+        if self.cbxPcaType.GetSelection() == 1:
             self.spnPCAnum.Enable(0)
         else:
             self.spnPCAnum.Enable(1)
@@ -1636,7 +1658,11 @@ class TitleBar(bp.ButtonPanel):
         self.data = data
     
     def run_pca(self):
-        # Run principal component analysis
+        """Run principal component analysis
+
+        """
+        xdata = None
+
         try:
             self.spnNumPcs1.Enable(1)
             self.spnNumPcs2.Enable(1)
@@ -1729,24 +1755,24 @@ class TitleBar(bp.ButtonPanel):
                        usecol=[], usesym=[])
         else:
             idx = pc1-1
-            plotLine(self.parent.plcPcaLoadsV,
-                     self.data['pcloads'],
-                     xaxis=self.data['xaxis'], rownum=idx, tit='PCA Loadings',
-                     type='single', xLabel='Variable',
-                     yLabel='w['+str(idx+1)+']', wdth=1, ledge=[])
+            plot_line(self.parent.plcPcaLoadsV,
+                      self.data['pcloads'],
+                      xaxis=self.data['xaxis'], rownum=idx, tit='PCA Loadings',
+                      type='single', xLabel='Variable',
+                      yLabel='w['+str(idx+1)+']', wdth=1, ledge=[])
                     
         # Plot % variance
-        plotLine(self.parent.plcPCvar, np.transpose(self.data['pcpervar']),
-                 xaxis=np.arange(0, len(self.data['pcpervar']))[:, nax],
-                 rownum=0, tit='Percentage Explained Variance', type='single',
-                 xLabel='Principal Component', yLabel='Cumulative % Variance',
-                 wdth=3, ledge=[])
+        plot_line(self.parent.plcPCvar, np.transpose(self.data['pcpervar']),
+                  xaxis=np.arange(0, len(self.data['pcpervar']))[:, nax],
+                  rownum=0, tit='Percentage Explained Variance', type='single',
+                  xLabel='Principal Component', yLabel='Cumulative % Variance',
+                  wdth=3, ledge=[])
         
         # Plot eigenvalues
-        plotLine(self.parent.plcPCeigs, np.transpose(self.data['pceigs']),
-                 xaxis=np.arange(1, len(self.data['pceigs']) + 1)[:, nax],
-                 rownum=0, tit='Eigenvalues', xLabel='Principal Component',
-                 yLabel='Eigenvalue', wdth=3, type='single', ledge=[])
+        plot_line(self.parent.plcPCeigs, np.transpose(self.data['pceigs']),
+                  xaxis=np.arange(1, len(self.data['pceigs']) + 1)[:, nax],
+                  rownum=0, tit='Eigenvalues', xLabel='Principal Component',
+                  yLabel='Eigenvalue', wdth=3, type='single', ledge=[])
         
         # make sure ctrls enabled
         self.spnNumPcs1.Enable(True)
@@ -1787,10 +1813,10 @@ class PlotProperties(wx.Dialog):
         self.graph = parent.last_draw[0]
         self.canvas = parent
 
-        self.minXrange = parent.GetXCurrentRange()[0]
-        self.maxXrange = parent.GetXCurrentRange()[1]
-        self.minYrange = parent.GetYCurrentRange()[0]
-        self.maxYrange = parent.GetYCurrentRange()[1]
+        self.minXrange = parent.get_x_current_range()[0]
+        self.maxXrange = parent.get_x_current_range()[1]
+        self.minYrange = parent.get_y_current_range()[0]
+        self.maxYrange = parent.get_y_current_range()[1]
 
         self.Increment = (self.maxXrange - self.minXrange) / 100
 
@@ -1799,20 +1825,20 @@ class PlotProperties(wx.Dialog):
         self.txtYmin.SetValue('%.3f' % self.minYrange)
         self.txtYmax.SetValue('%.3f' % self.maxYrange)
 
-        self.txtTitle.SetValue(self.graph.getTitle())
-        self.txtXlabel.SetValue(self.graph.getXLabel())
-        self.txtYlabel.SetValue(self.graph.getYLabel())
+        self.txtTitle.SetValue(self.graph.get_title())
+        self.txtXlabel.SetValue(self.graph.get_xlabel())
+        self.txtYlabel.SetValue(self.graph.get_ylabel())
 
-        self.spnFontSizeAxes.SetValue(parent.GetFontSizeAxis())
-        self.spnFontSizeTitle.SetValue(parent.GetFontSizeTitle())
+        self.spnFontSizeAxes.SetValue(parent.get_font_size_axis())
+        self.spnFontSizeTitle.SetValue(parent.get_font_size_title())
 
-        if self.canvas.GetEnableGrid():
+        if self.canvas.get_enable_grid():
             self.tbGrid.SetValue(1)
-        if self.canvas.GetEnableZoom():
+        if self.canvas.get_enable_zoom():
             self.tbZoom.SetValue(1)
-        if self.canvas.GetEnableDrag():
+        if self.canvas.get_enable_drag():
             self.tbDrag.SetValue(1)
-        if self.canvas.GetEnablePointLabel():
+        if self.canvas.get_enable_point_label():
             self.tbPointLabel.SetValue(1)
 
     def _init_grs_df_scores(self):
@@ -2104,7 +2130,7 @@ class PlotProperties(wx.Dialog):
         self.tbPointLabel.SetToolTip('')
         self.tbPointLabel.Bind(wx.EVT_BUTTON, self.on_tb_point_label)
         
-        self.tbZoom = wxTogBut(id=-1, label='Zoom', name='tbZoom',
+        self.tbZoom = wxTogBut(id=-1, label='zoom', name='tbZoom',
                                parent=self.genPnl, pos=wx.Point(248, 48),
                                size=wx.Size(40, 21), style=0)
         self.tbZoom.SetValue(True)
@@ -2372,32 +2398,32 @@ class PlotProperties(wx.Dialog):
     #     if self.cbApply.GetValue() is True:
     #         self.canvas.SetFont(self.font)
     #         self.canvas.SetForegroundColour(self.colour)
-    #         self.canvas.Redraw()
+    #         self.canvas.redraw()
     
     def on_txt_title(self, _):
         if self.cbApply.GetValue() is True:
-            self.graph.setTitle(self.txtTitle.GetValue())
-            self.canvas.Redraw()
+            self.graph.set_title(self.txtTitle.GetValue())
+            self.canvas.redraw()
             
     def on_tb_grid(self, _):
-        self.canvas.enableGrid(self.tbGrid.GetValue())
+        self.canvas.enable_grid(self.tbGrid.GetValue())
     
     def on_tb_drag_button(self, _):
-        self.canvas.enableDrag(self.tbDrag.GetValue())
+        self.canvas.enable_drag(self.tbDrag.GetValue())
     
     def on_tb_point_label(self, _):
-        self.canvas.enablePointLabel(self.tbPointLabel.GetValue())
+        self.canvas.enable_point_label(self.tbPointLabel.GetValue())
     
     def on_tb_zoom_button(self, _):
-        self.canvas.enableZoom(self.tbZoom.GetValue())
+        self.canvas.enable_zoom(self.tbZoom.GetValue())
         
     def on_btn_apply(self, _):
-        self.canvas.fontSizeAxis = self.spnFontSizeAxes.GetValue()
-        self.canvas.fontSizeTitle = self.spnFontSizeTitle.GetValue()
+        self.canvas.font_size_axis = self.spnFontSizeAxes.GetValue()
+        self.canvas.font_size_title = self.spnFontSizeTitle.GetValue()
         
-        self.graph.setTitle(self.txtTitle.GetValue())
-        self.graph.setXLabel(self.txtXlabel.GetValue())
-        self.graph.setYLabel(self.txtYlabel.GetValue())
+        self.graph.set_title(self.txtTitle.GetValue())
+        self.graph.set_xlabel(self.txtXlabel.GetValue())
+        self.graph.set_ylabel(self.txtYlabel.GetValue())
         
         xmin = float(self.txtXmin.GetValue())
         xmax = float(self.txtXmax.GetValue())
@@ -2408,18 +2434,18 @@ class PlotProperties(wx.Dialog):
             self.canvas.last_draw = [self.canvas.last_draw[0],
                                      np.array([xmin, xmax]),
                                      np.array([ymin, ymax])]
-        self.canvas.Redraw()
+        self.canvas.redraw()
         self.Close()
     
     def on_spn_font_size_axes(self, _):
         if self.cbApply.GetValue() is True:
-            self.canvas.fontSizeAxis = self.spnFontSizeAxes.GetValue()
-            self.canvas.Redraw()
+            self.canvas.font_size_axis = self.spnFontSizeAxes.GetValue()
+            self.canvas.redraw()
         
     def on_spn_font_size_title(self, _):
         if self.cbApply.GetValue() is True:
-            self.canvas.fontSizeTitle = self.spnFontSizeTitle.GetValue()
-            self.canvas.Redraw()
+            self.canvas.font_size_title = self.spnFontSizeTitle.GetValue()
+            self.canvas.redraw()
     
     def resize_axes(self):
         xmin = float(self.txtXmin.GetValue())
@@ -2431,7 +2457,7 @@ class PlotProperties(wx.Dialog):
             self.canvas.last_draw = [self.canvas.last_draw[0],
                                      np.array([xmin, xmax]),
                                      np.array([ymin, ymax])]
-        self.canvas.Redraw()
+        self.canvas.redraw()
     
     def on_spn_xmin(self, _):
         self.resize_axes()
@@ -2488,5 +2514,7 @@ class PlotProperties(wx.Dialog):
 
 if __name__ == '__main__':
     app = wx.App()
+    # This needs parameters to work
+    # noinspection PyTypeChecker
     props = PlotProperties(None)
     app.MainLoop()

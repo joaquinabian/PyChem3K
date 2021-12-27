@@ -23,7 +23,7 @@ from wx.lib.plot import PolyMarker
 from wx.lib.stattext import GenStaticText
 
 import mva.chemometrics as chemtrics
-from pca import plotLine
+from pca import plot_line
 from pca import plot_loads
 from pca import MyPlotCanvas
 from pca import plot_pls_model
@@ -230,7 +230,7 @@ class Plsr(wx.Panel):
                          colour='white', width=1, style=wx.PENSTYLE_TRANSPARENT)
         
         for each in objects.keys():
-            exec('self.' + each + '.Draw(PlotGraphics([curve], ' +
+            exec('self.' + each + '.draw(PlotGraphics([curve], ' +
                  'objects["' + each + '"][0], ' +
                  'objects["' + each + '"][1], ' +
                  'objects["' + each + '"][2]))')
@@ -455,13 +455,13 @@ class TitleBar(bp.ButtonPanel):
             self.data['partial_pred'] = np.transpose(pls_output['b'])
 
             # plot pls error
-            plotLine(self.parent.plcPLSerror,
-                     np.concatenate((np.array(self.data['rmsec'])[nax, :],
+            plot_line(self.parent.plcPLSerror,
+                      np.concatenate((np.array(self.data['rmsec'])[nax, :],
                                      np.array(self.data['rmsepc'])[nax, :]), 0),
-                     xaxis=np.arange(1, len(self.data['rmsec'])+1)[:, nax],
-                     rownum=0, tit='Root Mean Squared Error',
-                     xLabel='Latent variable', yLabel='RMS Error', type='multi',
-                     ledge=['Trn Err', 'Tst Err'], wdth=3)
+                      xaxis=np.arange(1, len(self.data['rmsec'])+1)[:, nax],
+                      rownum=0, tit='Root Mean Squared Error',
+                      xLabel='Latent variable', yLabel='RMS Error', type='multi',
+                      ledge=['Trn Err', 'Tst Err'], wdth=3)
             
             # plot predicted vs. residuals for train and validation
             trnPlot, valPlot = np.zeros((1, 2)), np.zeros((1, 2))
@@ -506,7 +506,7 @@ class TitleBar(bp.ButtonPanel):
                                          'Residuals v. Predicted Values',
                                          'Predicted', 'Residuals')
             
-            self.parent.plcPlsHetero.Draw(PlsHeteroPlot)
+            self.parent.plcPlsHetero.draw(PlsHeteroPlot)
             
             # Set max fac for loadings plot
             self.spnPLSfactor1.Enable(1)
@@ -532,7 +532,7 @@ class TitleBar(bp.ButtonPanel):
                 usecol=[], usesym=[], errplot=False,
                 plScL=self.data['pls_class'])
             
-            # Draw PLS loadings
+            # draw PLS loadings
             self.plot_pls_loads()
             
             # for pls export
@@ -657,7 +657,7 @@ class TitleBar(bp.ButtonPanel):
                                     
         write = PlotGraphics(write)
         
-        writeto.Draw(write)
+        writeto.draw(write)
         
     def plot_pls_loads(self):
         # Plot loadings
@@ -673,11 +673,11 @@ class TitleBar(bp.ButtonPanel):
                        usecol=[], usesym=[])
         else:
             idx = self.spnPLSfactor1.GetValue()-1
-            plotLine(self.parent.plcPLSloading,
-                     np.transpose(self.data['plsloads']),
-                     xaxis=self.data['xaxis'], tit='PLS Loadings', rownum=idx,
-                     type='single', xLabel='Variable',
-                     yLabel='w*c[' + str(idx+1) + ']', wdth=1, ledge=[])
+            plot_line(self.parent.plcPLSloading,
+                      np.transpose(self.data['plsloads']),
+                      xaxis=self.data['xaxis'], tit='PLS Loadings', rownum=idx,
+                      type='single', xLabel='Variable',
+                      yLabel='w*c[' + str(idx+1) + ']', wdth=1, ledge=[])
         
     def plot_pls_scores(self):
         """Plot scores for pls-da.

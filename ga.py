@@ -30,7 +30,7 @@ import mva.genetic as genic
 import mva.fitfun
 import mva.process
 
-from pca import plotLine
+from pca import plot_line
 from pca import plot_scores
 from pca import plot_loads
 from pca import MyPlotCanvas
@@ -252,7 +252,7 @@ class Ga(wx.Panel):
                          style=wx.PENSTYLE_TRANSPARENT)
         
         for each in objects.keys():
-            exec('self.' + each + '.Draw(PlotGraphics([curve], ' +
+            exec('self.' + each + '.draw(PlotGraphics([curve], ' +
                  'objects["' + each + '"][0], ' +
                  'objects["' + each + '"][1], ' +
                  'objects["' + each + '"][2]))')
@@ -1332,7 +1332,7 @@ class SelParam(fpb.FoldPanelBar):
         xAx = (min(self.tbar.data['xaxisfull']),
                max(self.tbar.data['xaxisfull']))
         yAx = (0, max(var_freq[:, 1])*1.1)
-        self.parent.splitPrnt.plc_ga_freq_plot.Draw(DfaPlotFreq, xAxis=xAx, yAxis=yAx)
+        self.parent.splitPrnt.plc_ga_freq_plot.draw(DfaPlotFreq, xAxis=xAx, yAxis=yAx)
         
         # plot variables
         alist = []
@@ -1349,13 +1349,13 @@ class SelParam(fpb.FoldPanelBar):
         # plot ga optimisation curve
         noGens = self.count_for_opt_curve(self.curves[chromId])
         # noinspection PyUnusedLocal
-        gaPlotOptLine = plotLine(self.parent.splitPrnt.plcGaOptPlot,
-                                 np.reshape(self.curves[chromId, 0:noGens], (1, noGens)),
-                                 xaxis=np.arange(1, noGens+1)[:, nax], rownum=0,
-                                 tit='GA Optimisation Curve',
-                                 xLabel='Generation',
-                                 yLabel='Objective function score', wdth=3,
-                                 dtype='single', ledge=[])
+        gaPlotOptLine = plot_line(self.parent.splitPrnt.plcGaOptPlot,
+                                  np.reshape(self.curves[chromId, 0:noGens], (1, noGens)),
+                                  xaxis=np.arange(1, noGens+1)[:, nax], rownum=0,
+                                  tit='GA Optimisation Curve',
+                                  xLabel='Generation',
+                                  yLabel='Objective function score', wdth=3,
+                                  dtype='single', ledge=[])
         
         # plot loadings
         self.tbar.data['gacurrentchrom'] = currentChrom
@@ -1367,17 +1367,17 @@ class SelParam(fpb.FoldPanelBar):
         
         # plot eigenvalues
         if ga_error.shape[0] == 1:
-            plotLine(self.parent.splitPrnt.plc_ga_eigs, ga_error,
-                     xaxis=np.arange(1, ga_error.shape[1]+1)[:, nax],
-                     rownum=0, xLabel='Discriminant Function', tit='',
-                     yLabel='Eigenvalues', wdth=3, dtype='single',
-                     ledge=[])
+            plot_line(self.parent.splitPrnt.plc_ga_eigs, ga_error,
+                      xaxis=np.arange(1, ga_error.shape[1]+1)[:, nax],
+                      rownum=0, xLabel='Discriminant Function', tit='',
+                      yLabel='Eigenvalues', wdth=3, dtype='single',
+                      ledge=[])
         else:
-            plotLine(self.parent.splitPrnt.plc_ga_eigs, ga_error,
-                     xaxis=np.arange(1, ga_error.shape[1]+1)[:, nax],
-                     xLabel='Latent Variable', tit='',
-                     yLabel='RMS Error', dtype='multi',
-                     ledge=['Train err', 'Test err'], wdth=3)
+            plot_line(self.parent.splitPrnt.plc_ga_eigs, ga_error,
+                      xaxis=np.arange(1, ga_error.shape[1]+1)[:, nax],
+                      xLabel='Latent Variable', tit='',
+                      yLabel='RMS Error', dtype='multi',
+                      ledge=['Train err', 'Test err'], wdth=3)
             
             self.parent.splitPrnt.nbGaModPlot.SetPageText(1, 'RMS Error')
         
@@ -1436,7 +1436,7 @@ class SelParam(fpb.FoldPanelBar):
                                         'Fitness')
             Xax = (ga_var_from-0.25, ga_var_to+0.25)
             Yax = (MinVarErr, MaxVarErr)
-            self.parent.splitPrnt.plcGaGrpDistPlot.Draw(gaPlotVarErr, xAxis=Xax, yAxis=Yax)
+            self.parent.splitPrnt.plcGaGrpDistPlot.draw(gaPlotVarErr, xAxis=Xax, yAxis=Yax)
             
             # Enable ctrls
             self.tbar.spnGaScoreFrom.Enable(1)
@@ -1512,6 +1512,6 @@ class SelParam(fpb.FoldPanelBar):
         else:
             # plot loadings as line
             xAx = np.take(self.tbar.data['xaxis'], chrom)[:, nax]
-            plotLine(canvas, np.transpose(plotVals), xaxis=xAx, tit='', rownum=col1,
-                     xLabel='Variable', yLabel='w[' + str(self.tbar.spnGaScoreTo.GetValue()) + ']',
-                     wdth=1, ledge=[], dtype='single')
+            plot_line(canvas, np.transpose(plotVals), xaxis=xAx, tit='', rownum=col1,
+                      xLabel='Variable', yLabel='w[' + str(self.tbar.spnGaScoreTo.GetValue()) + ']',
+                      wdth=1, ledge=[], dtype='single')

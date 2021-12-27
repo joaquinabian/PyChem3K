@@ -10,33 +10,26 @@
 # Licence:     GNU General Public Licence
 # -----------------------------------------------------------------------------
 
+import os
+import copy
+import numpy as np
+from numpy import newaxis as nax
 
 import wx
-# import wx.combo
 from wx.lib.plot import PolyLine, PlotGraphics
 from wx.lib.buttons import GenBitmapToggleButton as ToggleBtn
 import wx.lib.agw.buttonpanel as bp
-# import wx.lib.agw.foldpanelbar as fpb
-# import wx.lib.agw.customtreectrl as ctc
-
 from wx.lib.anchors import LayoutAnchors
 
-import scipy as sp
-import string
-import os
-import copy
-import mva.process
-import numpy as np
-from numpy import newaxis as nax
 from pca import MyPlotCanvas
-from pca import plotLine
-from commons import error_box
+from pca import plot_line
+# from commons import error_box
 
 [IDPLOTSPEC, ID_ADDPROCESSMETHOD, ID_PPTYPE, ID_PPMETHOD, ID_VALSLIDE
-] = [wx.NewId() for _init_ctrls in range(5)]
+ ] = [wx.NewId() for _init_ctrls in range(5)]
 
 
-def GridRowDel(grid, data):
+def grid_row_del(grid, data):
     # delete user defined variable row from grdIndLabels
     try:
         row = grid.GetSelectedRows()[0]
@@ -63,14 +56,21 @@ def GridRowDel(grid, data):
                 ncount += 1
         else:
             pass
-    except:
-        pass
+    except Exception:
+        raise
+        # pass
 
 class PeakCalculations(wx.Dialog):
     """"""
     def __init__(self, parent, xlim, data, canvas):
-        self._init_pc_ctrls(parent)
+        wx.Dialog.__init__(self, id=-1, name='', parent=parent,
+                           pos=(471, 248), size=(264, 165),
+                           style=wx.DEFAULT_DIALOG_STYLE |
+                           wx.RESIZE_BORDER | wx.CAPTION | wx.MAXIMIZE_BOX,
+                           title='Peak Calculations')
 
+        self._init_pc_ctrls()
+        self._init_pc_sizers()
         self._xlim = xlim
         self._data = data
         self._canvas = canvas
@@ -93,77 +93,80 @@ class PeakCalculations(wx.Dialog):
         parent.Add(self.btnCalculate, 0, border=0, flag=wx.EXPAND)
         parent.Add(self.btnCancel, 0, border=0, flag=wx.EXPAND)
 
-    def _init_pc_ctrls(self, prnt):
+    def _init_pc_ctrls(self):
         # generated method, don't edit
-        wx.Dialog.__init__(self, id=-1, name='', parent=prnt,
-                           pos=wx.Point(471, 248), size=wx.Size(264, 165),
-                           style=wx.DIALOG_MODAL | wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER | wx.CAPTION | wx.MAXIMIZE_BOX,
-                           title='Peak Calculations')
-        self.SetClientSize(wx.Size(258, 133))
+
+        self.SetClientSize((258, 133))
         self.Center(wx.BOTH)
 
         bmp = wx.Bitmap(os.path.join('bmp', 'peakimax.png'))
         self.btnIntensity = ToggleBtn(bitmap=bmp, id=-1, name='btnIntensity',
-                                      parent=self, pos=wx.Point(0, 0),
-                                      size=wx.Size(128, 31), style=0)
+                                      parent=self, pos=(0, 0),
+                                      size=(128, 31), style=0)
         self.btnIntensity.SetToggle(True)
         self.btnIntensity.SetLabel('')
         self.btnIntensity.SetToolTip('Calculate the maximum intensity in the selected region')
 
         bmp = wx.Bitmap(os.path.join('bmp', 'peakareaaxis.png'))
         self.btnAreaAxis = ToggleBtn(bitmap=bmp, id=-1, name='btnAreaAxis',
-                                     parent=self, pos=wx.Point(130, 0),
-                                     size=wx.Size(128, 31), style=0)
+                                     parent=self, pos=(130, 0),
+                                     size=(128, 31), style=0)
         self.btnAreaAxis.SetToggle(True)
         self.btnAreaAxis.SetLabel('')
         self.btnAreaAxis.SetToolTip('Calculate the total area to the axis')
-
-        self.btnAreaBaseline = ToggleBtn(bitmap=wx.Bitmap(os.path.join('bmp', 'peakareabase.png')),
-              id=-1, name='btnAreaBaseline', parent=self, pos=wx.Point(0, 33), 
-              size=wx.Size(128, 31), style=0)
+        
+        bmp = wx.Bitmap(os.path.join('bmp', 'peakareabase.png'))
+        self.btnAreaBaseline = ToggleBtn(bitmap=bmp, id=-1,
+                                         name='btnAreaBaseline', parent=self, 
+                                         pos=(0, 33),
+                                         size=(128, 31), style=0)
         self.btnAreaBaseline.SetToggle(True)
         self.btnAreaBaseline.SetLabel('')
         self.btnAreaBaseline.SetToolTip('Calculate the total area to the baseline')
-
-        self.btnAreaFitAxis = ToggleBtn(bitmap=wx.Bitmap(os.path.join('bmp', 'peakcfitareaaxis.png')),
-              id=-1, name='btnAreaFitAxis', parent=self, pos=wx.Point(130, 33), 
-              size=wx.Size(128, 31), style=0)
+        
+        bmp = wx.Bitmap(os.path.join('bmp', 'peakcfitareaaxis.png'))
+        self.btnAreaFitAxis = ToggleBtn(bitmap=bmp, id=-1, name='btnAreaFitAxis', 
+                                        parent=self, pos=(130, 33),
+                                        size=(128, 31), style=0)
         self.btnAreaFitAxis.SetToggle(True)
         self.btnAreaFitAxis.SetLabel('')
         self.btnAreaFitAxis.SetToolTip('Curvefit peak and calculate area to the X-axis')
-
-        self.btnAreaFitBaseline = ToggleBtn(bitmap=wx.Bitmap(os.path.join('bmp', 'peakcfitareabase.png')),
-              id=-1, name='btnAreaFitBaseline', parent=self, pos=wx.Point(0, 66), 
-              size=wx.Size(128, 31), style=0)
+        
+        bmp = wx.Bitmap(os.path.join('bmp', 'peakcfitareabase.png'))
+        self.btnAreaFitBaseline = ToggleBtn(bitmap=bmp, id=-1, 
+                                            name='btnAreaFitBaseline', 
+                                            parent=self, pos=(0, 66), 
+                                            size=(128, 31), style=0)
         self.btnAreaFitBaseline.SetToggle(True)
         self.btnAreaFitBaseline.SetLabel('')
         self.btnAreaFitBaseline.SetToolTip('Curvefit peak and calculate area to baseline')
-
-        self.btnIntensityFit = ToggleBtn(bitmap=wx.Bitmap(os.path.join('bmp', 'peakifitmax.png')),
-              id=-1, name='btnSpare', parent=self, pos=wx.Point(130, 66), 
-              size=wx.Size(128, 31), style=0)
+        
+        bmp = wx.Bitmap(os.path.join('bmp', 'peakifitmax.png'))
+        self.btnIntensityFit = ToggleBtn(bitmap=bmp, id=-1, name='btnSpare', 
+                                         parent=self, pos=(130, 66), 
+                                         size=(128, 31), style=0)
         self.btnIntensityFit.SetToggle(True)
         self.btnIntensityFit.SetLabel('')
         self.btnIntensityFit.SetToolTip('Curvefit peak and find maximum intensity')
 
-        self.btnCalculate = wx.Button(id=-1, label='Calculate', name='btnCalculate', 
-              parent=self, pos=wx.Point(0, 99), size=wx.Size(128, 31), style=0)
+        self.btnCalculate = wx.Button(id=-1, label='Calculate', 
+                                      name='btnCalculate', parent=self, 
+                                      pos=(0, 99), size=(128, 31), 
+                                      style=0)
         self.btnCalculate.SetToolTip('')
-        self.btnCalculate.Bind(wx.EVT_BUTTON, self.OnBtnCalculateButton,
-              id=self.btnCalculate.GetId())
+        self.btnCalculate.Bind(wx.EVT_BUTTON, self.on_btn_calculate,
+                               id=self.btnCalculate.GetId())
 
         self.btnCancel = wx.Button(id=-1, label='Cancel', name='btnCancel', 
-              parent=self, pos=wx.Point(130, 99), size=wx.Size(128, 31), 
-              style=0)
+                                   parent=self, pos=(130, 99), size=(128, 31),
+                                   style=0)
         self.btnCancel.SetToolTip('')
-        self.btnCancel.Bind(wx.EVT_BUTTON, self.OnBtnCancelButton,
-              id=self.btnCancel.GetId())
-
-        self._init_pc_sizers()
-
-
+        self.btnCancel.Bind(wx.EVT_BUTTON, self.on_btn_cancel,
+                            id=self.btnCancel.GetId())
     
-    def GetXdata(self, start=None):
+    def get_xdata(self, start=None):
+        """"""
+        _ = start
         # use raw or processed data
         if self._prnt.titleBar.cbxData.GetSelection() == 0:
             xdata = self._data['raw'][:, np.array(self._data['variableidx'])]
@@ -172,8 +175,10 @@ class PeakCalculations(wx.Dialog):
             xdata = self._data['proc'][:, np.array(self._data['variableidx'])]
             label = '_PROC'
         return xdata, label
-    
-    def UpdateVars(self, grid, countpos, fix, x):
+
+    # noinspection PyMethodMayBeStatic, PyUnresolvedReferences
+    def update_vars(self, grid, countpos, fix, x):
+        """"""
         # update ind var labels
         grid.InsertRows(pos=countpos, numRows=1, updateLabels=True)
         # set checkbox in first column
@@ -188,19 +193,25 @@ class PeakCalculations(wx.Dialog):
             grid.SetRowLabelValue(r, str(r-countpos))
         # add label
         for c in range(1, grid.GetNumberCols()):
-            grid.SetCellValue(countpos, c, fix[0] + '%.2f' %np.mean(x) + fix[1])
+            grid.SetCellValue(countpos, c, fix[0] + '%.2f' % np.mean(x) + fix[1])
         # make cell read only in col 1 for referencing
         grid.SetReadOnly(countpos, 1)
         grid.SetCellBackgroundColour(countpos, 1, wx.LIGHT_GREY)
     
-    def InsertVariable(self, pos, var):
-        # add new column to raw and proc data
-        self._data['raw'] = np.concatenate((self._data['raw'][:, 0:pos],
-              var, self._data['raw'][:, pos:self._data['raw'].shape[1]]), 1)
-        self._data['proc'] = np.concatenate((self._data['proc'][:, 0:pos],
-              var, self._data['proc'][:, pos:self._data['proc'].shape[1]]), 1)
+    def insert_variable(self, pos, var):
+        """add new column to raw and proc data
+
+        """
+        raw = self._data['raw']
+        proc = self._data['proc']
+
+        self._data['raw'] = np.concatenate((raw[:, 0:pos],  var,
+                                            raw[:, pos:raw.shape[1]]), 1)
+        self._data['proc'] = np.concatenate((proc[:, 0:pos], var,
+                                             proc[:, pos:proc.shape[1]]), 1)
                 
-    def OnBtnCalculateButton(self, event):
+    def on_btn_calculate(self, _):
+        """"""
         # find bin range
         xaxis = self._data['xaxis'][:, 0]
         mnx = min([self._xlim[0], self._xlim[1]])
@@ -208,86 +219,91 @@ class PeakCalculations(wx.Dialog):
         
         # fix to deal with x-axis orientation
         if xaxis[0] < xaxis[len(xaxis)-1]:
-            bin1 = len(xaxis[xaxis<=mnx])
-            bin2 = len(xaxis[xaxis<=mxx])
+            bin1 = len(xaxis[xaxis <= mnx])
+            bin2 = len(xaxis[xaxis <= mxx])
         else:
-            bin1 = len(xaxis[xaxis>=mnx])
-            bin2 = len(xaxis[xaxis>=mxx])
+            bin1 = len(xaxis[xaxis >= mnx])
+            bin2 = len(xaxis[xaxis >= mxx])
         
         # bin range
-        rng=np.arange(min([bin1, bin2]), max([bin1, bin2]))
+        rng = np.arange(min([bin1, bin2]), max([bin1, bin2]))
         x = xaxis[rng]
         
         # replot vertical lines to fit bin
         graphics, xlim, ylim = self._canvas.last_draw
         graphics.objects = [graphics.objects[0]]
         graphics.objects.append(PolyLine([[x[0], ylim[0]],
-              [x[0], ylim[1]]], colour='red'))
+                                         [x[0], ylim[1]]], colour='red'))
         graphics.objects.append(PolyLine([[x[len(x)-1], ylim[0]],
-              [x[len(x)-1], ylim[1]]], colour='red'))
-        self._canvas.Draw(graphics)   # , xAxis=tuple(xlim), yAxis=tuple(ylim))
+                                         [x[len(x)-1], ylim[1]]], colour='red'))
+        self._canvas.draw(graphics)   # , xAxis=tuple(xlim), yAxis=tuple(ylim))
+
         # get position of most recent user defined variable to be have been added
         grid = self._prnt.prnt.prnt.plExpset.grdIndLabels
-        countpos = 0                  # count number of user defined variables
+        # count number of user defined variables
+        countpos = 0
         for r in range(1, grid.GetNumberRows()):
             countpos += 1
             if len(grid.GetRowLabelValue(r).split('U')) == 1:
                 break 
         # get xdata for calcs
-        xdata, label = self.GetXdata(start=countpos-1)
+        xdata, label = self.get_xdata(start=countpos - 1)
         # do calculations
         if self.btnIntensity.GetValue():   # max intensity in range
             intensity = xdata[:, rng].max(axis=1)[:, nax]
             # update variable labels grid
-            self.UpdateVars(grid, countpos, ['I_', label], x)
+            self.update_vars(grid, countpos, ['I_', label], x)
             # add new column to raw and proc data
-            self.InsertVariable(countpos, intensity)
+            self.insert_variable(countpos, intensity)
             countpos += 1
         if self.btnIntensityFit.GetValue():   # max intensity based on curve fit
-            intensity_fit = self.CurveFit(xdata, x, rng, type=0)
+            intensity_fit = self.curve_fit(xdata, x, rng, typex=0)
             # update variable labels grid
-            self.UpdateVars(grid, countpos, ['IF_', label], x)
+            self.update_vars(grid, countpos, ['IF_', label], x)
             # add new column to raw and proc data
-            self.InsertVariable(countpos, intensity_fit)
+            self.insert_variable(countpos, intensity_fit)
             countpos += 1
         if self.btnAreaAxis.GetValue():   # total area in range
             area_axis = np.sum(xdata[:, rng], axis=1)[:, nax]
             # update variable labels grid
-            self.UpdateVars(grid, countpos, ['AA_', label], x)
+            self.update_vars(grid, countpos, ['AA_', label], x)
             # add new column to raw and proc data
-            self.InsertVariable(countpos, area_axis)
+            self.insert_variable(countpos, area_axis)
             countpos += 1
         if self.btnAreaFitAxis.GetValue():   # total area in range with curve fit
-            area_fit_axis = self.CurveFit(xdata, x, rng, type=1)
+            area_fit_axis = self.curve_fit(xdata, x, rng, typex=1)
             # update variable labels grid
-            self.UpdateVars(grid, countpos, ['AFA_', label], x)
+            self.update_vars(grid, countpos, ['AFA_', label], x)
             # add new column to raw and proc data
-            self.InsertVariable(countpos, area_fit_axis)
+            self.insert_variable(countpos, area_fit_axis)
             countpos += 1
         if self.btnAreaBaseline.GetValue():   # total area in to base of peak
-            area_baseline = self.CurveFit(xdata, x, rng, type=3)
+            area_baseline = self.curve_fit(xdata, x, rng, typex=3)
             # update variable labels grid
-            self.UpdateVars(grid, countpos, ['AB_', label], x)
+            self.update_vars(grid, countpos, ['AB_', label], x)
             # add new column to raw and proc data
-            self.InsertVariable(countpos, area_baseline)
+            self.insert_variable(countpos, area_baseline)
             countpos += 1
         if self.btnAreaFitBaseline.GetValue():   # total area in to base of peak with curve fit
-            area_fit_baseline = self.CurveFit(xdata, x, rng, type=2)
+            area_fit_baseline = self.curve_fit(xdata, x, rng, typex=2)
             # update variable labels grid
-            self.UpdateVars(grid, countpos, ['AFB_', label], x)
+            self.update_vars(grid, countpos, ['AFB_', label], x)
             # add new column to raw and proc data
-            self.InsertVariable(countpos, area_fit_baseline)
+            self.insert_variable(countpos, area_fit_baseline)
         # update experiment setup
         self._prnt.prnt.prnt.get_experiment_details(case=1)
         # destroy dialog
         self.Destroy()
         
-    def OnBtnCancelButton(self, _):
+    def on_btn_cancel(self, _):
         self.Destroy()
     
-    def CurveFit(self, xdata, x, rng, typex=1):
-        # fit 2nd order polynomial
+    def curve_fit(self, xdata, x, rng, typex=1):
+        """fit 2nd order polynomial
+
+        """
         area = []
+        r, c = None, None
         favg = np.zeros((len(x), ))
         for r in range(xdata.shape[0]):
             p = np.polyfit(x, xdata[r, rng], 2)
@@ -297,7 +313,8 @@ class PeakCalculations(wx.Dialog):
                     f = xdata[r, rng]
                 favg = favg + f
                 area.append(np.sum(f))
-                if typex > 1: # fit straight line
+                # fit straight line
+                if typex > 1:
                     p1 = np.polyfit(x, xdata[r, rng], 1)
                     f1 = np.polyval(p1, x)
                     area[len(area)-1] = np.sum(f-f1)
@@ -306,139 +323,137 @@ class PeakCalculations(wx.Dialog):
         
         area = np.array(area)[:, nax]
         if typex > 0:
-            favg = favg/float(r+1)   # avg curve fit for plotting
+            # avg curve fit for plotting
+            favg = favg/float(r+1)
             graphics, xlim, ylim = self._canvas.last_draw
             if typex < 3:
                 c = 'blue'
             elif typex == 3:
                 c = 'green'
-            graphics.objects.extend([PolyLine(np.concatenate((x[:, nax],
-                                                             favg[:, nax]), 1), colour=c)])
+            graphics.objects.extend([PolyLine(
+                np.concatenate((x[:, nax], favg[:, nax]), 1), colour=c)])
             if typex > 1:
                 f1avg = np.polyfit([x[0], x[len(x)-1]], [favg[0], favg[len(favg)-1]], 1)
                 f1avg = np.polyval(f1avg, x)
-                graphics.objects.extend([PolyLine(np.concatenate((x[:, nax],
-                                                                 f1avg[:, nax]), 1), colour=c)])
-            self._canvas.Draw(graphics)  # , xAxis=tuple(xlim), yAxis=tuple(ylim))
+                graphics.objects.extend([PolyLine(
+                    np.concatenate((x[:, nax], f1avg[:, nax]), 1), colour=c)])
+            self._canvas.draw(graphics)  # , xAxis=tuple(xlim), yAxis=tuple(ylim))
         
         return area
         
-class plotSpectra(wx.Panel):
-    def _init_coll_bxsPspc1_Items(self, parent):
-        # generated method, don't edit
+class PlotSpectra(wx.Panel):
+    def __init__(self, parent, id_, pos, size, style, name):
+        wx.Panel.__init__(self, id=-1, name='plotSpectra', parent=parent,
+                          pos=(88, 116), size=(757, 538),
+                          style=wx.TAB_TRAVERSAL)
 
-        parent.Add(self.bxsPspc2, 1, border=0, flag=wx.EXPAND)
+        _, _, _, _, _ = id_, pos, size, style, name
 
-    def _init_coll_bxsPspc2_Items(self, parent):
-        # generated method, don't edit
+        self.parent = parent
+        self._init_ctrls()
+        self._init_sizers()
 
-        parent.Add(self.titleBar, 0, border=0, flag=wx.EXPAND)
-        parent.Add(self.Splitter, 1, border=0, flag=wx.EXPAND)
-    
     def _init_sizers(self):
-        # generated method, don't edit
+        """"""
         self.bxsPspc1 = wx.BoxSizer(orient=wx.HORIZONTAL)
-
         self.bxsPspc2 = wx.BoxSizer(orient=wx.VERTICAL)
-        
-        self._init_coll_bxsPspc1_Items(self.bxsPspc1)
-        self._init_coll_bxsPspc2_Items(self.bxsPspc2)
-        
+
+        self.bxsPspc1.Add(self.bxsPspc2, 1, border=0, flag=wx.EXPAND)
+        self.bxsPspc2.Add(self.titleBar, 0, border=0, flag=wx.EXPAND)
+        self.bxsPspc2.Add(self.Splitter, 1, border=0, flag=wx.EXPAND)
+
         self.SetSizer(self.bxsPspc1)
         
-    def _init_ctrls(self, prnt):
-        # generated method, don't edit
-        wx.Panel.__init__(self, id=-1, name='plotSpectra', parent=prnt,
-                          pos=wx.Point(88, 116), size=wx.Size(757, 538),
-                          style=wx.TAB_TRAVERSAL)
-        self.SetClientSize(wx.Size(749, 504))
+    def _init_ctrls(self):
+        """"""
+        self.SetClientSize((749, 504))
         self.SetToolTip('')
         self.SetAutoLayout(True)
         
         self.Splitter = wx.SplitterWindow(
-            id=-1, name='Splitter', parent=self, pos=wx.Point(16, 24),
-            size=wx.Size(272, 168), style=wx.SP_3D | wx.SP_LIVE_UPDATE)
+            id=-1, name='Splitter', parent=self, pos=(16, 24),
+            size=(272, 168), style=wx.SP_3D | wx.SP_LIVE_UPDATE)
         self.Splitter.SetAutoLayout(True)
-        self.Splitter.Bind(wx.EVT_SPLITTER_DCLICK, self.OnSplitterDclick)
+        self.Splitter.Bind(wx.EVT_SPLITTER_DCLICK, self.on_splitter_dclick)
         
         self.p1 = wx.Panel(self.Splitter)
         self.p1.SetAutoLayout(True)
-        self.p1.prnt = prnt
+        self.p1.prnt = self.parent
         self.p1.parent = self
         
-        self.optDlg = selFun(self.Splitter)
+        self.optDlg = SelFun(self.Splitter)
         
         self.plcPlot = MyPlotCanvas(id_=IDPLOTSPEC, name='plcPlot',
-                                    parent=self.p1, pos=wx.Point(0, 0),
-                                    size=wx.Size(200, 200),
-                                    style=wx.SUNKEN_BORDER,
+                                    parent=self.p1, pos=(0, 0),
+                                    size=(200, 200), style=wx.SUNKEN_BORDER,
                                     toolbar=self.p1.prnt.parent.tbMain)
-        self.plcPlot.enableZoom
+        self.plcPlot.enableZoom = False
         self.plcPlot.fontSizeTitle = 12
         self.plcPlot.SetToolTip('')
         self.plcPlot.fontSizeAxis = 10
         self.plcPlot.SetConstraints(LayoutAnchors(self.plcPlot, True, True,
                                                   True, True))
         
-        self.titleBar = TitleBar(self, id=-1, text="Spectral Preprocessing",
+        self.titleBar = TitleBar(self, id_=-1, text="Spectral Preprocessing",
                                  style=bp.BP_USE_GRADIENT,
                                  alignment=bp.BP_ALIGN_LEFT,
                                  canvasList=[self.plcPlot])
               
         self.Splitter.SplitVertically(self.optDlg, self.p1, 1)
         self.Splitter.SetMinimumPaneSize(1)
-        
-        self._init_sizers()
 
-    def __init__(self, parent, id, pos, size, style, name):
-        self._init_ctrls(parent)
-        
-        self.parent = parent
-    
-    def Reset(self):
+    def reset(self):
+        # noinspection PyTypeChecker
         curve = PolyLine([[0, 0], [1, 1]], colour='white', width=1,
-              style=wx.TRANSPARENT)
+                         style=wx.TRANSPARENT)
         curve = PlotGraphics([curve], 'Experimental Data',
-              'Arbitrary', 'Arbitrary')
+                             'Arbitrary', 'Arbitrary')
         self.plcPlot.Draw(curve)
         
         # clear preproc list
         self.optDlg.lb.Clear()
     
-    def OnSplitterDclick(self, event):
+    def on_splitter_dclick(self, _):
         if self.Splitter.GetSashPosition() <= 5:
             self.Splitter.SetSashPosition(250)
         else:
             self.Splitter.SetSashPosition(1)
     
-    def DoPeakCalculations(self):
+    def do_peak_calculations(self):
         # get x lims for calculating peak areas etc
+        # noinspection PyUnresolvedReferences
         coords = self.plcPlot.GetInterXlims()
         # open options dialog
         dlg = PeakCalculations(self, coords, self.titleBar.data, self.plcPlot)
         dlg.ShowModal()
-        
+
+
 class TitleBar(bp.ButtonPanel):
-
-    def __init__(self, parent, id, text, style, alignment, canvasList):
-
-        self._init_btnpanel_ctrls(parent)
-        self.create_btns()
-        self.parent = parent
-
-        self.canvas = canvasList[0]
-
-    def _init_btnpanel_ctrls(self, prnt):
-        bp.ButtonPanel.__init__(self, parent=prnt, id=-1,
+    """"""
+    def __init__(self, parent, id_, text, style, alignment, canvasList):
+        bp.ButtonPanel.__init__(self, parent=parent, id=-1,
                                 text="Spectral Preprocessing",
                                 agwStyle=bp.BP_USE_GRADIENT,
                                 alignment=bp.BP_ALIGN_LEFT)
 
+        _, _, _, _ = id_, text, style, alignment
+
+        print('in titlebar')
+        self.data = None
+        self.parent = parent
+        self.canvas = canvasList[0]
+        self._init_btnpanel_ctrls()
+        self.Freeze()
+        self.set_properties()
+        self.create_btns()
+
+    def _init_btnpanel_ctrls(self):
+        """"""
         bmp = wx.Bitmap(os.path.join('bmp', 'params.png'), wx.BITMAP_TYPE_PNG)
         self.btnSetProc = bp.ButtonInfo(self, -1, bmp, kind=wx.ITEM_NORMAL,
                                         shortHelp='Select Preprocessing Options',
                                         longHelp='Select Preprocessing Options')
-        self.Bind(wx.EVT_BUTTON, self.OnBtnSetProcButton, id=self.btnSetProc.GetId())
+        self.Bind(wx.EVT_BUTTON, self.on_btn_set_proc, id=self.btnSetProc.GetId())
 
         bmp = wx.Bitmap(os.path.join('bmp', 'peak.png'), wx.BITMAP_TYPE_PNG)
         long_help = 'Interactive mode for peak area calculations, intensities etc.'
@@ -464,8 +479,7 @@ class TitleBar(bp.ButtonPanel):
         
         self.spcPlotSpectra = wx.SpinCtrl(id=-1, initial=1, max=100, min=1,
                                           name='spcPlotSpectra', parent=self,
-                                          pos=wx.Point(198, 554),
-                                          size=wx.Size(64, 23),
+                                          pos=(198, 554), size=(64, 23),
                                           style=wx.SP_ARROW_KEYS)
         self.spcPlotSpectra.SetToolTip('')
         self.spcPlotSpectra.SetValue(1)
@@ -473,23 +487,18 @@ class TitleBar(bp.ButtonPanel):
 
         choices = ['Raw spectra', 'Processed spectra']
         self.cbxData = wx.Choice(choices=choices, id=-1, name='cbxData',
-                                 parent=self, pos=wx.Point(118, 23),
-                                 size=wx.Size(100, 23), style=0)
+                                 parent=self, pos=(118, 23),
+                                 size=(100, 23), style=0)
         self.cbxData.SetSelection(0)
 
         choices = ['Single spectrum', 'All spectra']
         self.cbxNumber = wx.Choice(choices=choices, id=-1, name='cbxNumber',
-                                   parent=self, pos=wx.Point(118, 23),
-                                   size=wx.Size(100, 23), style=0)
+                                   parent=self, pos=(118, 23),
+                                   size=(100, 23), style=0)
         self.cbxNumber.SetSelection(0)
 
-
-        
     def create_btns(self):
-        self.Freeze()
-        
-        self.SetProperties()
-        
+        """"""
         self.AddControl(self.cbxData)
         self.AddControl(self.cbxNumber)
         self.AddControl(self.spcPlotSpectra)
@@ -505,9 +514,13 @@ class TitleBar(bp.ButtonPanel):
         self.Thaw()
         self.DoLayout()
         
-    def SetProperties(self):
-        # Sets the colours for the two demos: called only if the user didn't
-        # modify the colours and sizes using the Settings Panel
+    def set_properties(self):
+        """Sets the colours for the two demos.
+
+        Called only if the user didn't modify the colours and sizes
+        using the Settings Panel
+
+        """
         bpArt = self.GetBPArt()
         
         # set the color the text is drawn with
@@ -525,7 +538,7 @@ class TitleBar(bp.ButtonPanel):
         bpArt.SetColour(bp.BP_SELECTION_PEN_COLOUR,
                         wx.Colour(206, 206, 195))
     
-    def on_btn_interactive(self, event):
+    def on_btn_interactive(self, _):
         # plot the average spectrum
         self.plot_spectra(average=True)
         # add details of current plot to toolbar
@@ -533,16 +546,16 @@ class TitleBar(bp.ButtonPanel):
         # interactive mode for plotting screen - allows to calculate peak areas etc
         self.canvas.enable_interactive(True)
     
-    def on_btn_plot(self, event):
+    def on_btn_plot(self, _):
         # Set enable zoom just in case
-        self.canvas.enableZoom = True
+        self.canvas.enable_zoom = True
         # Plot spectra
         self.plot_spectra()
     
-    def on_spn_plot(self, event):
+    def on_spn_plot(self, _):
         if self.cbxNumber.GetSelection() == 0:
             # Set enable zoom just in case
-            self.canvas.enableZoom = True
+            self.canvas.enable_zoom = True
             # Plot spectra
             self.plot_spectra()
     
@@ -567,15 +580,15 @@ class TitleBar(bp.ButtonPanel):
             wx.BeginBusyCursor()
             # Plot xdata
             if self.cbxNumber.GetSelection() == 1:
-                plotLine(self.canvas, xdata, tit=title, xaxis=self.data['xaxis'],
-                         xLabel='Arbitrary', yLabel='Arbitrary', type='multi',
-                         wdth=1, ledge=None)
+                plot_line(self.canvas, xdata, tit=title, xaxis=self.data['xaxis'],
+                          xLabel='Arbitrary', yLabel='Arbitrary', type='multi',
+                          wdth=1, ledge=None)
                 
             elif self.cbxNumber.GetSelection() == 0:
-                plotLine(self.canvas, xdata, tit=title, xaxis=self.data['xaxis'],
-                         xLabel='Arbitrary', yLabel='Arbitrary', type='single',
-                         rownum=self.spcPlotSpectra.GetValue()-1, wdth=1,
-                         ledge=[])
+                plot_line(self.canvas, xdata, tit=title, xaxis=self.data['xaxis'],
+                          xLabel='Arbitrary', yLabel='Arbitrary', type='single',
+                          rownum=self.spcPlotSpectra.GetValue()-1, wdth=1,
+                          ledge=[])
                 
             # remove busy cursor
             wx.EndBusyCursor()
@@ -584,16 +597,19 @@ class TitleBar(bp.ButtonPanel):
                             np.mean(xdata, axis=0)[:, np.newaxis]), 1))
             line = PlotGraphics([line], title='Average %s Spectrum' % title,
                                 xLabel='Arbitrary', yLabel='Average Intensity')
+            # noinspection PyProtectedMember
             if self.canvas._justDragged:
-                xlim = tuple(self.canvas.GetXCurrentRange())
-                ylim = tuple(self.canvas.GetYCurrentRange())
+                xlim = tuple(self.canvas.get_x_current_range())
+                ylim = tuple(self.canvas.get_y_current_range())
                 
-            self.canvas.Draw(line, xAxis=xlim, yAxis=ylim)
+            self.canvas.draw(line, xAxis=xlim, yAxis=ylim)
         
-    def on_btn_export_data(self, event):
-        # export data
+    def on_btn_export_data(self, _):
+        """export data
+
+        """
         dlg = wx.FileDialog(self, "Choose a file", ".", "", 
-              "Text files (*.txt)|*.txt", wx.SAVE)
+                            "Text files (*.txt)|*.txt", wx.FD_SAVE)
         try:
             if dlg.ShowModal() == wx.ID_OK:
                 if self.cbxData.GetSelection() == 0:
@@ -609,7 +625,7 @@ class TitleBar(bp.ButtonPanel):
         # for i in range(1, grid.GetNumberRows()):
         #     if len(string.split(grid.GetRowLabelValue(i), 'U')) > 1:
         #          if string.split(grid.GetCellValue(i, 1), '_')[2] in ['PROC']:
-        #             GridRowDel(grid, self.data) # would need to pass row num (i) for this to work
+        #             grid_row_del(grid, self.data) # would need to pass row num (i) for this to work
         #             # update experiment setup
         #             self.parent.parent.parent.get_experiment_details(case=1)
         #    else:
@@ -622,7 +638,7 @@ class TitleBar(bp.ButtonPanel):
         self.data['proc'] = x
         self.parent.parent.parent.get_experiment_details(case=1)
     
-    def OnBtnSetProcButton(self, event):
+    def on_btn_set_proc(self, _):
         if self.parent.splitter.GetSashPosition() <= 5:
             self.parent.splitter.SetSashPosition(250)
         else:
@@ -633,10 +649,16 @@ class TitleBar(bp.ButtonPanel):
         self.parent.optDlg.get_data(data)
     
                                     
-class selFun(wx.Panel):
-    def _init_selfun_ctrls(self, prnt):
+class SelFun(wx.Panel):
+
+    def __init__(self, parent):
+        wx.Panel.__init__(self, parent=parent, id=-1, style=0)
+        self.data = None
+        self._init_selfun_ctrls()
+
+    def _init_selfun_ctrls(self):
         # generated method, don't edit
-        wx.Panel.__init__(self, parent=prnt, id=-1, style=0)
+
         self.SetToolTip('')
         
         new_bmp = wx.ArtProvider.GetBitmap(wx.ART_NEW, wx.ART_TOOLBAR, (16, 16))
@@ -662,12 +684,8 @@ class selFun(wx.Panel):
         vsizer.Add(hsizer, 1, wx.EXPAND)
         
         self.SetSizer(vsizer)
-        
         self.tb.Realize()
-        
-    def __init__(self, parent):
-        self._init_selfun_ctrls(parent)
-        
+
     def get_data(self, data):
         self.data = data
 
@@ -678,10 +696,10 @@ class selFun(wx.Panel):
 #            win.CenterOnParent(wx.VERTICAL)
             try:
                 win.ShowModal()
-                ppsteps = win.GetPpSteps()
+                ppsteps = win.get_pp_steps()
                 if ppsteps is not None:
                     self.data['processlist'].append(ppsteps)
-                    self.lb.Append(win.GetPpSteps()[0])
+                    self.lb.Append(win.get_pp_steps()[0])
             finally:
                 win.Destroy()
             
@@ -689,7 +707,7 @@ class selFun(wx.Panel):
             if self.lb.GetSelection() > -1:
                 del self.data['processlist'][self.lb.GetSelection()]
                 self.lb.Delete(self.lb.GetSelection())
-        elif tb == 30: # refresh or reset
+        elif tb == 30:  # refresh or reset
             self.data['processlist'] = []
             self.data['proc'] = None
         
@@ -701,14 +719,14 @@ class Process(wx.Dialog):
         choices = ['Select class...', 'Normalisation', 'Scaling',
                    'Baseline Correction', 'Smoothing', 'Derivatisation']
         self.chType = wx.Choice(choices=choices, id=ID_PPTYPE, name='chType',
-                                parent=self, pos=wx.Point(118, 23),
-                                size=wx.Size(100, 23), style=0)
+                                parent=self, pos=(118, 23),
+                                size=(100, 23), style=0)
         self.chType.SetSelection(0)
         self.chType.Bind(wx.EVT_CHOICE, self.on_ch_type, id=ID_PPTYPE)
 
-        self.chMethod= wx.Choice(choices=[], id=ID_PPMETHOD, name='chMethod',
-                                 parent=self, pos=wx.Point(118, 23),
-                                 size=wx.Size(100, 23), style=0)
+        self.chMethod = wx.Choice(choices=[], id=ID_PPMETHOD, name='chMethod',
+                                  parent=self, pos=(118, 23),
+                                  size=(100, 23), style=0)
         self.chMethod.Bind(wx.EVT_CHOICE, self.on_ch_meth, id=ID_PPMETHOD)
         self.chMethod.Append('Choose method...')
         self.chMethod.SetSelection(0)
@@ -719,7 +737,7 @@ class Process(wx.Dialog):
         
         self.ftval = wx.Slider(self, ID_VALSLIDE, 10, 1, 100, (30, 60), (250, -1), 
                                wx.SL_HORIZONTAL | wx.SL_AUTOTICKS | wx.SL_LABELS)
-        self.ftval.Bind(wx.EVT_SCROLL_CHANGED, self.OnValSlider, id=ID_VALSLIDE) 
+        self.ftval.Bind(wx.EVT_SCROLL_CHANGED, self.on_val_slider, id=ID_VALSLIDE)
         self.ftval.SetTickFreq(5)
         self.ftval.Show(False)
         
@@ -733,11 +751,11 @@ class Process(wx.Dialog):
         
         self.ppstep = None
         
-    def on_ch_type(self, event):
+    def on_ch_type(self, _):
         self.chMethod.Clear()
-        
+        self.chMethod.Append('Choose method...')
+
         if self.chType.GetSelection() == 1:   # normalisation
-            self.chMethod.Append('Choose method...')
             self.chMethod.Append('Row normalisation')
             self.chMethod.Append('Column normalisation')
             self.chMethod.Append('Row mean centre')
@@ -748,24 +766,20 @@ class Process(wx.Dialog):
             self.chMethod.SetSelection(0)
         
         if self.chType.GetSelection() == 2:   # scaling
-            self.chMethod.Append('Choose method...')
             self.chMethod.Append('Scale minimum to 0 and maximum to +1')
             self.chMethod.SetSelection(0)
             
         if self.chType.GetSelection() == 3:   # baseline
-            self.chMethod.Append('Choose method...')
             self.chMethod.Append('Set first bin to zero')
             self.chMethod.Append('Substract a linear baseline')
             self.chMethod.SetSelection(0)
         
         if self.chType.GetSelection() == 4:   # smoothing
-            self.chMethod.Append('Choose method...')
             self.chMethod.Append('Apply a moving average filter')
 #            self.chMethod.Append('Savitsky-Golay filter')
             self.chMethod.SetSelection(0)
         
         if self.chType.GetSelection() == 5:   # derivatisation
-            self.chMethod.Append('Choose method...')
             self.chMethod.Append('Linear derivative')
             self.chMethod.SetSelection(0)
         
@@ -822,19 +836,19 @@ class Process(wx.Dialog):
         if close:
             self.Close()
     
-    def OnValSlider(self, event):
+    def on_val_slider(self, event):
+        """"""
         option = self.chMethod.GetStringSelection()
+        position = str(event.GetPosition())
+
         if option == 'Apply a moving average filter':
-            self.ppstep = [option + ', window = ' + str(event.GetPosition()),
-                           'x=mva.process.avgfilt(x, ' + str(event.GetPosition()) + ', dim="c")']
+            self.ppstep = ['%s, window=%s, x=mva.process.avgfilt(x, %s, dim="c")' % (option, position, position)]
         
         elif option == 'Linear derivative':
-            self.ppstep = [option + ', window = ' + str(event.GetPosition()),
-                           'x=mva.process.derivlin(x, ' + str(event.GetPosition()) + ')']
+            self.ppstep = ['%s, window=%s, x=mva.process.derivlin(x, %s)' % (option, position, position)]
         
         elif option == 'Extended multiplicative scatter correction':
-            self.ppstep = [option + ', order = ' + str(event.GetPosition()),
-                           'x=mva.process.emsc(x, ' + str(event.GetPosition()) + ')']
+            self.ppstep = ['%s, order=%s, x=mva.process.emsc(x, %s)' % (option, position, position)]
         
 #        elif option == 'Savitsky-Golay filter':
 #            self.ppstep = [option + ', order = ' + str(event.GetPosition()),
@@ -842,6 +856,6 @@ class Process(wx.Dialog):
             
         self.Close()
         
-    def GetPpSteps(self):
+    def get_pp_steps(self):
         return self.ppstep
     

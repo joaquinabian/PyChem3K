@@ -27,7 +27,7 @@ from commons import error_box
 from mva import chemometrics as chemtrics
 # noinspection PyProtectedMember
 from mva.chemometrics import _index
-from pca import plotLine
+from pca import plot_line
 from pca import plot_scores
 from pca import plot_loads
 from pca import set_btn_state
@@ -186,7 +186,7 @@ class Dfa(wx.Panel):
                          width=1, style=wx.PENSTYLE_TRANSPARENT)
 
         for each in objects.keys():
-            cmd = ('self.%s.Draw(PlotGraphics([curve], '
+            cmd = ('self.%s.draw(PlotGraphics([curve], '
                    'objects["%s"][0], objects["%s"][1], objects["%s"][2]))')
             exec(cmd % (each, each, each, each))
 
@@ -256,8 +256,7 @@ class TitleBar(bp.ButtonPanel):
 
         self.spnDfaScore1 = wx.SpinCtrl(id=-1, initial=1, max=100, min=1,
                                         name='spnDfaScore1', parent=self,
-                                        pos=(199,
-                                                     4), size=(46, 23),
+                                        pos=(199, 4), size=(46, 23),
                                         style=wx.SP_ARROW_KEYS)
         self.spnDfaScore1.SetToolTip('')
         self.spnDfaScore1.Enable(0)
@@ -266,8 +265,7 @@ class TitleBar(bp.ButtonPanel):
 
         self.spnDfaScore2 = wx.SpinCtrl(id=-1, initial=1, max=100, min=1,
                                         name='spnDfaScore2', parent=self,
-                                        pos=(287,
-                                                     4), size=(46, 23),
+                                        pos=(287, 4), size=(46, 23),
                                         style=wx.SP_ARROW_KEYS)
         self.spnDfaScore2.SetToolTip('')
         self.spnDfaScore2.Enable(0)
@@ -515,11 +513,11 @@ class TitleBar(bp.ButtonPanel):
 
         else:
             idx = self.spnDfaScore1.GetValue() - 1
-            plotLine(self.parent.plcDfaLoadsV,
-                     np.transpose(self.data['dfloads']),
-                     xaxis=self.data['xaxis'], tit=label, rownum=idx,
-                     xLabel='Variable', yLabel='w[' + str(idx + 1) + ']',
-                     wdth=1, ledge=[], type='single')
+            plot_line(self.parent.plcDfaLoadsV,
+                      np.transpose(self.data['dfloads']),
+                      xaxis=self.data['xaxis'], tit=label, rownum=idx,
+                      xLabel='Variable', yLabel='w[' + str(idx + 1) + ']',
+                      wdth=1, ledge=[], type='single')
 
         # calculate and plot hierarchical clustering using euclidean distance
         # get average df scores for each class
@@ -540,13 +538,13 @@ class TitleBar(bp.ButtonPanel):
             xL='Euclidean Distance', yL='Sample')
 
         # Plot eigs
-        self.draw_dfa_eig = plotLine(self.parent.plcDFAeigs, self.data['dfeigs'],
-                                     xaxis=np.arange(1, self.data['dfeigs'].shape[
+        self.draw_dfa_eig = plot_line(self.parent.plcDFAeigs, self.data['dfeigs'],
+                                      xaxis=np.arange(1, self.data['dfeigs'].shape[
                                        1] + 1)[:, nax], rownum=0,
-                                     tit='Eigenvalues',
-                                     xLabel='Discriminant Function',
-                                     yLabel='Eigenvalues', wdth=3, type='single',
-                                     ledge=[])
+                                      tit='Eigenvalues',
+                                      xLabel='Discriminant Function',
+                                      yLabel='Eigenvalues', wdth=3, type='single',
+                                      ledge=[])
 
         # make sure ctrls enabled
         self.spnDfaScore1.Enable(True)

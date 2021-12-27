@@ -16,7 +16,7 @@ import os
 
 import numpy as np
 from numpy import newaxis as nax
-import scipy as sp
+# noinspection PyUnresolvedReferences
 import scipy.stats
 
 import wx
@@ -30,25 +30,23 @@ from wx.lib.anchors import LayoutAnchors
 from commons import PolyMarker
 from pca import box_plot
 from pca import plot_scores
-from pca import plot_pls_model
-from pca import set_btn_state
 from pca import MyPlotCanvas
-from mva.process import meancent
 from mva.process import scale01
 
+# noinspection PyUnresolvedReferences
 class Univariate(wx.Panel):
     """partial least squares regression
 
     """
     def __init__(self, parent, id_, pos, size, style, name):
         wx.Panel.__init__(self, id=-1, name='Univariate', parent=parent,
-                          pos=wx.Point(84, 70), size=wx.Size(796, 460),
+                          pos=(84, 70), size=(796, 460),
                           style=wx.TAB_TRAVERSAL)
 
         _, _, _, _, _ = id_, pos, size, style, name
 
         self._init_ctrls(parent)
-        self._init_coll_nbUniRes_Pages(self.nbUniRes)
+        self._init_coll_nb_uni_res_pages(self.nbUniRes)
         self._init_sizers()
     
     def _init_coll_bxs_pls2_items(self, parent):
@@ -88,7 +86,7 @@ class Univariate(wx.Panel):
         for item in self.grsPls1.GetChildren():
             self.grsPls1.Detach(item.GetWindow())
         
-        # self.grsPls1.Clear()
+        # self.grsPls1.clear()
         self.grsPls1.DeleteWindows()
         
         self.grsPls1.SetCols(2)
@@ -108,7 +106,7 @@ class Univariate(wx.Panel):
         for item in self.grsPls1.GetChildren():
             self.grsPls1.Detach(item.GetWindow())
         
-        # self.grsPls1.Clear()
+        # self.grsPls1.clear()
         self.grsPls1.DeleteWindows()
         
         self.grsPls1.SetCols(1)
@@ -122,7 +120,7 @@ class Univariate(wx.Panel):
         self.reset()
         self.grsPls1.Layout()
         
-    def _init_coll_nbUniRes_Pages(self, parent):
+    def _init_coll_nb_uni_res_pages(self, parent):
         """"""
         parent.AddPage(imageId=-1, page=self.plcScatter, select=True,
                        text='Scatter Plot')
@@ -131,13 +129,13 @@ class Univariate(wx.Panel):
 
     def _init_ctrls(self, prnt):
         """"""
-        self.SetClientSize(wx.Size(788, 426))
+        self.SetClientSize((788, 426))
         self.SetAutoLayout(True)
         self.SetToolTip('')
         self.prnt = prnt
 
         self.plcBoxplot = MyPlotCanvas(id_=-1, name='plcBoxplot', parent=self,
-                                       pos=wx.Point(0, 0), size=wx.Size(302, 246),
+                                       pos=(0, 0), size=(302, 246),
                                        style=0, toolbar=self.prnt.parent.tbMain)
         self.plcBoxplot.fontSizeAxis = 8
         self.plcBoxplot.fontSizeTitle = 10
@@ -150,8 +148,8 @@ class Univariate(wx.Panel):
             LayoutAnchors(self.plcBoxplot, True, True, True, True))
         
         self.plcPsumm = MyPlotCanvas(id_=-1, name='plcPsumm',
-                                     parent=self, pos=wx.Point(0, 0),
-                                     size=wx.Size(302, 246),
+                                     parent=self, pos=(0, 0),
+                                     size=(302, 246),
                                      style=0, toolbar=self.prnt.parent.tbMain)
         self.plcPsumm.fontSizeAxis = 8
         self.plcPsumm.fontSizeTitle = 10
@@ -165,8 +163,8 @@ class Univariate(wx.Panel):
             LayoutAnchors(self.plcPsumm, True, True, True, True))
         
         self.plcRoc = MyPlotCanvas(id_=-1, name='plcRoc',
-                                   parent=self, pos=wx.Point(0, 0),
-                                   size=wx.Size(302, 246),
+                                   parent=self, pos=(0, 0),
+                                   size=(302, 246),
                                    style=0, toolbar=self.prnt.parent.tbMain)
         self.plcRoc.fontSizeAxis = 8
         self.plcRoc.fontSizeTitle = 10
@@ -179,8 +177,8 @@ class Univariate(wx.Panel):
             LayoutAnchors(self.plcRoc, True, True, True, True))
         
         self.nbUniRes = wx.Notebook(id=-1, name='nbUniRes', parent=self,
-                                    pos=wx.Point(176, 274),
-                                    size=wx.Size(310, 272),
+                                    pos=(176, 274),
+                                    size=(310, 272),
                                     style=wx.NB_BOTTOM)
         self.nbUniRes.SetToolTip('')
         self.nbUniRes.SetAutoLayout(True)
@@ -188,8 +186,8 @@ class Univariate(wx.Panel):
                                                    True, True, True))
 
         self.plcScatter = MyPlotCanvas(id_=-1, name='plcScatter',
-                                       parent=self.nbUniRes, pos=wx.Point(0, 0),
-                                       size=wx.Size(302, 246),
+                                       parent=self.nbUniRes, pos=(0, 0),
+                                       size=(302, 246),
                                        style=0, toolbar=self.prnt.parent.tbMain)
         self.plcScatter.fontSizeAxis = 8
         self.plcScatter.fontSizeTitle = 10
@@ -203,7 +201,7 @@ class Univariate(wx.Panel):
         
         self.txtResTable = wx.TextCtrl(
             id=-1, name='txtResTable', parent=self.nbUniRes,
-            pos=wx.Point(0, 0), size=wx.Size(200, 200),
+            pos=(0, 0), size=(200, 200),
             style=wx.TE_DONTWRAP | wx.HSCROLL | wx.TE_READONLY |
             wx.SUNKEN_BORDER | wx.TE_MULTILINE | wx.VSCROLL,
             value='')
@@ -214,7 +212,8 @@ class Univariate(wx.Panel):
         self.titleBar = TitleBar(self, id_=-1, text="Univariate Tests",
                                  style=bp.BP_USE_GRADIENT,
                                  alignment=bp.BP_ALIGN_LEFT)
-    
+
+    # noinspection PyTypeChecker
     def reset(self):
         # reset plots
         objects = {
@@ -224,6 +223,7 @@ class Univariate(wx.Panel):
             'plcScatter': ['Scatter Plot or Regression Summary', 'Group/R', 'Value']
         }
 
+        # noinspection PyUnusedLocal
         curve = PolyLine([[0, 0], [1, 1]], colour='white', width=1,
                          style=wx.PENSTYLE_TRANSPARENT)
         
@@ -231,7 +231,7 @@ class Univariate(wx.Panel):
         self.plcBoxplot.xSpec = 'min'
         
         for each in objects:
-            exec('self.' + each + '.Draw(wx.lib.plot.PlotGraphics([curve], ' +
+            exec('self.' + each + '.draw(wx.lib.plot.PlotGraphics([curve], ' +
                  'objects["' + each + '"][0], ' +
                  'objects["' + each + '"][1], ' +
                  'objects["' + each + '"][2]))'
@@ -241,25 +241,39 @@ class Univariate(wx.Panel):
         self.txtResTable.SetValue('Results Table')
             
 class TitleBar(bp.ButtonPanel):
-    def _init_btnpanel_ctrls(self, prnt):
-        bp.ButtonPanel.__init__(
-            self, parent=prnt, id=-1, text="Univariate Tests",
-            agwStyle=bp.BP_USE_GRADIENT, alignment=bp.BP_ALIGN_LEFT)
-        
+    def __init__(self, parent, id_, text, style, alignment):
+        """"""
+        bp.ButtonPanel.__init__(self, parent=parent, id=-1,
+                                text="Univariate Tests",
+                                agwStyle=bp.BP_USE_GRADIENT,
+                                alignment=bp.BP_ALIGN_LEFT)
+
+        _, _, _, _ = id_, text, style, alignment
+
+        self.data = None
+
+        self.parent = parent
+        self._init_btnpanel_ctrls()
+        self.Freeze()
+        self.set_properties()
+        self.create_btns()
+
+    def _init_btnpanel_ctrls(self):
+        """"""
         self.cbxData = wx.Choice(
             choices=['Raw spectra', 'Processed spectra'], id=-1, name='cbxData',
-            parent=self, pos=wx.Point(118, 21), size=wx.Size(90, 23), style=0)
+            parent=self, pos=(118, 21), size=(90, 23), style=0)
         self.cbxData.SetSelection(0)
-        
+
         self.cbxVariable = wx.Choice(
             choices=['Variables'], id=-1, name='cbxVariable', parent=self,
-            pos=wx.Point(118, 21), size=wx.Size(90, 23), style=0)
+            pos=(118, 21), size=(90, 23), style=0)
         self.cbxVariable.SetSelection(0)
-        
+
         self.cbxTest = wx.Choice(
             choices=['ANOVA', 'Kruskal-Wallis', 'Correlation Coeff.'],
-            id=-1, name='cbxTest', parent=self, pos=wx.Point(75, 21),
-            size=wx.Size(90, 23), style=0)
+            id=-1, name='cbxTest', parent=self, pos=(75, 21),
+            size=(90, 23), style=0)
 
         self.cbxTest.Bind(wx.EVT_CHOICE, self.on_cbx_test, id=-1)
         self.cbxTest.SetSelection(0)
@@ -269,35 +283,26 @@ class TitleBar(bp.ButtonPanel):
                                         shortHelp='Run Test',
                                         longHelp='Run Test')
         self.btnRunTest.Enable(False)
-        self.Bind(wx.EVT_BUTTON, self.on_btn_run_test, id=self.btnRunTest.GetId())
-        
-    def __init__(self, parent, id_, text, style, alignment):
-        """"""
-        _, _, _, _ = id_, text, style, alignment
-        self._init_btnpanel_ctrls(parent)
-        self.parent = parent
-        self.create_btns()
-    
+        self.Bind(wx.EVT_BUTTON, self.on_btn_run_test,
+                  id=self.btnRunTest.GetId())
+
     def create_btns(self):
-        self.Freeze()
-        
-        self.SetProperties()
-                    
+        """"""
         self.AddControl(self.cbxData)
         self.AddControl(self.cbxVariable)
         self.AddControl(self.cbxTest)
         self.AddSeparator()
         self.AddButton(self.btnRunTest)
-        
+
         self.Thaw()
         self.DoLayout()
-    
+
     def get_data(self, data):
         # curframe = inspect.currentframe()
         # print(inspect.getouterframes(curframe, 2))
         self.data = data
         
-    def SetProperties(self):
+    def set_properties(self):
         """ Sets the colours for the two demos.
 
         Called only if the user didn't modify the colours and sizes
@@ -357,7 +362,7 @@ class TitleBar(bp.ButtonPanel):
         # run the analysis
         self.run_univariate()
 
-    # noinspection PyUnresolvedReferences
+    # noinspection PyUnresolvedReferences, PyTypeChecker, PyStringFormat
     def run_univariate(self):
         # ANOVA or KW
         # F = None
@@ -530,7 +535,7 @@ class TitleBar(bp.ButtonPanel):
                       ';R = ' + '%.2f' % self.data['plotp']
 
             eq = PolyMarker(coords, labels=lineq, marker='text')
-            self.parent.plcBoxplot.Draw(
+            self.parent.plcBoxplot.draw(
                 PlotGraphics([points, linear, eq], title='Linear Regression',
                              xLabel='Actual Value',
                              yLabel=self.cbxVariable.GetStringSelection()))
@@ -555,14 +560,15 @@ class TitleBar(bp.ButtonPanel):
                      -np.reshape(scale01(xtrunc_mean), (len(xaxis), ))]),
                     colour='red', legend='Average spectrum (-ve)')
 
-                self.parent.plcScatter.Draw(
+                self.parent.plcScatter.draw(
                     PlotGraphics([rplot, applot, anplot], title='R-Summary',
                                  xLabel='Arbitrary',
                                  yLabel='Intensity (a.u.) / R'))
                 
         # save test used
         self.data['utest'] = [cbx_test, cbx_data]
-            
+
+    # noinspection PyTypeChecker
     def plot_results(self, x, p, ugrp, colours, psum=False):
         # boxplot
         box_plot(self.parent.plcBoxplot, x, self.data['label'], xLabel='Groups',
@@ -604,12 +610,12 @@ class TitleBar(bp.ButtonPanel):
             rocPlot.append(PolyLine(
                 np.concatenate((fp, tp), 1),
                 legend='%s: Area = %.2f (%.2f)' % (ugrp[each], area1, area2),
-                colour=wx.Colour(colours[colCount])))
+                colour=colours[colCount]))
             
             # plot roc ch
             rocPlot.append(PolyLine(
                 ch, style=wx.PENSTYLE_SHORT_DASH,
-                colour=wx.Colour(colours[colCount])))
+                colour=colours[colCount]))
             
             # colour index
             colCount += 1
@@ -618,12 +624,12 @@ class TitleBar(bp.ButtonPanel):
                 
         # set legend option
         if len(ugrp) > 2:
-            self.parent.plcRoc.enableLegend = True
+            self.parent.plcRoc.enable_legend = True
         else:
-            self.parent.plcRoc.enableLegend = False
+            self.parent.plcRoc.enable_legend = False
         
         # draw roc
-        self.parent.plcRoc.Draw(
+        self.parent.plcRoc.draw(
             PlotGraphics(rocPlot, title='Receiver Operating Characteristic',
                          xLabel='False Positive', yLabel='True Positive'))
         
@@ -644,13 +650,12 @@ class TitleBar(bp.ButtonPanel):
 
                     pRoc.append(PolyMarker(np.asarray(aslice[:, 1:3],
                                                       dtype='float64'),
-                                           marker='text',
-                                           labels=aslice[:, 4],
+                                           marker='text', labels=aslice[:, 4],
                                            colour=wx.Colour(aslice[0, 3])))
                 chkSum += len(aslice)
             #
             if chkSum > 0:
-                self.parent.plcPsumm.Draw(
+                self.parent.plcPsumm.draw(
                     PlotGraphics(pRoc, title='p-value vs. Area under ROC',
                                  xLabel='log(p)', yLabel='Area under ROC'))
 

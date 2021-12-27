@@ -547,8 +547,8 @@ class TitleBar(bp.ButtonPanel):
         # set font size
         font_size = 8
 
-        canvas.fontSizeAxis = font_size
-        canvas.enableLegend = False
+        canvas.font_size_axis = font_size
+        canvas.enable_legend = False
         
         # do level 1
         # List, Cols, ccount = [], [], 0
@@ -562,7 +562,7 @@ class TitleBar(bp.ButtonPanel):
         # minx = 0
         # if self.parent.optDlg.rbPlotColours.GetValue() is True:
         #     pass
-        #     canvas.enableLegend(1)
+        #     canvas.enable_legend(1)
         #     Line, List, Nlist, Store = [], [], [], {}
         #     count = 0
         #     for i in range(len(order)):
@@ -720,7 +720,7 @@ class TitleBar(bp.ButtonPanel):
                     # save node coord
                     Nodes[str((tree[i, 0]+1)*-1)] = (x2, (y1+y2)/2)
                         
-        canvas.Draw(PlotGraphics(Line, title=tit, xLabel=xL, yLabel=yL))
+        canvas.draw(PlotGraphics(Line, title=tit, xLabel=xL, yLabel=yL))
                 
     def report_partitioning(self, textctrl, clusterid,
                             error, nfound, title, centroids=None):

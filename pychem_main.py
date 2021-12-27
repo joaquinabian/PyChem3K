@@ -16,6 +16,7 @@ import sys
 import numpy as np
 from numpy import loadtxt
 from numpy import newaxis as nax
+# noinspection PyPep8Naming
 from xml.etree import ElementTree as ET
 
 import wx
@@ -40,7 +41,7 @@ from pca import plot_scores
 from pca import plot_loads
 from pca import plot_pls_model
 from pca import SymColSelectTool
-from plot_spectra import GridRowDel
+from plot_spectra import grid_row_del
 from commons import error_box
 
 
@@ -65,15 +66,15 @@ def create(parent):
 [wxID_PCMMNUHELPCONTENTS, wxID_PCMMNUABOUTCONTENTS,
  ] = [wx.NewId() for _init_coll_mnuHelp_Items in range(2)]
 
-# WX_IMPORT_CONFIRM_DIALOG (WXICD)
-[wxID_WXICD, wxID_WXICDBTNOK, wxID_WXICDGRDSAMPLEDATA, wxID_WXICDSTATICTEXT1, 
- wxID_WXICDSTATICTEXT2, wxID_WXICDSTATICTEXT4, wxID_WXICDSTCOLS,
- wxID_WXICDSTROWS, wxID_WXICDSWLOADX,
+# WX_IMPORT_CONFIRM_DIALOG (ICD)
+[wxID_ICD, wxID_ICDBTNOK, wxID_ICDGRDSAMPLEDATA, wxID_ICDSTATICTEXT1, 
+ wxID_ICDSTATICTEXT2, wxID_ICDSTATICTEXT4, wxID_ICDSTCOLS,
+ wxID_ICDSTROWS, wxID_ICDSWLOADX,
  ] = [wx.NewId() for _init_importconfirm_ctrls in range(9)]
 
-# WX_WORKSPACE_DIALOG (WXWSD)
-[wxID_WXWSD, wxID_WXWSDBTNCANCEL, wxID_WXWSDBTNDELETE, wxID_WXWSDBTNEDIT,
- wxID_WXWSDBTNOK, wxID_WXWSDLBSAVEWORKSPACE,
+# WX_WORKSPACE_DIALOG (WSD)
+[wxID_WSD, wxID_WSDBTNCANCEL, wxID_WSDBTNDELETE, wxID_WSDBTNEDIT,
+ wxID_WSDBTNOK, wxID_WSDLBSAVEWORKSPACE,
  ] = [wx.NewId() for _init_savews_ctrls in range(6)]
 
 [MNUGRIDCOPY, MNUGRIDPASTE, MNUGRIDDELETECOL, MNUGRIDRENAMECOL,
@@ -92,6 +93,8 @@ class PlotToolBar(wx.ToolBar):
         wx.ToolBar.__init__(self, parent, id=-1, pos=(0, 0), size=(0, 0),
                             style=wx.NO_BORDER | wx.TB_HORIZONTAL, name='')
 
+        self.splitPrnt = None
+        self.canvas = None
         self.stTitle = GenStaticText(self, -1, 'Title:', pos=(2, 5),
                                      style=wx.TRANSPARENT_WINDOW)
         self.AddControl(self.stTitle)
@@ -221,9 +224,8 @@ class PlotToolBar(wx.ToolBar):
         self.txtYmax.SetToolTip('Maximum Y-axis range')
         self.AddControl(self.txtYmax)
 
-        self.spnYmax = wx.SpinButton(id=-1, name='spnYmax',
-                                     parent=self, pos=(800, 2),
-                                     size=(15, 21),
+        self.spnYmax = wx.SpinButton(id=-1, name='spnYmax', parent=self,
+                                     pos=(800, 2), size=(15, 21),
                                      style=wx.SP_VERTICAL)
         self.spnYmax.SetToolTip('Maximum Y-axis range')
         self.spnYmax.Bind(wx.EVT_SPIN_DOWN, self.on_spn_ymax_down)
@@ -248,7 +250,7 @@ class PlotToolBar(wx.ToolBar):
         self.tbPoints.SetValue(True)
         self.tbPoints.SetToolTip('Plot using text labels')
         self.tbPoints.Enable(True)
-        self.tbPoints.Bind(wx.EVT_BUTTON, self.OnTbPointsButton)
+        self.tbPoints.Bind(wx.EVT_BUTTON, self.on_tb_points)
         self.AddControl(self.tbPoints)
 
         bmp = wx.Bitmap(opjoin('bmp', 'plot_symbol.bmp'), wx.BITMAP_TYPE_BMP)
@@ -348,22 +350,22 @@ class PlotToolBar(wx.ToolBar):
         self.loadIdx = 0
 
     def on_txt_plot(self, _):
-        self.graph.setTitle(self.txtPlot.GetValue())
-        self.graph.setXLabel(self.txtXlabel.GetValue())
-        self.graph.setYLabel(self.txtYlabel.GetValue())
-        self.canvas.Redraw()
+        self.graph.set_title(self.txtPlot.GetValue())
+        self.graph.set_xlabel(self.txtXlabel.GetValue())
+        self.graph.set_ylabel(self.txtYlabel.GetValue())
+        self.canvas.redraw()
 
     def on_txt_xlabel(self, _):
-        self.graph.setTitle(self.txtPlot.GetValue())
-        self.graph.setXLabel(self.txtXlabel.GetValue())
-        self.graph.setYLabel(self.txtYlabel.GetValue())
-        self.canvas.Redraw()
+        self.graph.set_title(self.txtPlot.GetValue())
+        self.graph.set_xlabel(self.txtXlabel.GetValue())
+        self.graph.set_ylabel(self.txtYlabel.GetValue())
+        self.canvas.redraw()
 
     def on_txt_ylabel(self, _):
-        self.graph.setTitle(self.txtPlot.GetValue())
-        self.graph.setXLabel(self.txtXlabel.GetValue())
-        self.graph.setYLabel(self.txtYlabel.GetValue())
-        self.canvas.Redraw()
+        self.graph.set_title(self.txtPlot.GetValue())
+        self.graph.set_xlabel(self.txtXlabel.GetValue())
+        self.graph.set_ylabel(self.txtYlabel.GetValue())
+        self.canvas.redraw()
 
     def on_tb_load_lab_std1(self, _):
         # plot loadings
@@ -399,7 +401,7 @@ class PlotToolBar(wx.ToolBar):
             # plot scores
             self.do_plot()
 
-    def OnTbPointsButton(self, _):
+    def on_tb_points(self, _):
         if (self.tbPoints.GetValue() is False) & \
                 (self.tbConf.GetValue() is False) & \
                 (self.tbSymbols.GetValue() is False) is False:
@@ -414,28 +416,34 @@ class PlotToolBar(wx.ToolBar):
             self.do_plot()
 
     def on_tb_xlog(self, _):
-        if self.canvas.getLogScale()[0]:
-            self.canvas.set_log_scale((False, self.canvas.getLogScale()[1]))
+        if self.canvas.get_log_scale()[0]:
+            self.canvas.set_log_scale((False, self.canvas.get_log_scale()[1]))
         else:
-            self.canvas.set_log_scale((True, self.canvas.getLogScale()[1]))
-        self.canvas.Redraw()
+            self.canvas.set_log_scale((True, self.canvas.get_log_scale()[1]))
+        self.canvas.redraw()
 
     def on_tb_ylog(self, _):
-        if self.canvas.getLogScale()[1]:
-            self.canvas.set_log_scale((self.canvas.getLogScale()[0], False))
+        if self.canvas.get_log_scale()[1]:
+            self.canvas.set_log_scale((self.canvas.get_log_scale()[0], False))
         else:
-            self.canvas.set_log_scale((self.canvas.getLogScale()[0], True))
-        self.canvas.Redraw()
+            self.canvas.set_log_scale((self.canvas.get_log_scale()[0], True))
+        self.canvas.redraw()
 
     def on_tb_scinote(self, _):
-        if self.canvas.GetUseScientificNotation() is False:
-            self.canvas.SetUseScientificNotation(True)
+        if self.canvas.get_use_scientific_notation() is False:
+            self.canvas.set_use_scientific_notation(True)
         else:
-            self.canvas.SetUseScientificNotation(False)
-        self.canvas.Redraw()
+            self.canvas.set_use_scientific_notation(False)
+        self.canvas.redraw()
 
-    def do_plot(self, loadType=0, symcolours=[], symsymbols=[]):
+    def do_plot(self, loadType=0, symcolours=None, symsymbols=None):
         """"""
+        if symcolours is None:
+            symcolours = []
+
+        if symsymbols is None:
+            symsymbols = []
+
         if self.canvas.GetName() in ['plcDFAscores']:
             if self.canvas.prnt.titleBar.data['dfscores'] is not None:
                 plot_scores(self.canvas,
@@ -514,7 +522,7 @@ class PlotToolBar(wx.ToolBar):
                         self.splitPrnt.titleBar.data['gadfadfscores'],
                         cl=self.splitPrnt.titleBar.data['class'][:, 0],
                         labels=self.splitPrnt.titleBar.data['label'],
-                        validation= self.splitPrnt.titleBar.data['validation'],
+                        validation=self.splitPrnt.titleBar.data['validation'],
                         col1=self.splitPrnt.titleBar.spnGaScoreFrom.GetValue() - 1,
                         col2=self.splitPrnt.titleBar.spnGaScoreTo.GetValue() - 1,
                         title=self.graph.title, xLabel=self.graph.xLabel,
@@ -610,62 +618,66 @@ class PlotToolBar(wx.ToolBar):
                            usecol=symcolours,
                            usesym=symsymbols)
 
-    def OnTxtTitle(self, _):
-        self.graph.setTitle(self.txtTitle.GetValue())
-        self.canvas.Redraw()
+    def on_txt_title(self, _):
+        self.graph.set_title(self.txtTitle.GetValue())
+        self.canvas.redraw()
 
-    def OnBtnApply(self, _):
-        self.canvas.fontSizeAxis = self.spnAxesFont.GetValue()
-        self.canvas.fontSizeTitle = self.spn_title.GetValue()
-
-        self.graph.setTitle(self.txtTitle.GetValue())
-        self.graph.setXLabel(self.txtXlabel.GetValue())
-        self.graph.setYLabel(self.txtYlabel.GetValue())
-
+    def get_axes_max_min(self):
+        """"""
         xmin = float(self.txtXmin.GetValue())
         xmax = float(self.txtXmax.GetValue())
         ymin = float(self.txtYmin.GetValue())
         ymax = float(self.txtYmax.GetValue())
+
+        return xmin, xmax, ymin, ymax
+
+    def on_btn_apply(self, _):
+        self.canvas.font_size_axis = self.spnAxesFont.GetValue()
+        self.canvas.font_size_title = self.spn_title.GetValue()
+
+        self.graph.set_title(self.txtTitle.GetValue())
+        self.graph.set_xlabel(self.txtXlabel.GetValue())
+        self.graph.set_ylabel(self.txtYlabel.GetValue())
+
+        xmin, xmax, ymin, ymax = self.get_axes_max_min()
         
         if (xmin < xmax) and (ymin < ymax):
             self.canvas.last_draw = [self.canvas.last_draw[0],
                                      np.array([xmin, xmax]),
                                      np.array([ymin, ymax])]
         
-        self.canvas.Redraw()
+        self.canvas.redraw()
         self.Close()
 
     def on_spn_axes_font(self, _):
-        self.canvas.fontSizeAxis = self.spnAxesFont.GetValue()
-        self.canvas.Redraw()
+        self.canvas.font_size_axis = self.spnAxesFont.GetValue()
+        self.canvas.redraw()
 
     def on_spn_title_font(self, _):
-        self.canvas.fontSizeTitle = self.spn_title.GetValue()
-        self.canvas.Redraw()
+        self.canvas.font_size_title = self.spn_title.GetValue()
+        self.canvas.redraw()
 
-    def resizeAxes(self):
-        xmin = float(self.txtXmin.GetValue())
-        xmax = float(self.txtXmax.GetValue())
-        ymin = float(self.txtYmin.GetValue())
-        ymax = float(self.txtYmax.GetValue())
+    def resize_axes(self):
+        """"""
+        xmin, xmax, ymin, ymax = self.get_axes_max_min()
 
         if (xmin < xmax) and (ymin < ymax):
             self.canvas.last_draw = [self.canvas.last_draw[0],
                                      np.array([xmin, xmax]),
                                      np.array([ymin, ymax])]
-        self.canvas.Redraw()
+        self.canvas.redraw()
 
     def on_spn_xmin(self, _):
-        self.resizeAxes()
+        self.resize_axes()
 
     def on_spn_xmax(self, _):
-        self.resizeAxes()
+        self.resize_axes()
 
     def on_spn_ymin(self, _):
-        self.resizeAxes()
+        self.resize_axes()
 
     def on_spn_ymax(self, _):
-        self.resizeAxes()
+        self.resize_axes()
 
     def on_spn_xmin_up(self, _):
         curr = float(self.txtXmin.GetValue())
@@ -735,7 +747,7 @@ class PyChemMain(wx.Frame):
         self.gridMenu = wx.Menu(title='')
         self.indRowMenu = wx.Menu(title='')
 
-        self._init_coll_mnuMain_Menus(self.mnuMain)
+        self._init_coll_mnu_main(self.mnuMain)
         self._init_coll_mnu_file(self.mnuFile)
         self._init_coll_mnu_tools(self.mnuTools)
         self._init_coll_mnu_help(self.mnuHelp)
@@ -754,7 +766,7 @@ class PyChemMain(wx.Frame):
 
         self.SetMinSize((200, 400))
         self.SetMenuBar(self.mnuMain)
-        self.Bind(wx.EVT_SIZE, self.OnMainFrameSize)
+        self.Bind(wx.EVT_SIZE, self.on_main_frame_size)
 
         self.nbMain = fnb.FlatNotebook(id=wxID_PCMNBMAIN, name='nbMain',
                                        parent=self, pos=(0, 0),
@@ -787,7 +799,7 @@ class PyChemMain(wx.Frame):
         self.plExpset.getFrame(self)
         self.plExpset.SetToolTip('')
 
-        self.plPreproc = plot_spectra.plotSpectra(id=wxID_PCMPLPREPROC,
+        self.plPreproc = plot_spectra.PlotSpectra(id_=wxID_PCMPLPREPROC,
                                                   name='plPreproc',
                                                   parent=self.nbMain,
                                                   pos=(0, 0), size=(1008, 635),
@@ -886,6 +898,7 @@ class PyChemMain(wx.Frame):
         parent.Append(helpString='', id=wxID_PCMMNUTOOLSMNUGAPLSC,
                       kind=wx.ITEM_NORMAL,
                       item='GA-Partial Least Squares Calibration')
+
         self.Bind(wx.EVT_MENU, self.on_mnu_tools_expset,
                   id=wxID_PCMMNUTOOLSEXPSET)
         self.Bind(wx.EVT_MENU, self.on_mnu_tools_preproc,
@@ -926,23 +939,21 @@ class PyChemMain(wx.Frame):
                   id=wxID_PCMMNUFILELOADWS)
         self.Bind(wx.EVT_MENU, self.on_mnu_file_saveexp,
                   id=wxID_PCMMNUFILESAVEEXP)
-        self.Bind(wx.EVT_MENU, self.OnMnuFileSavewsMenu,
+        self.Bind(wx.EVT_MENU, self.on_mnu_file_savews,
                   id=wxID_PCMMNUFILESAVEWS)
-        self.Bind(wx.EVT_MENU, self.OnMnuFileFileimportMenu,
+        self.Bind(wx.EVT_MENU, self.on_mnu_file_fileimport,
                   id=wxID_PCMMNUFILEFILEIMPORT)
         self.Bind(wx.EVT_MENU, self.on_mnu_file_app_exit,
                   id=wxID_PCMMNUFILEAPPEXIT)
 
-    def _init_coll_mnuMain_Menus(self, parent):
-        # generated method, don't edit
-
+    def _init_coll_mnu_main(self, parent):
+        """"""
         parent.Append(menu=self.mnuFile, title='File')
         parent.Append(menu=self.mnuTools, title='Tools')
         parent.Append(menu=self.mnuHelp, title='Help')
 
     def _init_coll_mnu_help(self, parent):
-        # generated method, don't edit
-
+        """"""
         parent.Append(helpString='', id=wxID_PCMMNUHELPCONTENTS,
                       kind=wx.ITEM_NORMAL, item='Contents')
         parent.Append(helpString='', id=wxID_PCMMNUABOUTCONTENTS,
@@ -983,14 +994,15 @@ class PyChemMain(wx.Frame):
         self.Bind(wx.EVT_MENU, self.on_mnu_grid_paste, id=MNUGRIDPASTE)
         self.Bind(wx.EVT_MENU, self.on_mnu_grid_rename_column, id=MNUGRIDRENAMECOL)
         self.Bind(wx.EVT_MENU, self.on_mnu_grid_delete_column, id=MNUGRIDDELETECOL)
-        self.Bind(wx.EVT_MENU, self.OnMnuGridResetSort, id=MNUGRIDRESETSORT)
+        self.Bind(wx.EVT_MENU, self.on_mnu_grid_reset_sort, id=MNUGRIDRESETSORT)
 
     def _init_grid_row_menu(self, parent):
         parent.Append(helpString='', id=MNUGRIDROWDEL, kind=wx.ITEM_NORMAL,
                       item='Delete User Defined Variable')
         self.Bind(wx.EVT_MENU, self.on_mnu_grid_row_del, id=MNUGRIDROWDEL)
 
-    def OnMainFrameSize(self, event):
+    # noinspection PyMethodMayBeStatic
+    def on_main_frame_size(self, event):
         event.Skip()
 
     # self.Layout()
@@ -1021,7 +1033,7 @@ class PyChemMain(wx.Frame):
             "website using the link below, or email the project "
             "author, roger.jarvis@manchester.ac.uk",
             350, wx.ClientDC(self))
-        info.WebSite = ("http://pychem.sf.net/", "PyChem home page")
+        info.WebSite = ("https://pychem.sf.net/", "PyChem home page")
 
         # Then we call wx.AboutBox giving it that info object
         AboutBox(info)
@@ -1101,8 +1113,9 @@ class PyChemMain(wx.Frame):
         else:
             dlg.Destroy()
 
-    def OnMnuFileSavewsMenu(self, _):
-        if self.data['exppath'] is not None:
+    def on_mnu_file_savews(self, _):
+        """"""
+        if self.data['exppath']:
             wsName = ''
             # text entry dialog
             msg = 'Type in a name under which to save the current workspace'
@@ -1115,7 +1128,7 @@ class PyChemMain(wx.Frame):
             dlg.Destroy()
 
             # workspace dialog for editing
-            if wsName != '':
+            if wsName:
                 # save workspace to xml file
                 self.xml_save(self.data['exppath'], wsName.replace(' ', '_'),
                               dtype=self.data['exppath'])
@@ -1136,7 +1149,7 @@ class PyChemMain(wx.Frame):
                 finally:
                     dlg.Destroy()
 
-    def OnMnuFileFileimportMenu(self, _):
+    def on_mnu_file_fileimport(self, _):
         dlg = ImportDialog(self)
         try:
             dlg.ShowModal()
@@ -1353,7 +1366,7 @@ class PyChemMain(wx.Frame):
                 finally:
                     dlg.Destroy()
 
-    def OnMnuGridResetSort(self, _):
+    def on_mnu_grid_reset_sort(self, _):
         # order rows in grid by row number
         grid = self.data['gridsel']
         order = []
@@ -1376,12 +1389,13 @@ class PyChemMain(wx.Frame):
 
     def on_mnu_grid_row_del(self, _):
         # delete user defined variable row from grdIndLabels
-        GridRowDel(self.data['gridsel'], self.data)
+        grid_row_del(self.data['gridsel'], self.data)
         # update experiment details
         self.get_experiment_details(case=1)
 
     def on_mnu_grid_rename_column(self, _):
         grid = self.data['gridsel']
+        # noinspection PyUnusedLocal
         col = grid.GetGridCursorCol()
         dlg = wx.TextEntryDialog(self, '', 'Enter new column heading', '')
         try:
@@ -1403,11 +1417,15 @@ class PyChemMain(wx.Frame):
         X = grid.GetGridCursorRow()
         Y = grid.GetGridCursorCol()
         if grid == self.plExpset.grdNames:
-            if X < 2: X = 2
-            if Y < 1: Y = 1
+            if X < 2:
+                X = 2
+            if Y < 1:
+                Y = 1
         elif grid == self.plExpset.grdIndLabels:
-            if X < 1: X = 1
-            if Y < 1: Y = 1
+            if X < 1:
+                X = 1
+            if Y < 1:
+                Y = 1
         Data = Data.split('\n')
         for i in range(len(Data)):
             if X + i < grid.GetNumberRows():
@@ -1467,9 +1485,9 @@ class PyChemMain(wx.Frame):
 
         if case == 0:
             exec(
-                'self.data = {"raw":None,"proc":None,"exppath":None,"indlabels":None,' + \
-                '"class":None,"label":None,"validation":None,"xaxis":[],' + \
-                '"sampleidx":None,"variableidx":None,"rawtrunc":None,' + \
+                'self.data = {"raw":None,"proc":None,"exppath":None,"indlabels":None,' +
+                '"class":None,"label":None,"validation":None,"xaxis":[],' +
+                '"sampleidx":None,"variableidx":None,"rawtrunc":None,' +
                 '"proctrunc":None,' + varList + '}')
 
             # disable options on file menu
@@ -1491,9 +1509,9 @@ class PyChemMain(wx.Frame):
                 varList + '}', locals(), globals())
 
         # for returning application to default settings
-        self.plPreproc.Reset()
+        self.plPreproc.reset()
         self.plExpset.Reset(case)
-        self.plPca.Reset()
+        self.plPca.reset()
         self.plDfa.reset()
         self.plCluster.reset()
         self.plPls.Reset()
@@ -1858,9 +1876,13 @@ class PyChemMain(wx.Frame):
         wx.EndBusyCursor()
 
     def xml_load(self, tree, workspace, dtype='new'):
-        # load pychem experiments from saved xml files
-        # if dtype == 'new':
-        #   load raw data
+        """ load pychem experiments from saved xml files
+
+        if dtype == 'new':
+           load raw data
+
+        """
+        x = 0
         rdArray = []
         getRows = tree.findtext("rawdata")
         rows = getRows.split('\n')
@@ -1927,7 +1949,7 @@ class PyChemMain(wx.Frame):
                         # add column labels
                         cl = rows[0].split('\t')
                         for col in range(1, len(cl)):
-                            cmd =  'self.%s.SetColLabelValue(%i,"%s")' % (item.tag, col-1, cl[col])
+                            cmd = 'self.%s.SetColLabelValue(%i,"%s")' % (item.tag, col-1, cl[col])
                             exec(cmd, locals(), globals())
                         for row in range(1, len(rows) - 1):
                             items = rows[row].split('\t')
@@ -2029,12 +2051,13 @@ class PyChemMain(wx.Frame):
                                         1)
                         elif self.plUnivariate.titleBar.cbxData.GetSelection() == 1:
                             x = np.take(self.data['proctrunc'],
-                                        [self.plUnivariate.titleBar.cbxVariable.GetSelection()]
-                                        , 1)
+                                        [self.plUnivariate.titleBar.cbxVariable.GetSelection()],
+                                        1)
                         if self.plUnivariate.titleBar.cbxTest.GetSelection() < 2:
                             self.data['utest'] = [
                                 self.plUnivariate.titleBar.cbxTest.GetSelection(),
                                 self.plUnivariate.titleBar.cbxData.GetSelection()]
+                            # noinspection PyProtectedMember
                             self.plUnivariate._init_class_sizers()
                             self.plUnivariate.titleBar.plot_results(
                                 x, float(item.text),
@@ -2043,6 +2066,7 @@ class PyChemMain(wx.Frame):
                                 psum=True)
                         else:
                             self.data['utest'] = None
+                            # noinspection PyProtectedMember
                             self.plUnivariate._init_corr_sizers()
                             self.plUnivariate.titleBar.run_univariate()
 
@@ -2169,13 +2193,12 @@ class PyChemMain(wx.Frame):
                         (self.plExpset.grdNames.GetCellValue(1,
                                                              i) == '1') is True:
 
-                    if self.data['class'] == []:
-                        self.data['class'] = np.zeros((countActive, 1))
+                    if self.data['class']:
+                        self.data['class'] = np.concatenate(
+                            (self.data['class'],  np.zeros((countActive, 1))),
+                            1)
                     else:
-                        self.data['class'] = np.concatenate((self.data['class'],
-                                                             np.zeros((
-                                                                 countActive,
-                                                                 1))), 1)
+                        self.data['class'] = np.zeros((countActive, 1))
 
                     countSample = 0
                     for j in range(2, self.plExpset.grdNames.GetNumberRows()):
@@ -2217,15 +2240,16 @@ class PyChemMain(wx.Frame):
                                     self.data['validation'].append(2)
                                 else:
                                     self.data['validation'].append(0)
-                            except:
-                                continue
+                            except Exception:
+                                raise
+                                # continue
                     self.data['validation'] = np.array(self.data['validation'])
 
                     # reorder by index
                     self.data['validation'] = self.data['validation'][index]
 
             # get x-axis labels/values
-            self.plUnivariate.titleBar.cbxVariable.Clear()
+            self.plUnivariate.titleBar.cbxVariable.clear()
             for j in range(1, self.plExpset.grdIndLabels.GetNumberCols()):
                 if self.plExpset.grdIndLabels.GetCellValue(0, j) == '1':
                     self.data['variableidx'] = []
@@ -2243,8 +2267,9 @@ class PyChemMain(wx.Frame):
                         # check for float or txt
                         try:
                             self.data['xaxisfull'].append(float(val))
-                        except:
-                            self.data['xaxisfull'].append(val)
+                        except Exception:
+                            raise
+                            # self.data['xaxisfull'].append(val)
 
             self.plUnivariate.titleBar.cbxVariable.SetSelection(0)
 
@@ -2255,6 +2280,7 @@ class PyChemMain(wx.Frame):
             num = 1
             for row in range(len(self.data['xaxis'])):
                 try:
+                    # noinspection PyUnusedLocal
                     val = float(self.data['xaxis'][row, 0])
                 except Exception:
                     raise
@@ -2412,7 +2438,7 @@ class ImportConfirmDialog(wx.Dialog):
     """"""
     def __init__(self, parent, data, rows, cols):
         """"""
-        wx.Dialog.__init__(self, id=wxID_WXICD,
+        wx.Dialog.__init__(self, id=wxID_ICD,
                            name='wx.ImportDialog', parent=parent,
                            pos=(483, 225), size=(313, 319),
                            style=wx.DEFAULT_DIALOG_STYLE,
@@ -2439,23 +2465,22 @@ class ImportConfirmDialog(wx.Dialog):
         self.SetToolTip('')
         self.Center(wx.BOTH)
 
-        self.swLoadX = SashWindow(id=wxID_WXICDSWLOADX,
+        self.swLoadX = SashWindow(id=wxID_ICDSWLOADX,
                                   name='swLoadX', parent=self,
                                   pos=(0, 0), size=(408, 352),
                                   style=wx.CLIP_CHILDREN | SW_3D)
         self.swLoadX.SetToolTip('')
 
-        self.btnOK = wx.Button(id=wxID_WXICDBTNOK, label='OK',
+        self.btnOK = wx.Button(id=wxID_ICDBTNOK, label='OK',
                                name='btnOK', parent=self.swLoadX,
-                               pos=(104, 248),
-                               size=(104, 26), style=0)
+                               pos=(104, 248), size=(104, 26), style=0)
         self.btnOK.Bind(wx.EVT_BUTTON, self.on_btn_ok,
-                        id=wxID_WXICDBTNOK)
-
-        self.grdSampleData = wx.grid.Grid(
-            id=wxID_WXICDGRDSAMPLEDATA,
-            name='grdSampleData', parent=self.swLoadX, pos=(16, 24),
-            size=(272, 208), style=wx.DOUBLE_BORDER)
+                        id=wxID_ICDBTNOK)
+        # noinspection PyUnresolvedReferences
+        self.grdSampleData = wx.grid.Grid(id=wxID_ICDGRDSAMPLEDATA,
+                                          name='grdSampleData', pos=(16, 24),
+                                          parent=self.swLoadX, size=(272, 208), 
+                                          style=wx.DOUBLE_BORDER)
         self.grdSampleData.SetDefaultColSize(80)
         self.grdSampleData.SetDefaultRowSize(20)
         self.grdSampleData.Enable(True)
@@ -2465,26 +2490,26 @@ class ImportConfirmDialog(wx.Dialog):
         self.grdSampleData.SetRowLabelSize(20)
 
         self.staticText1 = wx.StaticText(
-            id=wxID_WXICDSTATICTEXT1,
+            id=wxID_ICDSTATICTEXT1,
             label='Sample Data: ', name='staticText1', parent=self.swLoadX,
             pos=(16, 8), size=(67, 13), style=0)
         self.staticText1.SetToolTip('')
 
-        self.stRows = wx.StaticText(id=wxID_WXICDSTROWS, label='0',
+        self.stRows = wx.StaticText(id=wxID_ICDSTROWS, label='0',
                                     name='stRows', parent=self.swLoadX,
                                     pos=(88, 8), size=(32, 13), style=0)
 
         self.staticText2 = wx.StaticText(
-            id=wxID_WXICDSTATICTEXT2,
+            id=wxID_ICDSTATICTEXT2,
             label='rows by ', name='staticText2', parent=self.swLoadX,
             pos=(128, 8), size=(39, 13), style=0)
 
-        self.stCols = wx.StaticText(id=wxID_WXICDSTCOLS, label='0',
+        self.stCols = wx.StaticText(id=wxID_ICDSTCOLS, label='0',
                                     name='stCols', parent=self.swLoadX,
                                     pos=(176, 8), size=(32, 13), style=0)
 
         self.staticText4 = wx.StaticText(
-            id=wxID_WXICDSTATICTEXT4,
+            id=wxID_ICDSTATICTEXT4,
             label='columns', name='staticText4', parent=self.swLoadX,
             pos=(216, 8), size=(39, 13), style=0)
 
@@ -2585,7 +2610,7 @@ class WorkspaceDialog(wx.Dialog):
     """"""
     def __init__(self, parent, filename='', dtype='Load'):
         """"""
-        wx.Dialog.__init__(self, id=wxID_WXWSD,
+        wx.Dialog.__init__(self, id=wxID_WSD,
                            name='wxWorkspaceDialog', parent=parent,
                            pos=(453, 245),
                            size=(374, 280),
@@ -2643,25 +2668,25 @@ class WorkspaceDialog(wx.Dialog):
         self.SetAutoLayout(True)
         self.Center(wx.BOTH)
 
-        self.btnDelete = wx.Button(id=wxID_WXWSDBTNDELETE,
+        self.btnDelete = wx.Button(id=wxID_WSDBTNDELETE,
                                    label='Delete', name='btnDelete',
                                    parent=self, pos=(16, 7),
                                    size=(70, 23), style=0)
         self.btnDelete.SetToolTip('')
         self.btnDelete.SetAutoLayout(True)
         self.btnDelete.Bind(wx.EVT_BUTTON, self.on_btn_delete,
-                            id=wxID_WXWSDBTNDELETE)
+                            id=wxID_WSDBTNDELETE)
 
-        self.btnCancel = wx.Button(id=wxID_WXWSDBTNCANCEL,
+        self.btnCancel = wx.Button(id=wxID_WSDBTNCANCEL,
                                    label='Cancel', name='btnCancel',
                                    parent=self, pos=(16, 40),
                                    size=(72, 23), style=0)
         self.btnCancel.SetToolTip('')
         self.btnCancel.SetAutoLayout(True)
         self.btnCancel.Bind(wx.EVT_BUTTON, self.on_btn_cancel,
-                            id=wxID_WXWSDBTNCANCEL)
+                            id=wxID_WSDBTNCANCEL)
 
-        self.btnEdit = wx.Button(id=wxID_WXWSDBTNEDIT,
+        self.btnEdit = wx.Button(id=wxID_WSDBTNEDIT,
                                  label='Edit', name='btnEdit', parent=self,
                                  pos=(16, 152),
                                  size=(70, 23), style=0)
@@ -2669,19 +2694,19 @@ class WorkspaceDialog(wx.Dialog):
         self.btnEdit.SetAutoLayout(True)
         self.btnEdit.Show(False)
         self.btnEdit.Bind(wx.EVT_BUTTON, self.on_btn_edit,
-                          id=wxID_WXWSDBTNEDIT)
+                          id=wxID_WSDBTNEDIT)
 
-        self.btnOK = wx.Button(id=wxID_WXWSDBTNOK, label='OK',
+        self.btnOK = wx.Button(id=wxID_WSDBTNOK, label='OK',
                                name='btnOK', parent=self, pos=(16, 71),
                                size=(72, 23), style=0)
         self.btnOK.SetToolTip('')
         self.btnOK.SetAutoLayout(True)
         self.btnOK.Show(True)
         self.btnOK.Bind(wx.EVT_BUTTON, self.on_btn_ok,
-                        id=wxID_WXWSDBTNOK)
+                        id=wxID_WSDBTNOK)
 
         self.lbSaveWorkspace = wx.ListCtrl(
-            id=wxID_WXWSDLBSAVEWORKSPACE,
+            id=wxID_WSDLBSAVEWORKSPACE,
             name='lbSaveWorkspace', parent=self, pos=(96, 8),
             size=(264, 232),
             style=wx.LC_REPORT | wx.LC_SORT_ASCENDING | wx.LC_SINGLE_SEL)
@@ -2695,17 +2720,16 @@ class WorkspaceDialog(wx.Dialog):
                                   self.on_lb_save_workspace_left_dclick)
         self.lbSaveWorkspace.Bind(wx.EVT_LIST_END_LABEL_EDIT,
                                   self.on_lb_save_workspace_end_label_edit,
-                                  id=wxID_WXWSDLBSAVEWORKSPACE)
+                                  id=wxID_WSDLBSAVEWORKSPACE)
         self.lbSaveWorkspace.Bind(wx.EVT_LIST_ITEM_SELECTED,
                                   self.on_lb_save_workspace_selected,
-                                  id=wxID_WXWSDLBSAVEWORKSPACE)
+                                  id=wxID_WSDLBSAVEWORKSPACE)
 
     def on_btn_delete(self, _):
         if self.lbSaveWorkspace.GetItemCount() > 1:
             # need to delete the workspace in the xml file
             WSnode = self.tree.getroot().findall("Workspaces")[0]
-            workspaces = WSnode.getchildren()
-            for each in workspaces:
+            for each in WSnode:
                 if each.tag == self.lbSaveWorkspace.GetItemText(
                         self.currentItem).replace(' ', '_'):
                     WSnode.remove(each)
@@ -2728,7 +2752,7 @@ class WorkspaceDialog(wx.Dialog):
             return 0
 
     def append_workspace(self, ws):
-        index = self.lbSaveWorkspace.InsertStringItem(sys.maxint, ws)
+        index = self.lbSaveWorkspace.InsertItem(sys.maxsize, ws)
         self.lbSaveWorkspace.SetStringItem(index, 0, ws)
 
     def on_btn_ok(self, _):

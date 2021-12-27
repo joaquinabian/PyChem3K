@@ -1,9 +1,9 @@
 import wx
 import wx.lib.plot
 import numpy as np
+from wx.lib.plot import polyobjects
 
-
-class PolyMarker(wx.lib.plot.polyobjects.PolyMarker):
+class PolyMarker(polyobjects.PolyMarker):
     """Inherits from  wx PolyMaker to add labels
 
     """
@@ -18,11 +18,13 @@ class PolyMarker(wx.lib.plot.polyobjects.PolyMarker):
                    'text_colour': 'black'}
 
     def __init__(self, points, **attr):
-        super(wx.lib.plot.polyobjects.PolyMarker, self).__init__(points, attr)
+        super(polyobjects.PolyMarker, self).__init__(points, attr)
         print('in PolyMarker init')
 
     def _text(self, dc, coords, size=1):
         """Added by rmj 14.05.07"""
+        print('in PolyMarker._text')
+        _ = size
         dc.SetTextForeground(self.attributes['text_colour'])
         print('in PolyMarker, attributes labels :', self.attributes['labels'])
         # print('in PolyMarker, attr labels       :', self.attr['labels'])
