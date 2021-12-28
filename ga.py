@@ -49,24 +49,20 @@ class Ga(wx.Panel):
         self.parent = parent
         self._init_ctrls()
         self._init_sizers()
-        # self.Fit()
-        # self.Layout()
+        self.Layout()
 
     def _init_ctrls(self):
         """"""
         self.SetClientSize((788, 426))
-        self.SetAutoLayout(True)
         self.SetToolTip('self_tooltip')
 
-        self.splitter = wx.SplitterWindow(id=-1, name='Splitter', parent=self,
+        self.splitter = wx.SplitterWindow(self, id=-1, name='Splitter',
                                           pos=(16, 24), size=(272, 168),
                                           style=wx.SP_3D | wx.SP_LIVE_UPDATE)
         self.splitter.SetAutoLayout(True)
         self.splitter.Bind(wx.EVT_SPLITTER_DCLICK, self.on_splitter_dclick)
 
         self.p1 = wx.Panel(self.splitter)
-        self.p1.SetAutoLayout(True)
-
         self.optDlg = SelParam(self.splitter)
 
         self.nb_ga_pls_preds = wx.Notebook(id=-1, name='nbGaPlsPreds',
@@ -85,11 +81,7 @@ class Ga(wx.Panel):
                                                parent=self.nb_ga_pls_preds,
                                                pos=(0, 0), size=(310, 272),
                                                style=0, toolbar=toolbar)
-        self.plc_ga_model_plot1.enableZoom = True
         self.plc_ga_model_plot1.enableLegend = True
-        self.plc_ga_model_plot1.fontSizeAxis = 8
-        self.plc_ga_model_plot1.fontSizeLegend = 8
-        self.plc_ga_model_plot1.fontSizeTitle = 10
         self.plc_ga_model_plot1.SetToolTip('self.plc_ga_model_plot1')
 
         self.nb_ga_mod_plot = wx.Notebook(id=-1, name='nbGaModPlot',
@@ -101,10 +93,6 @@ class Ga(wx.Panel):
                                         parent=self.nb_ga_mod_plot,
                                         pos=(0, 0), size=(310, 272), style=0,
                                         toolbar=toolbar)
-        self.plc_ga_eigs.enableZoom = True
-        self.plc_ga_eigs.fontSizeAxis = 8
-        self.plc_ga_eigs.fontSizeLegend = 8
-        self.plc_ga_eigs.fontSizeTitle = 10
         self.plc_ga_eigs.SetToolTip('self.plc_ga_eigs')
 
         self.plc_ga_spec_load = MyPlotCanvas(id_=-1, name='plcGaSpecLoad',
@@ -112,19 +100,11 @@ class Ga(wx.Panel):
                                              pos=(0, 24), size=(503, 279),
                                              toolbar=toolbar)
         self.plc_ga_spec_load.SetToolTip('self.plc_ga_spec_load')
-        self.plc_ga_spec_load.enableZoom = True
-        self.plc_ga_spec_load.fontSizeAxis = 8
-        self.plc_ga_spec_load.fontSizeLegend = 8
-        self.plc_ga_spec_load.fontSizeTitle = 10
 
         self.plc_ga_freq_plot = MyPlotCanvas(id_=-1, name='plcGaFreqPlot',
                                              parent=self.p1, pos=(760, 0),
                                              size=(310, 272), style=0,
                                              toolbar=toolbar)
-        self.plc_ga_freq_plot.enableZoom = True
-        self.plc_ga_freq_plot.fontSizeAxis = 8
-        self.plc_ga_freq_plot.fontSizeLegend = 8
-        self.plc_ga_freq_plot.fontSizeTitle = 10
         self.plc_ga_freq_plot.SetToolTip('self.plc_ga_freq_plot')
 
         self.plc_ga_feat_plot = MyPlotCanvas(id_=-1, name='plcGaFeatPlot',
@@ -132,21 +112,13 @@ class Ga(wx.Panel):
                                              size=(310, 272), style=0,
                                              toolbar=toolbar)
         self.plc_ga_feat_plot.SetToolTip('self.plc_ga_feat_plot')
-        self.plc_ga_feat_plot.enableZoom = True
         self.plc_ga_feat_plot.enableLegend = True
-        self.plc_ga_feat_plot.fontSizeAxis = 8
-        self.plc_ga_feat_plot.fontSizeLegend = 8
-        self.plc_ga_feat_plot.fontSizeTitle = 10
 
         self.plc_ga_grp_dist_plot = MyPlotCanvas(id_=-1, name='plcGaGrpDistPlot',
                                                  parent=self.nb_ga_mod_plot, style=0,
                                                  pos=(0, 0), size=(310, 272),
                                                  toolbar=toolbar)
         self.plc_ga_grp_dist_plot.enableLegend = True
-        self.plc_ga_grp_dist_plot.enableZoom = True
-        self.plc_ga_grp_dist_plot.fontSizeAxis = 8
-        self.plc_ga_grp_dist_plot.fontSizeLegend = 8
-        self.plc_ga_grp_dist_plot.fontSizeTitle = 10
         self.plc_ga_grp_dist_plot.SetToolTip('self.plc_ga_grp_dist_plot')
 
         self.plc_ga_opt_plot = MyPlotCanvas(id_=-1, name='plcGaOptPlot',
@@ -154,11 +126,18 @@ class Ga(wx.Panel):
                                             pos=(0, 0), size=(310, 272), style=0,
                                             toolbar=toolbar)
         self.plc_ga_opt_plot.enableLegend = False
-        self.plc_ga_opt_plot.enableZoom = True
-        self.plc_ga_opt_plot.fontSizeAxis = 8
-        self.plc_ga_opt_plot.fontSizeLegend = 8
-        self.plc_ga_opt_plot.fontSizeTitle = 10
         self.plc_ga_opt_plot.SetToolTip('')
+
+        windows = [self.plc_ga_model_plot1, self.plc_ga_eigs,
+                   self.plc_ga_spec_load, self.plc_ga_freq_plot,
+                   self.plc_ga_feat_plot, self.plc_ga_grp_dist_plot,
+                   self.plc_ga_opt_plot]
+
+        for window in windows:
+            window.fontSizeAxis = 8
+            window.fontSizeLegend = 8
+            window.fontSizeTitle = 10
+            window.enableZoom = True
 
         self.titleBar = TitleBar(self, id_=-1, text="",
                                  style=bp.BP_USE_GRADIENT,
@@ -168,8 +147,8 @@ class Ga(wx.Panel):
         self.splitter.SplitVertically(self.optDlg, self.p1, 1)
         self.splitter.SetMinimumPaneSize(1)
 
-        self._init_coll_nb_ga_mod_plot_pages(self.nb_ga_mod_plot)
-        self._init_coll_nb_ga_pls_preds_pages(self.nb_ga_pls_preds)
+        self._init_nb_ga_mod_plot(self.nb_ga_mod_plot)
+        self._init_nb_ga_pls_preds(self.nb_ga_pls_preds)
 
     def _init_sizers(self):
         """"""
@@ -177,35 +156,36 @@ class Ga(wx.Panel):
         self.bxsGa2 = wx.BoxSizer(orient=wx.VERTICAL)
         self.bxsGa1 = wx.BoxSizer(orient=wx.HORIZONTAL)
 
+        self.bxsGa1.Add(self.bxsGa2, 1, border=0, flag=wx.EXPAND)
         self.bxsGa2.Add(self.titleBar, 0, border=0, flag=wx.EXPAND)
         self.bxsGa2.Add(self.splitter, 1, border=0, flag=wx.EXPAND)
-        self.bxsGa1.Add(self.bxsGa2, 1, border=0, flag=wx.EXPAND)
-        self.grsGa.Add(self.nb_ga_pls_preds, 0, border=0, flag=wx.EXPAND)
-        self.grsGa.Add(self.plc_ga_freq_plot, 0, border=0, flag=wx.EXPAND)
-        self.grsGa.Add(self.plc_ga_feat_plot, 0, border=0, flag=wx.EXPAND)
-        self.grsGa.Add(self.nb_ga_mod_plot, 0, border=0, flag=wx.EXPAND)
 
-        self.SetSizer(self.bxsGa1)
+        self.grsGa.Add(self.nb_ga_pls_preds, 1, border=0, flag=wx.EXPAND)
+        self.grsGa.Add(self.plc_ga_freq_plot, 1, border=0, flag=wx.EXPAND)
+        self.grsGa.Add(self.plc_ga_feat_plot, 1, border=0, flag=wx.EXPAND)
+        self.grsGa.Add(self.nb_ga_mod_plot, 1, border=0, flag=wx.EXPAND)
+
         self.p1.SetSizer(self.grsGa)
-    
-    def _init_coll_nb_ga_pls_preds_pages(self, parent):
+        self.SetSizer(self.bxsGa1)
+
+    def _init_nb_ga_pls_preds(self, parent):
         """self.nb_ga_pls_preds
 
         """
-        parent.AddPage(imageId=-1, page=self.plc_ga_model_plot1,
+        parent.AddPage(self.plc_ga_model_plot1, imageId=-1,
                        select=True, text='')
     
-    def _init_coll_nb_ga_mod_plot_pages(self, parent):
+    def _init_nb_ga_mod_plot(self, parent):
         """self.nb_ga_mod_plot
 
         """
-        parent.AddPage(imageId=-1, page=self.plc_ga_opt_plot, select=True,
+        parent.AddPage(self.plc_ga_opt_plot, imageId=-1, select=True,
                        text='GA Optimisation Curve')
-        parent.AddPage(imageId=-1, page=self.plc_ga_eigs, select=False,
+        parent.AddPage(self.plc_ga_eigs, imageId=-1, select=False,
                        text='Eigenvalues')
-        parent.AddPage(imageId=-1, page=self.plc_ga_spec_load, select=False,
+        parent.AddPage(self.plc_ga_spec_load, imageId=-1, select=False,
                        text='Spectral Loadings')
-        parent.AddPage(imageId=-1, page=self.plc_ga_grp_dist_plot, select=False,
+        parent.AddPage(self.plc_ga_grp_dist_plot, imageId=-1, select=False,
                        text='Model Error Comparisons')
     
     def reset(self):
