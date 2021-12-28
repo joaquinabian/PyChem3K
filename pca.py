@@ -128,7 +128,7 @@ def create_sym_col_select(canvas, output):
     # set sizer and resize
     # noinspection PyUnresolvedReferences
     canvas.tbMain.SymPopUpWin.SetSizer(canvas.tbMain.SymPopUpWin.grsSelect)
-    resize = wx.Size(canvas.tbMain.SymPopUpWin.GetSize()[0], count * 35)
+    resize = (canvas.tbMain.SymPopUpWin.GetSize()[0], count * 35)
     canvas.tbMain.SymPopUpWin.SetSize(resize)
 
 # noinspection PyTypeChecker
@@ -340,7 +340,7 @@ def plot_pls_model(canvas, model='full', tbar=None, **_attr):
         sc1 = str(const + 1)
         exec("prnt." + canvPref + sc1 + "= MyPlotCanvas(id_=-1, " +
              "name='" + canvPref + sc1 + "', parent=nBook, " +
-             "pos=wx.Point(0, 0), size=wx.Size(302, 246), " +
+             "pos=(0, 0), size=(302, 246), " +
              "style=0, toolbar=tbar)")
         exec("prnt." + canvPref + sc1 + ".font_size_axis = 8")
         exec("prnt." + canvPref + sc1 + ".font_size_title = 10")
@@ -1024,7 +1024,7 @@ class SymColSelectTool(wx.Dialog):
         wx.Dialog.__init__(self, parent=parent, style=0)
 
         self.parent = parent
-        self.SetSize(wx.Size(300, 0))
+        self.SetSize((300, 0))
         self.SetAutoLayout(True)
 
     def on_btn_close(self, _):
@@ -1050,14 +1050,14 @@ class SymColSelectTool(wx.Dialog):
         dlg = SymDialog(self, btn)
         pos = btn.ClientToScreen((0, 0))
         sz = btn.GetSize()
-        dlg.SetPosition(wx.Point(pos[0]-155, pos[1] + sz[1]))
+        dlg.SetPosition((pos[0]-155, pos[1] + sz[1]))
         dlg.ShowModal()
         
 class SymDialog(wx.Dialog):
 
     def __init__(self, parent, btn):
         wx.Dialog.__init__(self, id=-1, name=u'SymDialog', parent=parent,
-                           pos=wx.Point(589, 316), size=wx.Size(156, 155),
+                           pos=(589, 316), size=(156, 155),
                            style=wx.DEFAULT_DIALOG_STYLE,
                            title=u'Select Symbol')
 
@@ -1067,45 +1067,45 @@ class SymDialog(wx.Dialog):
     def _init_ctrls(self):
         # generated method, don't edit
 
-        self.SetClientSize(wx.Size(140, 119))
+        self.SetClientSize((140, 119))
         self.SetToolTip(u'')
 
         bmp = wx.Bitmap(op_join('bmp', 'square.bmp'), wx.BITMAP_TYPE_BMP)
         self.tbSquare = wx.BitmapButton(bitmap=bmp, id=-1, name=u'tbSquare',
-                                        parent=self, pos=wx.Point(0, 0),
-                                        size=wx.Size(69, 38), style=0)
+                                        parent=self, pos=(0, 0),
+                                        size=(69, 38), style=0)
         self.tbSquare.Bind(wx.EVT_BUTTON, self.on_tb_square)
 
         bmp = wx.Bitmap(op_join('bmp', 'circle.bmp'), wx.BITMAP_TYPE_BMP)
         self.tbCircle = wx.BitmapButton(bitmap=bmp, id=-1, name=u'tbCircle',
-                                        parent=self, pos=wx.Point(71, 0),
-                                        size=wx.Size(69, 38), style=0)
+                                        parent=self, pos=(71, 0),
+                                        size=(69, 38), style=0)
         self.tbCircle.Bind(wx.EVT_BUTTON, self.on_tb_circle)
 
         bmp = wx.Bitmap(op_join('bmp', 'plus.bmp'), wx.BITMAP_TYPE_BMP)
         self.tbPlus = wx.BitmapButton(bitmap=bmp, id=-1, name=u'tbPlus',
-                                      parent=self, pos=wx.Point(0, 40),
-                                      size=wx.Size(69, 38), style=0)
+                                      parent=self, pos=(0, 40),
+                                      size=(69, 38), style=0)
         self.tbPlus.Bind(wx.EVT_BUTTON, self.on_tb_plus)
 
         bmp = wx.Bitmap(op_join('bmp', 'triangle.bmp'), wx.BITMAP_TYPE_BMP)
         self.tbTriangleUp = wx.BitmapButton(bitmap=bmp, id=-1,
                                             name=u'tbTriangleUp', parent=self,
-                                            pos=wx.Point(71, 40),
-                                            size=wx.Size(69, 38), style=0)
+                                            pos=(71, 40),
+                                            size=(69, 38), style=0)
         self.tbTriangleUp.Bind(wx.EVT_BUTTON, self.on_tb_triangle_up)
 
         bmp = wx.Bitmap(op_join('bmp', 'triangle_down.bmp'), wx.BITMAP_TYPE_BMP)
         self.tbTriangleDown = wx.BitmapButton(bitmap=bmp, id=-1,
                                               name=u'tbTriangleDown',
-                                              parent=self, pos=wx.Point(0, 80),
-                                              size=wx.Size(69, 38), style=0)
+                                              parent=self, pos=(0, 80),
+                                              size=(69, 38), style=0)
         self.tbTriangleDown.Bind(wx.EVT_BUTTON, self.on_tb_triangle_down)
 
         bmp = wx.Bitmap(op_join('bmp', 'cross.bmp'), wx.BITMAP_TYPE_BMP)
         self.tbCross = wx.BitmapButton(bitmap=bmp, id=-1, name=u'tbCross',
-                                       parent=self, pos=wx.Point(71, 80),
-                                       size=wx.Size(69, 38), style=0)
+                                       parent=self, pos=(71, 80),
+                                       size=(69, 38), style=0)
         self.tbCross.Bind(wx.EVT_BUTTON, self.on_tb_cross)
 
         self._init_sizers()
@@ -1220,7 +1220,7 @@ class MyPlotCanvas(wlpc.PlotCanvas):
     
     # def OnMnuPlotProperties(self, event):
     #      dlg = plotProperties(self)
-    #      dlg.SetSize(wx.Size(450, 350))
+    #      dlg.SetSize((450, 350))
     #      dlg.Center(wx.BOTH)
     #
     #      # Set up dialog for specific cases
@@ -1398,7 +1398,7 @@ class Pca(wx.Panel):
     def __init__(self, parent, id_, pos, size, style, name):
         """"""
         wx.Panel.__init__(self, id=wxID_PCA, name='Pca', parent=parent,
-                          pos=wx.Point(-12, 22), size=wx.Size(1024, 599),
+                          pos=(-12, 22), size=(1024, 599),
                           style=wx.TAB_TRAVERSAL)
 
         _, _, _, _, _ = id_, pos, size, style, name
@@ -1409,13 +1409,13 @@ class Pca(wx.Panel):
 
     def _init_ctrls(self):
         """"""
-        self.SetClientSize(wx.Size(1016, 565))
+        self.SetClientSize((1016, 565))
         self.SetAutoLayout(True)
         self.SetToolTip('')
 
         self.plcPCeigs = MyPlotCanvas(id_=-1, name='plcPCeigs',
-                                      parent=self, pos=wx.Point(589, 283),
-                                      size=wx.Size(200, 200), style=0,
+                                      parent=self, pos=(589, 283),
+                                      size=(200, 200), style=0,
                                       toolbar=self.parent.parent.tbMain)
         self.plcPCeigs.SetToolTip('')
         self.plcPCeigs.fontSizeTitle = 10
@@ -1426,8 +1426,8 @@ class Pca(wx.Panel):
         self.plcPCeigs.fontSizeLegend = 8
 
         self.plcPCvar = MyPlotCanvas(id_=-1, name='plcPCvar', parent=self,
-                                     pos=wx.Point(176, 283),
-                                     size=wx.Size(200, 200), style=0,
+                                     pos=(176, 283),
+                                     size=(200, 200), style=0,
                                      toolbar=self.parent.parent.tbMain)
         self.plcPCvar.fontSizeAxis = 8
         self.plcPCvar.fontSizeTitle = 10
@@ -1436,8 +1436,8 @@ class Pca(wx.Panel):
         self.plcPCvar.fontSizeLegend = 8
 
         self.plcPCAscore = MyPlotCanvas(
-            parent=self, id_=-1, name='plcPCAscore', pos=wx.Point(0, 24),
-            size=wx.Size(200, 200), style=0, toolbar=self.parent.parent.tbMain)
+            parent=self, id_=-1, name='plcPCAscore', pos=(0, 24),
+            size=(200, 200), style=0, toolbar=self.parent.parent.tbMain)
         self.plcPCAscore.fontSizeTitle = 10
         self.plcPCAscore.fontSizeAxis = 8
         self.plcPCAscore.enableZoom = True
@@ -1446,8 +1446,8 @@ class Pca(wx.Panel):
         self.plcPCAscore.fontSizeLegend = 8
 
         self.plcPcaLoadsV = MyPlotCanvas(
-            id_=-1, name='plcPcaLoadsV', parent=self, pos=wx.Point(0, 24),
-            size=wx.Size(200, 200), style=0, toolbar=self.parent.parent.tbMain)
+            id_=-1, name='plcPcaLoadsV', parent=self, pos=(0, 24),
+            size=(200, 200), style=0, toolbar=self.parent.parent.tbMain)
         self.plcPcaLoadsV.SetToolTip('')
         self.plcPcaLoadsV.fontSizeTitle = 10
         self.plcPcaLoadsV.enableZoom = True
@@ -1536,44 +1536,44 @@ class TitleBar(bp.ButtonPanel):
 
         choices = ['Raw spectra', 'Processed spectra']
         self.cbxData = wx.Choice(choices=choices, id=-1, name='cbxData',
-                                 parent=self, pos=wx.Point(118, 23),
-                                 size=wx.Size(100, 23), style=0)
+                                 parent=self, pos=(118, 23),
+                                 size=(100, 23), style=0)
         self.cbxData.SetSelection(0)
               
         self.cbxPcaType = wx.Choice(choices=['NIPALS', 'SVD'], id=-1,
                                     name='cbxPcaType', parent=self,
-                                    pos=wx.Point(56, 23),
-                                    size=wx.Size(64, 23), style=0)
+                                    pos=(56, 23),
+                                    size=(64, 23), style=0)
         self.cbxPcaType.Bind(wx.EVT_COMBOBOX, self.on_cbx_pca_type, id=ID_PCATYPE)
         self.cbxPcaType.SetSelection(0)
         
         choices = ['Correlation matrix', 'Covariance matrix']
         self.cbxPreprocType = wx.Choice(choices=choices, id=-1,
                                         name='cbxPreprocType', parent=self,
-                                        pos=wx.Point(118, 23),
-                                        size=wx.Size(110, 23), style=0, )
+                                        pos=(118, 23),
+                                        size=(110, 23), style=0, )
         self.cbxPreprocType.SetSelection(0)
         
         self.spnPCAnum = wx.SpinCtrl(id=ID_SPNPCS, initial=3, max=100,
                                      min=3, name='spnPCAnum', parent=self,
-                                     pos=wx.Point(112, 158),
-                                     size=wx.Size(46, 23),
+                                     pos=(112, 158),
+                                     size=(46, 23),
                                      style=wx.SP_ARROW_KEYS)
         self.spnPCAnum.SetToolTip('')
         self.spnPCAnum.SetValue(3)
         
         self.spnNumPcs1 = wx.SpinCtrl(id=ID_NUMPCS1, initial=1,
                                       max=100, min=1, name='spnNumPcs1',
-                                      parent=self, pos=wx.Point(240, 184),
-                                      size=wx.Size(46, 23),
+                                      parent=self, pos=(240, 184),
+                                      size=(46, 23),
                                       style=wx.SP_ARROW_KEYS)
         self.spnNumPcs1.Enable(0)
         self.spnNumPcs1.Bind(wx.EVT_SPINCTRL, self.on_spn_num_pcs1, id=-1)
         
         self.spnNumPcs2 = wx.SpinCtrl(id=ID_NUMPCS2, initial=1, max=100, min=1,
                                       name='spnNumPcs2', parent=self,
-                                      pos=wx.Point(240, 184),
-                                      size=wx.Size(46, 23),
+                                      pos=(240, 184),
+                                      size=(46, 23),
                                       style=wx.SP_ARROW_KEYS)
         self.spnNumPcs2.Enable(0)
         self.spnNumPcs2.Bind(wx.EVT_SPINCTRL, self.on_spn_num_pcs2, id=-1)
@@ -1797,7 +1797,7 @@ class PlotProperties(wx.Dialog):
     def __init__(self, parent):
         """"""
         wx.Dialog.__init__(self, id=-1, name='', parent=parent,
-                           pos=wx.Point(0, 0), size=wx.Size(530, 480),
+                           pos=(0, 0), size=(530, 480),
                            style=wx.MAXIMIZE_BOX | wx.DEFAULT_DIALOG_STYLE,
                            title='Plot Properties')
 
@@ -1908,7 +1908,7 @@ class PlotProperties(wx.Dialog):
         parent.Add(self.tbZoom, (6, 4), border=4, flag=flag, span=(1, 1))
         parent.Add(self.cbApply, (7, 0), border=4, flag=flag, span=(1, 1))
         parent.Add(self.btnApply, (7, 1), border=4, flag=flag, span=(1, 5))
-        # parent.AddSpacer(wx.Size(8, 8), (8, 0), flag=flag, span=(2, 6))
+        # parent.AddSpacer((8, 8), (8, 0), flag=flag, span=(2, 6))
 
     # noinspection PyMethodMayBeStatic
     def _init_coll_gbs_plot_props_growables(self, parent):
@@ -1922,8 +1922,8 @@ class PlotProperties(wx.Dialog):
         self.gbsPlotProps.SetCols(6)
         self.gbsPlotProps.SetRows(6)
         self.gbsPlotProps.SetNonFlexibleGrowMode(wx.FLEX_GROWMODE_SPECIFIED)
-        self.gbsPlotProps.SetMinSize(wx.Size(250, 439))
-        self.gbsPlotProps.SetEmptyCellSize(wx.Size(0, 0))
+        self.gbsPlotProps.SetMinSize((250, 439))
+        self.gbsPlotProps.SetEmptyCellSize((0, 0))
         self.gbsPlotProps.SetFlexibleDirection(wx.HORIZONTAL)
 
         self._init_coll_gbs_plot_props(self.gbsPlotProps)
@@ -1961,136 +1961,136 @@ class PlotProperties(wx.Dialog):
         self.loadSets.Enable(False)
         
         self.genPnl = wx.Panel(id=-1, name='genPnl', parent=self.genSets,
-                               pos=wx.Point(0, 0), size=wx.Size(20, 250),
+                               pos=(0, 0), size=(20, 250),
                                style=wx.TAB_TRAVERSAL)
         self.genPnl.SetToolTip('')
         
         self.scorePnl = wx.Panel(id=-1, name='scorePnl', parent=self.scoreSets,
-                                 pos=wx.Point(0, 0), size=wx.Size(20, 100),
+                                 pos=(0, 0), size=(20, 100),
                                  style=wx.TAB_TRAVERSAL)
         self.scorePnl.SetToolTip('')     
         
         self.loadPnl = wx.Panel(id=-1, name='loadPnl', parent=self.loadSets,
-                                pos=wx.Point(0, 0), size=wx.Size(20, 100),
+                                pos=(0, 0), size=(20, 100),
                                 style=wx.TAB_TRAVERSAL)
         self.loadPnl.SetToolTip('')     
         
         self.stTitle = wx.StaticText(id=-1, label='Title', name=u'stTitle',
-                                     parent=self.genPnl, pos=wx.Point(0, 0),
-                                     size=wx.Size(21, 24), style=0)
+                                     parent=self.genPnl, pos=(0, 0),
+                                     size=(21, 24), style=0)
         self.stTitle.SetToolTip('')
 
         self.stYfrom = wx.StaticText(id=-1, label=u'Y-Axis From:',
                                      name=u'stYfrom', parent=self.genPnl,
-                                     pos=wx.Point(0, 131), size=wx.Size(42, 24),
+                                     pos=(0, 131), size=(42, 24),
                                      style=0)
         self.stYfrom.SetToolTip('')
 
         self.stYto = wx.StaticText(id=-1, label='To:', name=u'stYto',
-                                   parent=self.genPnl, pos=wx.Point(144, 131),
-                                   size=wx.Size(40, 21), style=0)
+                                   parent=self.genPnl, pos=(144, 131),
+                                   size=(40, 21), style=0)
         self.stYto.SetToolTip('')
 
         self.stXfrom = wx.StaticText(id=-1, label=u'X-Axis From:',
                                      name=u'stXfrom', parent=self.genPnl,
-                                     pos=wx.Point(0, 103), size=wx.Size(40, 21),
+                                     pos=(0, 103), size=(40, 21),
                                      style=0)
         self.stXfrom.SetToolTip('')
 
         self.stXto = wx.StaticText(id=-1, label='To:', name=u'stXto',
-                                   parent=self.genPnl, pos=wx.Point(144, 103),
-                                   size=wx.Size(40, 21), style=0)
+                                   parent=self.genPnl, pos=(144, 103),
+                                   size=(40, 21), style=0)
         self.stXto.SetToolTip('')
 
         self.stXlabel = wx.StaticText(id=-1, label='X label', name=u'stXlabel',
-                                      parent=self.genPnl, pos=wx.Point(0, 53),
-                                      size=wx.Size(40, 21), style=0)
+                                      parent=self.genPnl, pos=(0, 53),
+                                      size=(40, 21), style=0)
         self.stXlabel.SetToolTip('')
 
         self.stYlabel = wx.StaticText(id=-1, label='Y label', name=u'stYlabel',
-                                      parent=self.genPnl, pos=wx.Point(0, 78),
-                                      size=wx.Size(40, 21), style=0)
+                                      parent=self.genPnl, pos=(0, 78),
+                                      size=(40, 21), style=0)
         self.stYlabel.SetToolTip('')
 
         self.txtTitle = wx.TextCtrl(id=-1, name='txtTitle', parent=self.genPnl,
-                                    pos=wx.Point(15, 0), size=wx.Size(40, 21),
+                                    pos=(15, 0), size=(40, 21),
                                     style=0, value='')
         self.txtTitle.SetToolTip('')
         self.txtTitle.Bind(wx.EVT_TEXT, self.on_txt_title)
 
         self.txtYlabel = wx.TextCtrl(id=-1, name='txtYlabel', parent=self.genPnl,
-                                     pos=wx.Point(15, 78), size=wx.Size(40, 21),
+                                     pos=(15, 78), size=(40, 21),
                                      style=0, value='')
         self.txtYlabel.SetToolTip('')
 
         self.txtXlabel = wx.TextCtrl(id=-1, name='txtXlabel',
-                                     parent=self.genPnl, pos=wx.Point(15, 53),
-                                     size=wx.Size(40, 21), style=0, value='')
+                                     parent=self.genPnl, pos=(15, 53),
+                                     size=(40, 21), style=0, value='')
         self.txtXlabel.SetToolTip('')
 
         self.txtXmin = wx.TextCtrl(id=-1, name='txtXmin',
-                                   parent=self.genPnl, pos=wx.Point(15, 103),
-                                   size=wx.Size(40, 21), style=0, value='')
+                                   parent=self.genPnl, pos=(15, 103),
+                                   size=(40, 21), style=0, value='')
         self.txtXmin.SetToolTip('')
 
         self.spnXmin = wx.SpinButton(id=-1, name='spnXmin',
-                                     parent=self.genPnl, pos=wx.Point(96, 103),
-                                     size=wx.Size(15, 21), style=wx.SP_VERTICAL)
+                                     parent=self.genPnl, pos=(96, 103),
+                                     size=(15, 21), style=wx.SP_VERTICAL)
         self.spnXmin.SetToolTip('')
         self.spnXmin.Bind(wx.EVT_SPIN_DOWN, self.on_spn_xmin_down)
         self.spnXmin.Bind(wx.EVT_SPIN_UP, self.on_spn_xmin_up)
         self.spnXmin.Bind(wx.EVT_SPIN, self.on_spn_xmin)
 
         self.spnXmax = wx.SpinButton(id=-1, name='spnXmax',
-                                     parent=self.genPnl, pos=wx.Point(240, 103),
-                                     size=wx.Size(15, 21), style=wx.SP_VERTICAL)
+                                     parent=self.genPnl, pos=(240, 103),
+                                     size=(15, 21), style=wx.SP_VERTICAL)
         self.spnXmax.SetToolTip('')
         self.spnXmax.Bind(wx.EVT_SPIN_DOWN, self.on_spn_xmax_down)
         self.spnXmax.Bind(wx.EVT_SPIN_UP, self.on_spn_xmax_up)
         self.spnXmax.Bind(wx.EVT_SPIN, self.on_spn_xmax)
 
         self.spnYmax = wx.SpinButton(id=-1, name='spnYmax',
-                                     parent=self.genPnl, pos=wx.Point(240, 131),
-                                     size=wx.Size(15, 21), style=wx.SP_VERTICAL)
+                                     parent=self.genPnl, pos=(240, 131),
+                                     size=(15, 21), style=wx.SP_VERTICAL)
         self.spnYmax.SetToolTip('')
         self.spnYmax.Bind(wx.EVT_SPIN_DOWN, self.on_spn_ymax_down)
         self.spnYmax.Bind(wx.EVT_SPIN_UP, self.on_spn_ymax_up)
         self.spnYmax.Bind(wx.EVT_SPIN, self.on_spn_ymax)
 
         self.spnYmin = wx.SpinButton(id=-1, name='spnYmin',
-                                     parent=self.genPnl, pos=wx.Point(96, 131),
-                                     size=wx.Size(15, 21), style=wx.SP_VERTICAL)
+                                     parent=self.genPnl, pos=(96, 131),
+                                     size=(15, 21), style=wx.SP_VERTICAL)
         self.spnYmin.SetToolTip('')
         self.spnYmin.Bind(wx.EVT_SPIN_DOWN, self.on_spn_ymin_down)
         self.spnYmin.Bind(wx.EVT_SPIN_UP, self.on_spn_ymin_up)
         self.spnYmin.Bind(wx.EVT_SPIN, self.on_spn_ymin)
 
         self.txtXmax = wx.TextCtrl(id=-1, name='txtXmax', parent=self.genPnl,
-                                   pos=wx.Point(192, 103), size=wx.Size(40, 21),
+                                   pos=(192, 103), size=(40, 21),
                                    style=0, value='')
         self.txtXmax.SetToolTip('')
 
         self.txtYmax = wx.TextCtrl(id=-1, name='txtYmax', parent=self.genPnl,
-                                   pos=wx.Point(192, 131), size=wx.Size(40, 21),
+                                   pos=(192, 131), size=(40, 21),
                                    style=0, value='')
         self.txtYmax.SetToolTip('')
 
         self.txtYmin = wx.TextCtrl(id=-1, name='txtYmin',
-                                   parent=self.genPnl, pos=wx.Point(15, 131),
-                                   size=wx.Size(40, 21), style=0, value='')
+                                   parent=self.genPnl, pos=(15, 131),
+                                   size=(40, 21), style=0, value='')
         self.txtYmin.SetToolTip('')
 
         self.stFont = wx.StaticText(id=-1, name=u'stFont',
                                     label='Font size axes and title (pt)',
-                                    parent=self.genPnl, pos=wx.Point(0, 28),
-                                    size=wx.Size(40, 21), style=0)
+                                    parent=self.genPnl, pos=(0, 28),
+                                    size=(40, 21), style=0)
         self.stFont.SetToolTip('')
 
         self.spnFontSizeAxes = wx.SpinCtrl(id=-1, name='spnFontSizeAxes',
                                            initial=8, max=76, min=4,
                                            parent=self.genPnl,
-                                           pos=wx.Point(15, 28),
-                                           size=wx.Size(40, 21),
+                                           pos=(15, 28),
+                                           size=(40, 21),
                                            style=wx.SP_ARROW_KEYS)
         self.spnFontSizeAxes.SetToolTip('')
         self.spnFontSizeAxes.SetValue(8)
@@ -2100,8 +2100,8 @@ class PlotProperties(wx.Dialog):
         self.spnFontSizeTitle = wx.SpinCtrl(id=-1, initial=8, max=76, min=4,
                                             name='spnFontSizeTitle',
                                             parent=self.genPnl,
-                                            pos=wx.Point(15, 28),
-                                            size=wx.Size(40, 21),
+                                            pos=(15, 28),
+                                            size=(40, 21),
                                             style=wx.SP_ARROW_KEYS)
         self.spnFontSizeTitle.SetToolTip('')
         self.spnFontSizeTitle.SetValue(8)
@@ -2109,95 +2109,95 @@ class PlotProperties(wx.Dialog):
         self.spnFontSizeTitle.Bind(wx.EVT_SPIN, self.on_spn_font_size_title)
         
         self.tbGrid = wxTogBut(id=-1, name='tbGrid', label='Grid',
-                               parent=self.genPnl, pos=wx.Point(248, 48),
-                               size=wx.Size(40, 21), style=0)
+                               parent=self.genPnl, pos=(248, 48),
+                               size=(40, 21), style=0)
         self.tbGrid.SetValue(False)
         self.tbGrid.SetToolTip('')
         self.tbGrid.Bind(wx.EVT_BUTTON, self.on_tb_grid)
               
         self.tbDrag = wxTogBut(id=-1, name='tbDrag', label='Drag',
-                               parent=self.genPnl, pos=wx.Point(248, 48),
-                               size=wx.Size(40, 21), style=0)
+                               parent=self.genPnl, pos=(248, 48),
+                               size=(40, 21), style=0)
         self.tbDrag.SetValue(False)
         self.tbDrag.SetToolTip('')
         self.tbDrag.Bind(wx.EVT_BUTTON, self.on_tb_drag_button)
         
         self.tbPointLabel = wxTogBut(id=-1, label='Points',
                                      name='tbPointLabel', parent=self.genPnl,
-                                     pos=wx.Point(248, 48),
-                                     size=wx.Size(40, 21), style=0)
+                                     pos=(248, 48),
+                                     size=(40, 21), style=0)
         self.tbPointLabel.SetValue(False)
         self.tbPointLabel.SetToolTip('')
         self.tbPointLabel.Bind(wx.EVT_BUTTON, self.on_tb_point_label)
         
         self.tbZoom = wxTogBut(id=-1, label='zoom', name='tbZoom',
-                               parent=self.genPnl, pos=wx.Point(248, 48),
-                               size=wx.Size(40, 21), style=0)
+                               parent=self.genPnl, pos=(248, 48),
+                               size=(40, 21), style=0)
         self.tbZoom.SetValue(True)
         self.tbZoom.SetToolTip('')
         self.tbZoom.Bind(wx.EVT_BUTTON, self.on_tb_zoom_button)
         
         self.cbApply = wx.CheckBox(id=-1, name='cbApply',
                                    label='Immediate Apply',
-                                   parent=self.genPnl, pos=wx.Point(48, 96),
-                                   size=wx.Size(70, 13), style=0)
+                                   parent=self.genPnl, pos=(48, 96),
+                                   size=(70, 13), style=0)
         
         self.btnApply = wx.Button(id=-1, label='Apply & Close',
                                   name='btnApply', parent=self.genPnl,
-                                  pos=wx.Point(192, 136),
-                                  size=wx.Size(40, 21), style=0)
+                                  pos=(192, 136),
+                                  size=(40, 21), style=0)
         self.btnApply.Bind(wx.EVT_BUTTON, self.on_btn_apply)
         
         self.tbConf = wxTogBut(id=-1, name='tbConf',
                                label='95% Confidence Circles',
-                               parent=self.scorePnl, pos=wx.Point(248, 48),
-                               size=wx.Size(40, 21))
+                               parent=self.scorePnl, pos=(248, 48),
+                               size=(40, 21))
         self.tbConf.SetValue(True)
         self.tbConf.SetToolTip('')
         self.tbConf.Bind(wx.EVT_BUTTON, self.on_tb_conf)
         
         self.tbPoints = wxTogBut(id=-1, label='Labels',
                                  name='tbPoints', parent=self.scorePnl,
-                                 pos=wx.Point(248, 48), size=wx.Size(40, 21))
+                                 pos=(248, 48), size=(40, 21))
         self.tbPoints.SetValue(True)
         self.tbPoints.SetToolTip('')
         self.tbPoints.Bind(wx.EVT_BUTTON, self.on_tb_points)
         
         self.tbSymbols = wxTogBut(id=-1, name='tbSymbols', label='Symbols',
-                                  parent=self.scorePnl, pos=wx.Point(248, 48),
-                                  size=wx.Size(40, 21))
+                                  parent=self.scorePnl, pos=(248, 48),
+                                  size=(40, 21))
         self.tbSymbols.SetValue(False)
         self.tbSymbols.SetToolTip('')
         self.tbSymbols.Bind(wx.EVT_BUTTON, self.on_tb_symbols)
         
         self.tbLoadLabels = wx.Button(id=-1, name='tbLoadLabels',
                                       label='Labels', parent=self.loadPnl,
-                                      pos=wx.Point(248, 48),
-                                      size=wx.Size(40, 21))
+                                      pos=(248, 48),
+                                      size=(40, 21))
         self.tbLoadLabels.SetToolTip('')
         self.tbLoadLabels.Bind(wx.EVT_BUTTON, self.on_tb_load_labels)
         
         self.tbLoadLabStd1 = wx.Button(id=-1, name='tbLoadLabStd1',
                                        label='Labels & 1 Std',
                                        parent=self.loadPnl,
-                                       pos=wx.Point(248, 48),
-                                       size=wx.Size(40, 21))
+                                       pos=(248, 48),
+                                       size=(40, 21))
         self.tbLoadLabStd1.SetToolTip('')
         self.tbLoadLabStd1.Bind(wx.EVT_BUTTON, self.on_tb_load_lab_std1)
         
         self.tbLoadLabStd2 = wx.Button(id=-1, name='tbLoadLabStd2',
                                        label='Labels & 2 Std',
                                        parent=self.loadPnl,
-                                       pos=wx.Point(248, 48),
-                                       size=wx.Size(40, 21))
+                                       pos=(248, 48),
+                                       size=(40, 21))
         self.tbLoadLabStd2.SetToolTip('')
         self.tbLoadLabStd2.Bind(wx.EVT_BUTTON, self.on_tb_load_lab_std2)
         
         self.tbLoadSymStd2 = wx.Button(id=-1, label='Symbols & 2 Std',
                                        name='tbLoadSymStd2',
                                        parent=self.loadPnl,
-                                       pos=wx.Point(248, 48),
-                                       size=wx.Size(40, 21))
+                                       pos=(248, 48),
+                                       size=(40, 21))
         self.tbLoadSymStd2.SetToolTip('')
         self.tbLoadSymStd2.Bind(wx.EVT_BUTTON, self.on_tb_load_sym_std2)
         
@@ -2207,8 +2207,8 @@ class PlotProperties(wx.Dialog):
         self.foldPnl.AddFoldPanelWindow(self.loadSets, self.loadPnl, style)
         
         #  self.btnFont = wx.Button(id_=-1, label='Font',
-        #        name='btnFont', parent=self.genSets, pos=wx.Point(192, 136),
-        #        size=wx.Size(40, 21), style=0)
+        #        name='btnFont', parent=self.genSets, pos=(192, 136),
+        #        size=(40, 21), style=0)
         #  self.btnFont.Bind(wx.EVT_BUTTON, self.OnBtnFont)
     
     def on_tb_load_labels(self, _):
