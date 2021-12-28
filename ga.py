@@ -11,20 +11,17 @@
 # -----------------------------------------------------------------------------
 
 import os
-
-import wx
-import wx.lib.buttons
-import wx.lib.plot
-
-from wx.lib.stattext import GenStaticText
-import wx.lib.agw.buttonpanel as bp
-import wx.lib.agw.foldpanelbar as fpb
-from wx.lib.anchors import LayoutAnchors
-from wx.lib.plot import PolyLine, PlotGraphics, PolyMarker
-
 import scipy as sp
 import numpy as np
 from numpy import newaxis as nax
+
+import wx
+import wx.lib.agw.buttonpanel as bp
+import wx.lib.agw.foldpanelbar as fpb
+from wx.lib.anchors import LayoutAnchors
+from wx.lib.stattext import GenStaticText
+from wx.lib.plot import PolyLine, PlotGraphics
+from commons import PolyMarker
 
 import mva.genetic as genic
 import mva.fitfun
@@ -47,43 +44,45 @@ class Ga(wx.Panel):
                           style=wx.TAB_TRAVERSAL)
 
         _, _, _, _, _ = id_, pos, size, style, name
+
         self.dtype = dtype
         self.parent = parent
         self._init_ctrls()
+        self._init_sizers()
+        # self.Fit()
+        # self.Layout()
 
     def _init_ctrls(self):
         """"""
-        self.SetToolTip('')
+        self.SetClientSize((788, 426))
         self.SetAutoLayout(True)
+        self.SetToolTip('self_tooltip')
 
         self.splitter = wx.SplitterWindow(id=-1, name='Splitter', parent=self,
                                           pos=(16, 24), size=(272, 168),
                                           style=wx.SP_3D | wx.SP_LIVE_UPDATE)
         self.splitter.SetAutoLayout(True)
         self.splitter.Bind(wx.EVT_SPLITTER_DCLICK, self.on_splitter_dclick)
-        self.splitter.splitPrnt = self
 
         self.p1 = wx.Panel(self.splitter)
-        self.p1.prnt = self.splitter
         self.p1.SetAutoLayout(True)
 
         self.optDlg = SelParam(self.splitter)
 
-        self.nbGaPlsPreds = wx.Notebook(id=-1, name='nbGaPlsPreds',
-                                        parent=self.p1, pos=(176, 274),
-                                        size=(310, 272),
-                                        style=wx.NB_BOTTOM)
-        self.nbGaPlsPreds.SetToolTip('')
-        self.nbGaPlsPreds.SetAutoLayout(True)
-        self.nbGaPlsPreds.SetConstraints(
-            LayoutAnchors(self.nbGaPlsPreds, True, True, True, True))
+        self.nb_ga_pls_preds = wx.Notebook(id=-1, name='nbGaPlsPreds',
+                                           parent=self.p1, pos=(176, 274),
+                                           size=(310, 272),
+                                           style=wx.NB_BOTTOM)
+        self.nb_ga_pls_preds.SetToolTip('')
+        self.nb_ga_pls_preds.SetAutoLayout(True)
+        self.nb_ga_pls_preds.SetConstraints(
+            LayoutAnchors(self.nb_ga_pls_preds, True, True, True, True))
 
-        self.nbGaPlsPreds.prnt = self.p1
         # noinspection PyUnresolvedReferences
-        pretoolbar = self.nbGaPlsPreds.prnt.prnt
-        toolbar = pretoolbar.splitPrnt.parent.parent.tbMain
+        toolbar = self.parent.parent.tbMain
+
         self.plc_ga_model_plot1 = MyPlotCanvas(id_=-1, name='plcGaModelPlot1',
-                                               parent=self.nbGaPlsPreds,
+                                               parent=self.nb_ga_pls_preds,
                                                pos=(0, 0), size=(310, 272),
                                                style=0, toolbar=toolbar)
         self.plc_ga_model_plot1.enableZoom = True
@@ -91,29 +90,28 @@ class Ga(wx.Panel):
         self.plc_ga_model_plot1.fontSizeAxis = 8
         self.plc_ga_model_plot1.fontSizeLegend = 8
         self.plc_ga_model_plot1.fontSizeTitle = 10
-        self.plc_ga_model_plot1.SetToolTip('')
+        self.plc_ga_model_plot1.SetToolTip('self.plc_ga_model_plot1')
 
-        self.nbGaModPlot = wx.Notebook(id=-1, name='nbGaModPlot',
-                                       parent=self.p1, pos=(760, 326),
-                                       size=(310, 272), style=wx.NB_BOTTOM)
-        self.nbGaModPlot.prnt = self.p1
-        self.nbGaModPlot.SetToolTip('')
+        self.nb_ga_mod_plot = wx.Notebook(id=-1, name='nbGaModPlot',
+                                          parent=self.p1, pos=(760, 326),
+                                          size=(310, 272), style=wx.NB_BOTTOM)
+        self.nb_ga_mod_plot.SetToolTip('self.nb_ga_mod_plot')
 
         self.plc_ga_eigs = MyPlotCanvas(id_=-1, name='plcGaEigs',
-                                        parent=self.nbGaModPlot,
+                                        parent=self.nb_ga_mod_plot,
                                         pos=(0, 0), size=(310, 272), style=0,
-                                        toolbar=self.parent.parent.tbMain)
+                                        toolbar=toolbar)
         self.plc_ga_eigs.enableZoom = True
         self.plc_ga_eigs.fontSizeAxis = 8
         self.plc_ga_eigs.fontSizeLegend = 8
         self.plc_ga_eigs.fontSizeTitle = 10
-        self.plc_ga_eigs.SetToolTip('')
+        self.plc_ga_eigs.SetToolTip('self.plc_ga_eigs')
 
         self.plc_ga_spec_load = MyPlotCanvas(id_=-1, name='plcGaSpecLoad',
-                                             parent=self.nbGaModPlot, style=0,
+                                             parent=self.nb_ga_mod_plot, style=0,
                                              pos=(0, 24), size=(503, 279),
-                                             toolbar=self.parent.parent.tbMain)
-        self.plc_ga_spec_load.SetToolTip('')
+                                             toolbar=toolbar)
+        self.plc_ga_spec_load.SetToolTip('self.plc_ga_spec_load')
         self.plc_ga_spec_load.enableZoom = True
         self.plc_ga_spec_load.fontSizeAxis = 8
         self.plc_ga_spec_load.fontSizeLegend = 8
@@ -122,45 +120,45 @@ class Ga(wx.Panel):
         self.plc_ga_freq_plot = MyPlotCanvas(id_=-1, name='plcGaFreqPlot',
                                              parent=self.p1, pos=(760, 0),
                                              size=(310, 272), style=0,
-                                             toolbar=self.parent.parent.tbMain)
+                                             toolbar=toolbar)
         self.plc_ga_freq_plot.enableZoom = True
         self.plc_ga_freq_plot.fontSizeAxis = 8
         self.plc_ga_freq_plot.fontSizeLegend = 8
         self.plc_ga_freq_plot.fontSizeTitle = 10
-        self.plc_ga_freq_plot.SetToolTip('')
+        self.plc_ga_freq_plot.SetToolTip('self.plc_ga_freq_plot')
 
-        self.plcGaFeatPlot = MyPlotCanvas(id_=-1, name='plcGaFeatPlot',
-                                          parent=self.p1, pos=(0, 24),
-                                          size=(310, 272), style=0,
-                                          toolbar=self.parent.parent.tbMain)
-        self.plcGaFeatPlot.SetToolTip('')
-        self.plcGaFeatPlot.enableZoom = True
-        self.plcGaFeatPlot.enableLegend = True
-        self.plcGaFeatPlot.fontSizeAxis = 8
-        self.plcGaFeatPlot.fontSizeLegend = 8
-        self.plcGaFeatPlot.fontSizeTitle = 10
+        self.plc_ga_feat_plot = MyPlotCanvas(id_=-1, name='plcGaFeatPlot',
+                                             parent=self.p1, pos=(0, 24),
+                                             size=(310, 272), style=0,
+                                             toolbar=toolbar)
+        self.plc_ga_feat_plot.SetToolTip('self.plc_ga_feat_plot')
+        self.plc_ga_feat_plot.enableZoom = True
+        self.plc_ga_feat_plot.enableLegend = True
+        self.plc_ga_feat_plot.fontSizeAxis = 8
+        self.plc_ga_feat_plot.fontSizeLegend = 8
+        self.plc_ga_feat_plot.fontSizeTitle = 10
 
-        self.plcGaGrpDistPlot = MyPlotCanvas(id_=-1, name='plcGaGrpDistPlot',
-                                             parent=self.nbGaModPlot, style=0,
-                                             pos=(0, 0), size=(310, 272),
-                                             toolbar=self.parent.parent.tbMain)
-        self.plcGaGrpDistPlot.enableLegend = True
-        self.plcGaGrpDistPlot.enableZoom = True
-        self.plcGaGrpDistPlot.fontSizeAxis = 8
-        self.plcGaGrpDistPlot.fontSizeLegend = 8
-        self.plcGaGrpDistPlot.fontSizeTitle = 10
-        self.plcGaGrpDistPlot.SetToolTip('')
+        self.plc_ga_grp_dist_plot = MyPlotCanvas(id_=-1, name='plcGaGrpDistPlot',
+                                                 parent=self.nb_ga_mod_plot, style=0,
+                                                 pos=(0, 0), size=(310, 272),
+                                                 toolbar=toolbar)
+        self.plc_ga_grp_dist_plot.enableLegend = True
+        self.plc_ga_grp_dist_plot.enableZoom = True
+        self.plc_ga_grp_dist_plot.fontSizeAxis = 8
+        self.plc_ga_grp_dist_plot.fontSizeLegend = 8
+        self.plc_ga_grp_dist_plot.fontSizeTitle = 10
+        self.plc_ga_grp_dist_plot.SetToolTip('self.plc_ga_grp_dist_plot')
 
-        self.plcGaOptPlot = MyPlotCanvas(id_=-1, name='plcGaOptPlot',
-                                         parent=self.nbGaModPlot,
-                                         pos=(0, 0), size=(310, 272), style=0,
-                                         toolbar=self.parent.parent.tbMain)
-        self.plcGaOptPlot.enableLegend = False
-        self.plcGaOptPlot.enableZoom = True
-        self.plcGaOptPlot.fontSizeAxis = 8
-        self.plcGaOptPlot.fontSizeLegend = 8
-        self.plcGaOptPlot.fontSizeTitle = 10
-        self.plcGaOptPlot.SetToolTip('')
+        self.plc_ga_opt_plot = MyPlotCanvas(id_=-1, name='plcGaOptPlot',
+                                            parent=self.nb_ga_mod_plot,
+                                            pos=(0, 0), size=(310, 272), style=0,
+                                            toolbar=toolbar)
+        self.plc_ga_opt_plot.enableLegend = False
+        self.plc_ga_opt_plot.enableZoom = True
+        self.plc_ga_opt_plot.fontSizeAxis = 8
+        self.plc_ga_opt_plot.fontSizeLegend = 8
+        self.plc_ga_opt_plot.fontSizeTitle = 10
+        self.plc_ga_opt_plot.SetToolTip('')
 
         self.titleBar = TitleBar(self, id_=-1, text="",
                                  style=bp.BP_USE_GRADIENT,
@@ -170,59 +168,45 @@ class Ga(wx.Panel):
         self.splitter.SplitVertically(self.optDlg, self.p1, 1)
         self.splitter.SetMinimumPaneSize(1)
 
-        self._init_coll_nb_ga_mod_plot_pages(self.nbGaModPlot)
-        self._init_coll_nb_ga_pls_preds_pages(self.nbGaPlsPreds)
+        self._init_coll_nb_ga_mod_plot_pages(self.nb_ga_mod_plot)
+        self._init_coll_nb_ga_pls_preds_pages(self.nb_ga_pls_preds)
 
-        self._init_sizers()
+    def _init_sizers(self):
+        """"""
+        self.grsGa = wx.GridSizer(cols=2, hgap=2, rows=2, vgap=2)
+        self.bxsGa2 = wx.BoxSizer(orient=wx.VERTICAL)
+        self.bxsGa1 = wx.BoxSizer(orient=wx.HORIZONTAL)
 
-    def _init_coll_bxs_ga1_items(self, parent):
-        # generated method, don't edit
+        self.bxsGa2.Add(self.titleBar, 0, border=0, flag=wx.EXPAND)
+        self.bxsGa2.Add(self.splitter, 1, border=0, flag=wx.EXPAND)
+        self.bxsGa1.Add(self.bxsGa2, 1, border=0, flag=wx.EXPAND)
+        self.grsGa.Add(self.nb_ga_pls_preds, 0, border=0, flag=wx.EXPAND)
+        self.grsGa.Add(self.plc_ga_freq_plot, 0, border=0, flag=wx.EXPAND)
+        self.grsGa.Add(self.plc_ga_feat_plot, 0, border=0, flag=wx.EXPAND)
+        self.grsGa.Add(self.nb_ga_mod_plot, 0, border=0, flag=wx.EXPAND)
 
-        parent.Add(self.bxsGa2, 1, border=0, flag=wx.EXPAND)
-        
-    def _init_coll_bxs_ga2_items(self, parent):
-        # generated method, don't edit
-
-        parent.Add(self.titleBar, 0, border=0, flag=wx.EXPAND)
-        parent.Add(self.splitter, 1, border=0, flag=wx.EXPAND)
-    
-    def _init_coll_grs_ga_items(self, parent):
-        # generated method, don't edit
-
-        parent.Add(self.nbGaPlsPreds, 0, border=0, flag=wx.EXPAND)
-        parent.Add(self.plc_ga_freq_plot, 0, border=0, flag=wx.EXPAND)
-        parent.Add(self.plcGaFeatPlot, 0, border=0, flag=wx.EXPAND)
-        parent.Add(self.nbGaModPlot, 0, border=0, flag=wx.EXPAND)
+        self.SetSizer(self.bxsGa1)
+        self.p1.SetSizer(self.grsGa)
     
     def _init_coll_nb_ga_pls_preds_pages(self, parent):
-        """"""
-        parent.AddPage(imageId=-1, page=self.plc_ga_model_plot1, select=True,
-                       text='')
+        """self.nb_ga_pls_preds
+
+        """
+        parent.AddPage(imageId=-1, page=self.plc_ga_model_plot1,
+                       select=True, text='')
     
     def _init_coll_nb_ga_mod_plot_pages(self, parent):
-        """"""
-        parent.AddPage(imageId=-1, page=self.plcGaOptPlot, select=True,
+        """self.nb_ga_mod_plot
+
+        """
+        parent.AddPage(imageId=-1, page=self.plc_ga_opt_plot, select=True,
                        text='GA Optimisation Curve')
         parent.AddPage(imageId=-1, page=self.plc_ga_eigs, select=False,
                        text='Eigenvalues')
         parent.AddPage(imageId=-1, page=self.plc_ga_spec_load, select=False,
                        text='Spectral Loadings')
-        parent.AddPage(imageId=-1, page=self.plcGaGrpDistPlot, select=False,
+        parent.AddPage(imageId=-1, page=self.plc_ga_grp_dist_plot, select=False,
                        text='Model Error Comparisons')
-    
-    def _init_sizers(self):
-        self.grsGa = wx.GridSizer(cols=2, hgap=2, rows=2, vgap=2)
-        
-        self.bxsGa2 = wx.BoxSizer(orient=wx.VERTICAL)
-        
-        self.bxsGa1 = wx.BoxSizer(orient=wx.HORIZONTAL)
-        
-        self._init_coll_bxs_ga1_items(self.bxsGa1)
-        self._init_coll_bxs_ga2_items(self.bxsGa2)
-        self._init_coll_grs_ga_items(self.grsGa)
-        
-        self.SetSizer(self.bxsGa1)
-        self.p1.SetSizer(self.grsGa)
     
     def reset(self):
         # disable ctrls
@@ -240,22 +224,22 @@ class Ga(wx.Panel):
         
         # clear plots
         objects = {'plc_ga_model_plot1': ['Predictions', 't[1]', 't[2]'],
-                   'plcGaFeatPlot': ['Measured Variable Biplot', 'Variable',
-                                     'Variable'],
+                   'plc_ga_feat_plot': ['Measured Variable Biplot', 'Variable',
+                                        'Variable'],
                    'plc_ga_freq_plot': ['Frequency of Variable Selection',
                                         'Independent Variable', 'Frequency'],
-                   'plcGaOptPlot': ['Rate of GA Optimisation', 'Generation',
-                                    'Fitness Score']}
+                   'plc_ga_opt_plot': ['Rate of GA Optimisation', 'Generation',
+                                       'Fitness Score']}
 
         # noinspection PyUnusedLocal, PyTypeChecker
         curve = PolyLine([[0, 0], [1, 1]], colour='white', width=1,
                          style=wx.PENSTYLE_TRANSPARENT)
         
-        for each in objects.keys():
+        for each in objects:
             exec('self.' + each + '.Draw(PlotGraphics([curve], ' +
                  'objects["' + each + '"][0], ' +
                  'objects["' + each + '"][1], ' +
-                 'objects["' + each + '"][2]))')
+                 'objects["' + each + '"][2]))', locals(), globals())
     
     def on_splitter_dclick(self, _):
         if self.splitter.GetSashPosition() <= 5:
@@ -466,10 +450,10 @@ class TitleBar(bp.ButtonPanel):
             "loads'], self.parent.plcGaSpecLoad, self.spnGaScoreFrom.GetValue()-1)")
 
     def on_cbx_feat1(self, _):
-        self.parent.optDlg.plot_ga_vars(self.parent.plcGaFeatPlot)
+        self.parent.optDlg.plot_ga_vars(self.parent.plc_ga_feat_plot)
     
     def on_cbx_feat2(self, _):
-        self.parent.optDlg.plot_ga_vars(self.parent.plcGaFeatPlot)
+        self.parent.optDlg.plot_ga_vars(self.parent.plc_ga_feat_plot)
         
     def run_ga(self, **_attr):
         """Runs GA
@@ -1164,22 +1148,22 @@ class SelParam(fpb.FoldPanelBar):
             xdata = self.tbar.data['proc']
             
         currentItem = event.GetItem()
-        chromId = self.treGaResults.GetItemText(currentItem)
-        # chkValid = float(chromId.split(']')[1])
-        chromId = chromId.split('[')[0]
-        chromId = int(chromId.split('#')[1])-1
+        chrom_id = self.treGaResults.GetItemText(currentItem)
+        # chkValid = float(chrom_id.split(']')[1])
+        chrom_id = chrom_id.split('[')[0]
+        chrom_id = int(chrom_id.split('#')[1])-1
         # noinspection PyUnresolvedReferences
-        currentChrom = self.chroms[self.treeorder[chromId]].tolist()
+        currentChrom = self.chroms[self.treeorder[chrom_id]].tolist()
         
         # Plot frequency of variable selection for no. vars
         # Get chrom data and error data for each child
-        Chroms = []
-        VarsId = self.treGaResults.GetItemParent(currentItem)
-        NoVars = self.treGaResults.GetItemText(VarsId)
-        NoVars = int(NoVars.split(' ')[0])
+        chroms = []
+        vars_id = self.treGaResults.GetItemParent(currentItem)
+        nvars = self.treGaResults.GetItemText(vars_id)
+        nvars = int(nvars.split(' ')[0])
         
         # adjust chrom length if mutliple var subsets used
-        currentChrom = currentChrom[0:NoVars]
+        currentChrom = currentChrom[0:nvars]
         self.current_chrom = currentChrom
         
         # if chkValid > 10.0**-5:
@@ -1264,7 +1248,7 @@ class SelParam(fpb.FoldPanelBar):
         
         for run in range(NoRuns):
             if run == 0:
-                child_id = self.treGaResults.GetFirstChild(VarsId)[0]
+                child_id = self.treGaResults.GetFirstChild(vars_id)[0]
             else:
                 child_id = self.treGaResults.GetNextSibling(child_id)
             
@@ -1272,25 +1256,25 @@ class SelParam(fpb.FoldPanelBar):
             itemId = self.treGaResults.GetItemText(child_id)
             itemId = itemId.split('[')[0]
             itemId = int(itemId.split('#')[1])-1
-            items = self.chroms[itemId][0:NoVars]
+            items = self.chroms[itemId][0:nvars]
             for each in items:
-                Chroms.append(each)
+                chroms.append(each)
         
         # calculate variable frequencies
         var_freq = np.zeros((1, 2), 'i')
-        while len(Chroms) > 1:
+        while len(chroms) > 1:
             var_freq = np.concatenate((var_freq,
-                                      np.reshape([float(Chroms[0]), 1.0], (1, 2))),
+                                      np.reshape([float(chroms[0]), 1.0], (1, 2))),
                                       0)
             NewChroms = []
-            for i in range(1, len(Chroms), 1):
-                if Chroms[i] == var_freq[var_freq.shape[0]-1, 0]:
+            for i in range(1, len(chroms), 1):
+                if chroms[i] == var_freq[var_freq.shape[0]-1, 0]:
                     var_freq[var_freq.shape[0]-1, 1] += 1.0
                 else:
-                    NewChroms.append(float(Chroms[i]))
-            Chroms = NewChroms
-        if len(Chroms) == 1:
-            shaped_chroms = np.reshape([float(Chroms[0]), 1.0], (1, 2))
+                    NewChroms.append(float(chroms[i]))
+            chroms = NewChroms
+        if len(chroms) == 1:
+            shaped_chroms = np.reshape([float(chroms[0]), 1.0], (1, 2))
             var_freq = np.concatenate((var_freq, shaped_chroms), 0)
         var_freq = var_freq[1:var_freq.shape[0]]
         
@@ -1344,13 +1328,13 @@ class SelParam(fpb.FoldPanelBar):
         self.tbar.cbxFeature1.SetSelection(0)
         self.tbar.cbxFeature2.SetSelection(0)
         
-        self.plot_ga_vars(self.parent.splitPrnt.plcGaFeatPlot)
+        self.plot_ga_vars(self.parent.splitPrnt.plc_ga_feat_plot)
         
         # plot ga optimisation curve
-        noGens = self.count_for_opt_curve(self.curves[chromId])
+        noGens = self.count_for_opt_curve(self.curves[chrom_id])
         # noinspection PyUnusedLocal
-        gaPlotOptLine = plot_line(self.parent.splitPrnt.plcGaOptPlot,
-                                  np.reshape(self.curves[chromId, 0:noGens], (1, noGens)),
+        gaPlotOptLine = plot_line(self.parent.splitPrnt.plc_ga_opt_plot,
+                                  np.reshape(self.curves[chrom_id, 0:noGens], (1, noGens)),
                                   xaxis=np.arange(1, noGens+1)[:, nax], rownum=0,
                                   tit='GA Optimisation Curve',
                                   xLabel='Generation',
@@ -1379,7 +1363,7 @@ class SelParam(fpb.FoldPanelBar):
                       yLabel='RMS Error', dtype='multi',
                       ledge=['Train err', 'Test err'], wdth=3)
             
-            self.parent.splitPrnt.nbGaModPlot.SetPageText(1, 'RMS Error')
+            self.parent.splitPrnt.nb_ga_mod_plot.SetPageText(1, 'RMS Error')
         
         # plot variables vs. error for pairs
         ga_var_from = int(self.spnGaVarsFrom.GetValue())
@@ -1396,17 +1380,17 @@ class SelParam(fpb.FoldPanelBar):
             VarErr = np.zeros((1, 2), 'd')
             if xvars == 0:
                 gaRoot = self.treGaResults.GetRootItem() 
-                VarsId = self.treGaResults.GetFirstChild(gaRoot)[0]
+                vars_id = self.treGaResults.GetFirstChild(gaRoot)[0]
             else:
-                VarsId = self.treGaResults.GetNextSibling(VarsId)
+                vars_id = self.treGaResults.GetNextSibling(vars_id)
                 
-            Var = self.treGaResults.GetItemText(VarsId)
+            Var = self.treGaResults.GetItemText(vars_id)
             Var = Var.split(' ')[0]
 
             run_id = None
             for run in range(int(self.spnGaNoRuns.GetValue())):
                 if run == 0:
-                    run_id = self.treGaResults.GetFirstChild(VarsId)[0]
+                    run_id = self.treGaResults.GetFirstChild(vars_id)[0]
                 else:
                     run_id = self.treGaResults.GetNextSibling(run_id)
                 run_txt = self.treGaResults.GetItemText(run_id)
@@ -1436,7 +1420,7 @@ class SelParam(fpb.FoldPanelBar):
                                         'Fitness')
             Xax = (ga_var_from-0.25, ga_var_to+0.25)
             Yax = (MinVarErr, MaxVarErr)
-            self.parent.splitPrnt.plcGaGrpDistPlot.draw(gaPlotVarErr, xAxis=Xax, yAxis=Yax)
+            self.parent.splitPrnt.plc_ga_grp_dist_plot.draw(gaPlotVarErr, xAxis=Xax, yAxis=Yax)
             
             # Enable ctrls
             self.tbar.spnGaScoreFrom.Enable(1)
@@ -1515,3 +1499,18 @@ class SelParam(fpb.FoldPanelBar):
             plot_line(canvas, np.transpose(plotVals), xaxis=xAx, tit='', rownum=col1,
                       xLabel='Variable', yLabel='w[' + str(self.tbar.spnGaScoreTo.GetValue()) + ']',
                       wdth=1, ledge=[], dtype='single')
+
+
+if __name__ == '__main__':
+
+    class TestFrame(wx.Frame):
+        def __init__(self, parent):
+            wx.Frame.__init__(self, None, size=(500, 450))
+            self.parent = parent
+
+
+    app = wx.App()
+    frame = TestFrame(None)
+    Ga(frame, None, None, None, None, None, 'DFA')
+    frame.Show()
+    app.MainLoop()
