@@ -47,86 +47,40 @@ class Plsr(wx.Panel):
                           style=wx.TAB_TRAVERSAL)
 
         _, _, _, _, _ = id_, pos, size, style, name
+
         self.parent = parent
         self._init_ctrls()
-
-    def _init_coll_bxs_pls2(self, parent):
-        # generated method, don't edit
-
-        parent.Add(self.titleBar, 0, border=0, flag=wx.EXPAND)
-        parent.Add(self.grsPls1, 1, border=0, flag=wx.EXPAND)
-
-    def _init_coll_bxs_pls1(self, parent):
-        # generated method, don't edit
-
-        parent.Add(self.bxsPls2, 1, border=0, flag=wx.EXPAND)
-
-    def _init_coll_grs_pls1(self, parent):
-        # generated method, don't edit
-
-        parent.Add(self.nbPlsPreds, 0, border=0, flag=wx.EXPAND)
-        parent.Add(self.plcPLSloading, 0, border=0, flag=wx.EXPAND)
-        parent.Add(self.nbFullPls, 0, border=0, flag=wx.EXPAND)
-        parent.Add(self.plcPlsHetero, 0, border=0, flag=wx.EXPAND)
-
-    def _init_coll_nb_full_pls_pages(self, parent):
-        # generated method, don't edit
-
-        parent.AddPage(imageId=-1, page=self.plcPLSerror,
-                       select=True, text='PLS Error')
-        parent.AddPage(imageId=-1, page=self.plcPlsStats,
-                       select=False, text='OLS Results ')
-    
-    def _init_coll_nb_pls_preds_pages(self, parent):
-        # generated method, don't edit
-
-        parent.AddPage(imageId=-1,
-                       page=self.plc_pred_pls1, select=True, text='')
-    
-    def _init_sizers(self):
-        # generated method, don't edit
-        self.grsPls1 = wx.GridSizer(cols=2, hgap=2, rows=2, vgap=2)
-
-        self.bxsPls1 = wx.BoxSizer(orient=wx.HORIZONTAL)
-
-        self.bxsPls2 = wx.BoxSizer(orient=wx.VERTICAL)
-
-        self._init_coll_grs_pls1(self.grsPls1)
-        self._init_coll_bxs_pls1(self.bxsPls1)
-        self._init_coll_bxs_pls2(self.bxsPls2)
-
-        self.SetSizer(self.bxsPls1)
+        self._init_sizers()
 
     def _init_ctrls(self):
-        # generated method, don't edit
-
+        """"""
         self.SetClientSize((788, 426))
         self.SetAutoLayout(True)
         self.SetToolTip('')
 
-        self.nbFullPls = wx.Notebook(id=-1, name='nbFullPls', parent=self,
-                                     pos=(176, 274),
-                                     size=(310, 272),
-                                     style=wx.NB_BOTTOM)
-        self.nbFullPls.SetToolTip('')
-        self.nbFullPls.SetAutoLayout(True)
-        self.nbFullPls.SetConstraints(
-            LayoutAnchors(self.nbFullPls, True, True, True, True))
+        self.nb_full_pls = wx.Notebook(id=-1, name='nbFullPls', parent=self,
+                                       pos=(176, 274),
+                                       size=(310, 272),
+                                       style=wx.NB_BOTTOM)
+        self.nb_full_pls.SetToolTip('')
+        self.nb_full_pls.SetAutoLayout(True)
+        self.nb_full_pls.SetConstraints(
+            LayoutAnchors(self.nb_full_pls, True, True, True, True))
         # self.nbFullPls.SetTabSize((40, 15))
-              
-        self.nbPlsPreds = wx.Notebook(id=-1, name='nbPlsPreds', parent=self,
-                                      pos=(176, 274),
-                                      size=(310, 272),
-                                      style=wx.NB_BOTTOM)
-        self.nbPlsPreds.SetToolTip('')
-        self.nbPlsPreds.SetAutoLayout(True)
-        self.nbPlsPreds.SetConstraints(
-            LayoutAnchors(self.nbPlsPreds, True, True, True, True))
+
+        self.nb_pls_preds = wx.Notebook(id=-1, name='nbPlsPreds', parent=self,
+                                        pos=(176, 274),
+                                        size=(310, 272),
+                                        style=wx.NB_BOTTOM)
+        self.nb_pls_preds.SetToolTip('')
+        self.nb_pls_preds.SetAutoLayout(True)
+        self.nb_pls_preds.SetConstraints(
+            LayoutAnchors(self.nb_pls_preds, True, True, True, True))
         # self.nbPlsPreds.SetTabSize((0, 1))
-        self.nbPlsPreds.parent = self
-        
+        self.nb_pls_preds.parent = self
+
         self.plcPLSerror = MyPlotCanvas(id_=-1, name='plcPLSerror',
-                                        parent=self.nbFullPls, pos=(0, 0),
+                                        parent=self.nb_full_pls, pos=(0, 0),
                                         size=(302, 246), style=0,
                                         toolbar=self.parent.parent.tbMain)
         self.plcPLSerror.fontSizeAxis = 8
@@ -138,9 +92,9 @@ class Plsr(wx.Panel):
         self.plcPLSerror.SetAutoLayout(True)
         self.plcPLSerror.SetConstraints(
             LayoutAnchors(self.plcPLSerror, True, True, True, True))
-              
+
         self.plcPlsStats = MyPlotCanvas(id_=-1, name='plcPlsStats',
-                                        parent=self.nbFullPls,
+                                        parent=self.nb_full_pls,
                                         pos=(176, 0), size=(310, 272), style=0,
                                         toolbar=self.parent.parent.tbMain)
         self.plcPlsStats.xSpec = 'none'
@@ -155,7 +109,7 @@ class Plsr(wx.Panel):
         self.plcPlsStats.SetToolTip('')
 
         self.plc_pred_pls1 = MyPlotCanvas(id_=-1, name='plcPredPls1',
-                                          parent=self.nbPlsPreds, style=0,
+                                          parent=self.nb_pls_preds, style=0,
                                           pos=(176, 0), size=(310, 272),
                                           toolbar=self.parent.parent.tbMain)
         self.plc_pred_pls1.fontSizeTitle = 10
@@ -167,10 +121,12 @@ class Plsr(wx.Panel):
         self.plc_pred_pls1.SetAutoLayout(True)
         self.plc_pred_pls1.SetConstraints(
             LayoutAnchors(self.plc_pred_pls1, True, True, True, True))
-        
+
         self.plcPlsHetero = MyPlotCanvas(id_=-1, name='plcPlsHetero',
-                                         parent=self, pos=(488, 274), size=(310, 272),
-                                         style=0, toolbar=self.parent.parent.tbMain)
+                                         parent=self, pos=(488, 274),
+                                         size=(310, 272),
+                                         style=0,
+                                         toolbar=self.parent.parent.tbMain)
         self.plcPlsHetero.fontSizeAxis = 8
         self.plcPlsHetero.fontSizeTitle = 10
         self.plcPlsHetero.enableZoom = True
@@ -180,30 +136,56 @@ class Plsr(wx.Panel):
         self.plcPlsHetero.SetAutoLayout(True)
         self.plcPlsHetero.SetConstraints(
             LayoutAnchors(self.plcPlsHetero, True, True, True, True))
-        
-        self.plcPLSloading = MyPlotCanvas(id_=-1, name='plcPLSloading',
-                                          parent=self, pos=(0, 24),
-                                          size=(330, 292), style=0,
-                                          toolbar=self.parent.parent.tbMain)
-        self.plcPLSloading.fontSizeTitle = 10
-        self.plcPLSloading.fontSizeAxis = 8
-        self.plcPLSloading.enableZoom = True
-        self.plcPLSloading.enableLegend = True
-        self.plcPLSloading.SetToolTip('')
-        self.plcPLSloading.fontSizeLegend = 8
-        self.plcPLSloading.SetAutoLayout(True)
-        self.plcPLSloading.SetConstraints(
-            LayoutAnchors(self.plcPLSloading, True, True, True, True))
-        
+
+        self.plc_pls_load = MyPlotCanvas(id_=-1, name='plcPLSloading',
+                                         parent=self, pos=(0, 24),
+                                         size=(330, 292), style=0,
+                                         toolbar=self.parent.parent.tbMain)
+        self.plc_pls_load.fontSizeTitle = 10
+        self.plc_pls_load.fontSizeAxis = 8
+        self.plc_pls_load.enableZoom = True
+        self.plc_pls_load.enableLegend = True
+        self.plc_pls_load.SetToolTip('')
+        self.plc_pls_load.fontSizeLegend = 8
+        self.plc_pls_load.SetAutoLayout(True)
+        self.plc_pls_load.SetConstraints(
+            LayoutAnchors(self.plc_pls_load, True, True, True, True))
+
         self.titleBar = TitleBar(self, id_=-1,
                                  text="Partial Least Squares Regression",
                                  style=bp.BP_USE_GRADIENT,
                                  alignment=bp.BP_ALIGN_LEFT)
-        
-        self._init_coll_nb_full_pls_pages(self.nbFullPls)
-        self._init_coll_nb_pls_preds_pages(self.nbPlsPreds)
-        
-        self._init_sizers()
+
+        self._init_coll_nb_full_pls_pages(self.nb_full_pls)
+        self._init_coll_nb_pls_preds_pages(self.nb_pls_preds)
+
+    def _init_sizers(self):
+        # generated method, don't edit
+        self.grsPls1 = wx.GridSizer(cols=2, hgap=2, rows=2, vgap=2)
+        self.bxsPls1 = wx.BoxSizer(orient=wx.HORIZONTAL)
+        self.bxsPls2 = wx.BoxSizer(orient=wx.VERTICAL)
+
+        self.grsPls1.Add(self.nb_pls_preds, 0, border=0, flag=wx.EXPAND)
+        self.grsPls1.Add(self.plc_pls_load, 0, border=0, flag=wx.EXPAND)
+        self.grsPls1.Add(self.nb_full_pls, 0, border=0, flag=wx.EXPAND)
+        self.grsPls1.Add(self.plcPlsHetero, 0, border=0, flag=wx.EXPAND)
+        self.bxsPls1.Add(self.bxsPls2, 1, border=0, flag=wx.EXPAND)
+        self.bxsPls2.Add(self.titleBar, 0, border=0, flag=wx.EXPAND)
+        self.bxsPls2.Add(self.grsPls1, 1, border=0, flag=wx.EXPAND)
+
+        self.SetSizer(self.bxsPls1)
+
+    def _init_coll_nb_full_pls_pages(self, parent):
+        """"""
+        parent.AddPage(imageId=-1, page=self.plcPLSerror,
+                       select=True, text='PLS Error')
+        parent.AddPage(imageId=-1, page=self.plcPlsStats,
+                       select=False, text='OLS Results ')
+    
+    def _init_coll_nb_pls_preds_pages(self, parent):
+        """"""
+        parent.AddPage(imageId=-1, page=self.plc_pred_pls1,
+                       select=True, text='dummy')
 
     # noinspection PyPep8Naming
     def Reset(self):
@@ -222,19 +204,21 @@ class Plsr(wx.Panel):
         objects = {
             'plcPLSerror': ['RMS Error', 'Latent Variable', 'RMS Error'],
             'plc_pred_pls1': ['PLS Predictions', 'Actual', 'Predicted'],
-            'plcPlsHetero': ['Residuals vs. Predicted Values', 'Predicted', 'Residuals'],
-            'plcPLSloading': ['PLS Loading', 'w*c[1]', 'w*c[2]']}
+            'plcPlsHetero': ['Residuals vs. Predicted Values', 'Predicted',
+                             'Residuals'],
+            'plc_pls_load': ['PLS Loading', 'w*c[1]', 'w*c[2]']}
 
         # noinspection PyTypeChecker, PyUnusedLocal
-        curve = PolyLine([[0, 0], [1, 1]],
-                         colour='white', width=1, style=wx.PENSTYLE_TRANSPARENT)
+        curve = PolyLine([[0, 0], [1, 1]], colour='white',
+                         width=1, style=wx.PENSTYLE_TRANSPARENT)
         
-        for each in objects.keys():
+        for each in objects:
             exec('self.' + each + '.Draw(PlotGraphics([curve], ' +
                  'objects["' + each + '"][0], ' +
                  'objects["' + each + '"][1], ' +
                  'objects["' + each + '"][2]))')
-        
+
+
 class TitleBar(bp.ButtonPanel):
     """"""
     def __init__(self, parent, id_, text, style, alignment):
@@ -662,7 +646,7 @@ class TitleBar(bp.ButtonPanel):
     def plot_pls_loads(self):
         # Plot loadings
         if self.spnPLSfactor1.GetValue() != self.spnPLSfactor2.GetValue():
-            plot_loads(self.parent.plcPLSloading, self.data['plsloads'],
+            plot_loads(self.parent.plc_pls_load, self.data['plsloads'],
                        xaxis=self.data['indlabels'],
                        col1=self.spnPLSfactor1.GetValue()-1,
                        col2=self.spnPLSfactor2.GetValue()-1,
@@ -673,7 +657,7 @@ class TitleBar(bp.ButtonPanel):
                        usecol=[], usesym=[])
         else:
             idx = self.spnPLSfactor1.GetValue()-1
-            plot_line(self.parent.plcPLSloading,
+            plot_line(self.parent.plc_pls_load,
                       np.transpose(self.data['plsloads']),
                       xaxis=self.data['xaxis'], tit='PLS Loadings', rownum=idx,
                       type='single', xLabel='Variable',

@@ -63,43 +63,10 @@ class Dfa(wx.Panel):
 
         self.parent = parent
         self._init_ctrls()
-
-    def _init_coll_grs_dfa(self, parent):
-        # generated method, don't edit
-
-        parent.Add(self.plcDFAscores, 0, border=0, flag=wx.EXPAND)
-        parent.Add(self.plcDfaLoadsV, 0, border=0, flag=wx.EXPAND)
-        parent.Add(self.plcDfaCluster, 0, border=0, flag=wx.EXPAND)
-        parent.Add(self.plcDFAeigs, 0, border=0, flag=wx.EXPAND)
-
-    def _init_coll_bxs_dfa1(self, parent):
-        # generated method, don't edit
-
-        parent.Add(self.bxsDfa2, 1, border=0, flag=wx.EXPAND)
-
-    def _init_coll_bxs_dfa2(self, parent):
-        # generated method, don't edit
-
-        parent.Add(self.titleBar, 0, border=0, flag=wx.EXPAND)
-        parent.Add(self.grsDfa, 1, border=0, flag=wx.EXPAND)
-
-    def _init_sizers(self):
-        # generated method, don't edit
-        self.bxsDfa1 = wx.BoxSizer(orient=wx.HORIZONTAL)
-
-        self.bxsDfa2 = wx.BoxSizer(orient=wx.VERTICAL)
-
-        self.grsDfa = wx.GridSizer(cols=2, hgap=2, rows=2, vgap=2)
-
-        self._init_coll_bxs_dfa1(self.bxsDfa1)
-        self._init_coll_bxs_dfa2(self.bxsDfa2)
-        self._init_coll_grs_dfa(self.grsDfa)
-
-        self.SetSizer(self.bxsDfa1)
+        self._init_sizers()
 
     def _init_ctrls(self):
-        # generated method, don't edit
-
+        """"""
         self.SetClientSize((788, 426))
         self.SetToolTip('')
         self.SetAutoLayout(True)
@@ -165,7 +132,37 @@ class Dfa(wx.Panel):
                                  style=bp.BP_USE_GRADIENT,
                                  alignment=bp.BP_ALIGN_LEFT)
 
-        self._init_sizers()
+    def _init_sizers(self):
+        """"""
+        self.grsDfa = wx.GridSizer(cols=2, hgap=2, rows=2, vgap=2)
+        self.bxsDfa1 = wx.BoxSizer(orient=wx.HORIZONTAL)
+        self.bxsDfa2 = wx.BoxSizer(orient=wx.VERTICAL)
+
+        self._init_coll_bxs_dfa1(self.bxsDfa1)
+        self._init_coll_bxs_dfa2(self.bxsDfa2)
+        self._init_coll_grs_dfa(self.grsDfa)
+
+        self.SetSizer(self.bxsDfa1)
+
+
+    def _init_coll_grs_dfa(self, parent):
+        # generated method, don't edit
+
+        parent.Add(self.plcDFAscores, 0, border=0, flag=wx.EXPAND)
+        parent.Add(self.plcDfaLoadsV, 0, border=0, flag=wx.EXPAND)
+        parent.Add(self.plcDfaCluster, 0, border=0, flag=wx.EXPAND)
+        parent.Add(self.plcDFAeigs, 0, border=0, flag=wx.EXPAND)
+
+    def _init_coll_bxs_dfa1(self, parent):
+        # generated method, don't edit
+
+        parent.Add(self.bxsDfa2, 1, border=0, flag=wx.EXPAND)
+
+    def _init_coll_bxs_dfa2(self, parent):
+        # generated method, don't edit
+
+        parent.Add(self.titleBar, 0, border=0, flag=wx.EXPAND)
+        parent.Add(self.grsDfa, 1, border=0, flag=wx.EXPAND)
 
     def reset(self):
         self.titleBar.spnDfaScore1.Enable(0)

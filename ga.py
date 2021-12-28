@@ -95,11 +95,11 @@ class Ga(wx.Panel):
                                         toolbar=toolbar)
         self.plc_ga_eigs.SetToolTip('self.plc_ga_eigs')
 
-        self.plc_ga_spec_load = MyPlotCanvas(id_=-1, name='plcGaSpecLoad',
-                                             parent=self.nb_ga_mod_plot, style=0,
-                                             pos=(0, 24), size=(503, 279),
-                                             toolbar=toolbar)
-        self.plc_ga_spec_load.SetToolTip('self.plc_ga_spec_load')
+        self.plc_ga_loads = MyPlotCanvas(id_=-1, name='plcGaSpecLoad',
+                                         parent=self.nb_ga_mod_plot, style=0,
+                                         pos=(0, 24), size=(503, 279),
+                                         toolbar=toolbar)
+        self.plc_ga_loads.SetToolTip('self.plc_ga_spec_load')
 
         self.plc_ga_freq_plot = MyPlotCanvas(id_=-1, name='plcGaFreqPlot',
                                              parent=self.p1, pos=(760, 0),
@@ -129,7 +129,7 @@ class Ga(wx.Panel):
         self.plc_ga_opt_plot.SetToolTip('')
 
         windows = [self.plc_ga_model_plot1, self.plc_ga_eigs,
-                   self.plc_ga_spec_load, self.plc_ga_freq_plot,
+                   self.plc_ga_loads, self.plc_ga_freq_plot,
                    self.plc_ga_feat_plot, self.plc_ga_grp_dist_plot,
                    self.plc_ga_opt_plot]
 
@@ -183,7 +183,7 @@ class Ga(wx.Panel):
                        text='GA Optimisation Curve')
         parent.AddPage(self.plc_ga_eigs, imageId=-1, select=False,
                        text='Eigenvalues')
-        parent.AddPage(self.plc_ga_spec_load, imageId=-1, select=False,
+        parent.AddPage(self.plc_ga_loads, imageId=-1, select=False,
                        text='Spectral Loadings')
         parent.AddPage(self.plc_ga_grp_dist_plot, imageId=-1, select=False,
                        text='Model Error Comparisons')

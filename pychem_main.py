@@ -2244,7 +2244,7 @@ class PyChemMain(wx.Frame):
                     self.data['validation'] = self.data['validation'][index]
 
             # get x-axis labels/values
-            self.plUnivariate.titleBar.cbxVariable.clear()
+            self.plUnivariate.titleBar.cbxVariable.Clear()
             for j in range(1, self.plExpset.grdIndLabels.GetNumberCols()):
                 if self.plExpset.grdIndLabels.GetCellValue(0, j) == '1':
                     self.data['variableidx'] = []
